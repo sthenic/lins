@@ -1,0 +1,244 @@
+import unicode
+import streams
+
+import state_machine
+
+type
+   PlainTextState = ref object of State[Rune]
+      is_final*: bool
+
+   PlainTextTransition = Transition[Rune]
+
+   PlainTextStateMachine = StateMachine[Rune]
+
+   Sentence = tuple[str: seq[Rune], newlines: seq[int], par_idx: int,
+                    row_begin: int, col_begin: int, row_end: int, col_end: int]
+
+const
+   CAPITAL_LETTERS = toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+   PUNCTUATION = toRunes(".!?")
+   SPACE = toRunes(" \t")
+   NEWLINE = toRunes("\n\r")
+   HYPHEN = toRunes("-")
+   WHITESPACE = toRunes(" \t\n\r")
+
+# Forward declarations of conditions and transisiton callback functions.
+proc is_letter(stimuli: Rune): bool
+proc is_not_capital_letter(stimuli: Rune): bool
+proc is_punctuation(stimuli: Rune): bool
+proc is_space(stimuli: Rune): bool
+proc is_newline(stimuli: Rune): bool
+proc is_hyphen(stimuli: Rune): bool
+proc is_ws(stimuli: Rune): bool
+proc append(stimuli: Rune)
+proc append_first(stimuli: Rune)
+proc append_incr_nl(stimuli: Rune)
+proc insert_space(stimuli: Rune)
+proc prepend_space(stimuli: Rune)
+proc paragraph_complete(stimuli: Rune)
+
+# States
+let
+   STATE1 = PlainTextState(id: 1, name: "Init", is_final: false)
+   STATE2 = PlainTextState(id: 2, name: "Append", is_final: true)
+   STATE3 = PlainTextState(id: 3, name: "Punctuation", is_final: true)
+   STATE4 = PlainTextState(id: 4, name: "SentenceComplete", is_final: false)
+   STATE5 = PlainTextState(id: 5, name: "Space", is_final: false)
+   STATE6 = PlainTextState(id: 6, name: "Newline", is_final: false)
+
+# Transitions
+let
+   STATE1_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_letter, transition_cb: append_first,
+                          next_state: STATE2),
+      PlainTextTransition(condition_cb: is_ws, transition_cb: nil,
+                          next_state: STATE1),
+      PlainTextTransition(condition_cb: nil, transition_cb: nil,
+                          next_state: STATE1)
+   ]
+   STATE2_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_letter, transition_cb: append,
+                          next_state: STATE2),
+      PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
+                          next_state: STATE3),
+      PlainTextTransition(condition_cb: is_space, transition_cb: append,
+                          next_state: STATE5),
+      PlainTextTransition(condition_cb: is_newline, transition_cb: insert_space,
+                          next_state: STATE6)
+   ]
+   STATE3_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_letter, transition_cb: append,
+                          next_state: STATE2),
+      PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
+                          next_state: STATE3),
+      PlainTextTransition(condition_cb: is_ws, transition_cb: nil,
+                          next_state: STATE4)
+   ]
+   STATE4_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_not_capital_letter,
+                          transition_cb: prepend_space,
+                          next_state: STATE2),
+      PlainTextTransition(condition_cb: is_newline,
+                          transition_cb: paragraph_complete,
+                          next_state: nil)
+   ]
+   STATE5_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_letter, transition_cb: append,
+                          next_state: STATE2),
+      PlainTextTransition(condition_cb: is_space, transition_cb: nil,
+                          next_state: STATE5),
+      PlainTextTransition(condition_cb: is_newline, transition_cb: nil,
+                          next_state: STATE6)
+   ]
+   STATE6_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_letter,
+                          transition_cb: append_incr_nl,
+                          next_state: STATE2),
+      PlainTextTransition(condition_cb: is_space, transition_cb: nil,
+                          next_state: STATE6),
+      PlainTextTransition(condition_cb: is_newline,
+                          transition_cb: paragraph_complete,
+                          next_state: nil)
+   ]
+
+# Add transition sequences to the states.
+STATE1.transitions = STATE1_TRANSITIONS
+STATE2.transitions = STATE2_TRANSITIONS
+STATE3.transitions = STATE3_TRANSITIONS
+STATE4.transitions = STATE4_TRANSITIONS
+STATE5.transitions = STATE5_TRANSITIONS
+STATE6.transitions = STATE6_TRANSITIONS
+
+# Condition callbacks
+proc is_letter(stimuli: Rune): bool =
+   return stimuli notin PUNCTUATION and stimuli notin WHITESPACE
+
+proc is_not_capital_letter(stimuli: Rune): bool =
+   return is_letter(stimuli) and stimuli notin CAPITAL_LETTERS
+
+proc is_punctuation(stimuli: Rune): bool =
+   return stimuli in PUNCTUATION
+
+proc is_space(stimuli: Rune): bool =
+   return stimuli in SPACE
+
+proc is_newline(stimuli: Rune): bool =
+   return stimuli in NEWLINE
+
+proc is_hyphen(stimuli: Rune): bool =
+   return stimuli in HYPHEN
+
+proc is_ws(stimuli: Rune): bool =
+   return stimuli in WHITESPACE
+
+# Local variables
+var
+   sentence: Sentence = (str: @[], newlines: @[], par_idx: 0, row_begin: 0,
+                         col_begin: 0, row_end: 0, col_end: 0)
+   row: int = 0
+   col: int = 0
+   new_par: bool = true
+
+proc dead_state_callback(stimul: Rune) =
+   # Reset
+   sentence.str = @[]
+   sentence.newlines = @[]
+
+# Transition callbacks
+proc append(stimuli: Rune) =
+   sentence.str.add(stimuli)
+
+proc append_first(stimuli: Rune) =
+   sentence.row_begin = row
+   sentence.col_begin = col
+
+   if new_par:
+      sentence.par_idx += 1
+      new_par = false
+
+   sentence.str.add(stimuli)
+
+proc append_incr_nl(stimuli: Rune) =
+   sentence.newlines.add(sentence.str.len)
+   sentence.str.add(stimuli)
+
+proc insert_space(stimuli: Rune) =
+   sentence.str.add(Rune(' '))
+
+proc prepend_space(stimuli: Rune) =
+   sentence.str.add(Rune(' '))
+   sentence.str.add(stimuli)
+
+proc paragraph_complete(stimuli: Rune) =
+   new_par = true
+
+proc is_final(sm: PlainTextStateMachine): bool =
+   return PlainTextState(sm.current_state).is_final
+
+proc lex_file*(filename: string) =
+   var
+      fs: FileStream
+      pos_line, pos_last_line, pos_last_final: int
+      r: Rune
+      line: string
+      sm: PlainTextStateMachine =
+         PlainTextStateMachine(init_state: STATE1,
+                               dead_state_callback: dead_state_callback)
+
+   # Open the input file as a file stream since we will have to move around in
+   # the file.
+   fs = new_file_stream(filename, fmRead)
+   if fs.is_nil:
+      write(stderr, "Failed to open input file '", filename, "' for lexing.\n")
+      quit(-1)
+
+   # Initialize variables.
+   row = 1
+   col = 1
+   pos_last_final= 0
+   pos_last_line = 0
+   sentence.row_end = 1
+   sentence.col_end = 1
+   line = ""
+   state_machine.reset(sm)
+
+   while fs.read_line(line):
+      pos_line = 0
+      line.add('\n') # Add the newline character removed by read_line().
+      while pos_line < line.len:
+         # Use the template provided by the unicode standard library to decode
+         # the codepoint at position 'pos_line'. The rune is returned in r and
+         # pos_line is automatically incremented with the number of bytes
+         # consumed.
+         fast_rune_at(line, pos_line, r, true)
+         # Process stimuli
+         sm.run(r)
+         # Check resulting state
+         if sm.is_dead:
+            # Dead state reached, seek to last final position.
+            fs.set_position(pos_last_final)
+            # Reset the state machine
+            state_machine.reset(sm)
+            # Reset positional counters
+            row = sentence.row_end
+            col = sentence.col_end + 1
+            # Break to continue with the next input character (outer loop
+            # re-reads the line from the correct position).
+            break
+         elif sm.is_final:
+            pos_last_final = pos_last_line + pos_line
+            sentence.row_end = row
+            sentence.col_end = col
+
+         if (r == Rune('\n')):
+            row += 1
+            col = 1
+         else:
+            col += 1
+
+      pos_last_line = fs.get_position
+
+   if not sm.is_dead:
+      dead_state_callback(Rune(0))
+
+   echo "Done!"
