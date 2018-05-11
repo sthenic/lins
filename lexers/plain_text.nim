@@ -183,7 +183,7 @@ proc lex_file*(filename: string) =
       line: string
       sm: PlainTextStateMachine =
          PlainTextStateMachine(init_state: STATE1,
-                               dead_state_callback: dead_state_callback)
+                               dead_state_cb: dead_state_callback)
 
    # Open the input file as a file stream since we will have to move around in
    # the file.

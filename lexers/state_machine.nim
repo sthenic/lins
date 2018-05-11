@@ -11,7 +11,7 @@ type
 
    StateMachine*[T] = ref object of RootObj
       init_state*: State[T]
-      dead_state_callback*: proc (c: T)
+      dead_state_cb*: proc (c: T)
       current_state*: State[T]
 
 proc reset*(sm: StateMachine) =
@@ -38,7 +38,7 @@ proc run*[T](sm: StateMachine, stimuli: T) =
    if not do_transition:
       sm.current_state = nil
 
-   if (sm.current_state == nil and sm.dead_state_callback != nil):
-      sm.dead_state_callback(stimuli)
+   if (sm.current_state == nil and sm.dead_state_cb != nil):
+      sm.dead_state_cb(stimuli)
 
 proc is_dead*(sm: StateMachine): bool = return sm.current_state == nil
