@@ -1,44 +1,44 @@
 type
-   State*[T] = ref object of RootObj
+   State*[M, S] = ref object of RootObj
       id*: int
       name*: string
-      transitions*: seq[Transition[T]]
+      transitions*: seq[Transition[M, S]]
 
-   Transition*[T] = ref object of RootObj
-      condition_cb*: proc (c: T): bool
-      transition_cb*: proc (c: T)
-      next_state*: State[T]
+   Transition*[M, S] = ref object of RootObj
+      condition_cb*: proc (stimuli: S): bool
+      transition_cb*: proc (meta: var M, stimuli: S)
+      next_state*: State[M, S]
 
-   StateMachine*[T] = ref object of RootObj
-      init_state*: State[T]
-      dead_state_cb*: proc (c: T)
-      current_state*: State[T]
+   StateMachine*[M, S] = ref object of RootObj
+      init_state*: State[M, S]
+      dead_state_cb*: proc (meta: var M, stimuli: S)
+      current_state*: State[M, S]
 
-proc reset*(sm: StateMachine) =
-   sm.current_state = sm.init_state
+proc reset*(this: StateMachine) =
+   this.current_state = this.init_state
 
-proc run*[T](sm: StateMachine, stimuli: T) =
+proc run*[M, S](this: StateMachine, meta: var M, stimuli: S) =
    var do_transition = false
 
-   if (sm.current_state == nil):
+   if (this.current_state == nil):
       return
 
-   for i in 0..<sm.current_state.transitions.len:
-      if sm.current_state.transitions[i].condition_cb != nil:
-         do_transition = sm.current_state.transitions[i].condition_cb(stimuli)
+   for i in 0..<this.current_state.transitions.len:
+      if this.current_state.transitions[i].condition_cb != nil:
+         do_transition = this.current_state.transitions[i].condition_cb(stimuli)
       else:
          do_transition = true
 
       if do_transition:
-         if sm.current_state.transitions[i].transition_cb != nil:
-            sm.current_state.transitions[i].transition_cb(stimuli)
-         sm.current_state = sm.current_state.transitions[i].next_state
+         if this.current_state.transitions[i].transition_cb != nil:
+            this.current_state.transitions[i].transition_cb(meta, stimuli)
+         this.current_state = this.current_state.transitions[i].next_state
          break
 
    if not do_transition:
-      sm.current_state = nil
+      this.current_state = nil
 
-   if (sm.current_state == nil and sm.dead_state_cb != nil):
-      sm.dead_state_cb(stimuli)
+   if (this.current_state == nil and this.dead_state_cb != nil):
+      this.dead_state_cb(meta, stimuli)
 
-proc is_dead*(sm: StateMachine): bool = return sm.current_state == nil
+proc is_dead*(this: StateMachine): bool = return this.current_state == nil

@@ -4,15 +4,14 @@ import streams
 import state_machine
 
 type
-   PlainTextState = ref object of State[Rune]
-      is_final*: bool
-
-   PlainTextTransition = Transition[Rune]
-
-   PlainTextStateMachine = StateMachine[Rune]
-
    Sentence = tuple[str: seq[Rune], newlines: seq[int], par_idx: int,
                     row_begin: int, col_begin: int, row_end: int, col_end: int]
+   LexerState = tuple[row, col: int, new_par: bool, sentence: Sentence]
+
+   PlainTextState = ref object of State[LexerState, Rune]
+      is_final*: bool
+   PlainTextTransition = Transition[LexerState, Rune]
+   PlainTextStateMachine = StateMachine[LexerState, Rune]
 
 const
    CAPITAL_LETTERS = toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -30,12 +29,12 @@ proc is_space(stimuli: Rune): bool
 proc is_newline(stimuli: Rune): bool
 proc is_hyphen(stimuli: Rune): bool
 proc is_ws(stimuli: Rune): bool
-proc append(stimuli: Rune)
-proc append_first(stimuli: Rune)
-proc append_incr_nl(stimuli: Rune)
-proc insert_space(stimuli: Rune)
-proc prepend_space(stimuli: Rune)
-proc paragraph_complete(stimuli: Rune)
+proc append(meta: var LexerState, stimuli: Rune)
+proc append_first(meta: var LexerState, stimuli: Rune)
+proc append_incr_nl(meta: var LexerState, stimuli: Rune)
+proc insert_space(meta: var LexerState, stimuli: Rune)
+proc prepend_space(meta: var LexerState, stimuli: Rune)
+proc paragraph_complete(meta: var LexerState, stimuli: Rune)
 
 # States
 let
@@ -131,46 +130,40 @@ proc is_hyphen(stimuli: Rune): bool =
 proc is_ws(stimuli: Rune): bool =
    return stimuli in WHITESPACE
 
-# Local variables
-var
-   sentence: Sentence = (str: @[], newlines: @[], par_idx: 0, row_begin: 0,
-                         col_begin: 0, row_end: 0, col_end: 0)
-   row: int = 0
-   col: int = 0
-   new_par: bool = true
+proc dead_state_callback(meta: var LexerState, stimul: Rune) =
+   # echo meta.sentence.str, "\n"
 
-proc dead_state_callback(stimul: Rune) =
    # Reset
-   sentence.str = @[]
-   sentence.newlines = @[]
+   meta.sentence.str = @[]
+   meta.sentence.newlines = @[]
 
 # Transition callbacks
-proc append(stimuli: Rune) =
-   sentence.str.add(stimuli)
+proc append(meta: var LexerState, stimuli: Rune) =
+   meta.sentence.str.add(stimuli)
 
-proc append_first(stimuli: Rune) =
-   sentence.row_begin = row
-   sentence.col_begin = col
+proc append_first(meta: var LexerState, stimuli: Rune) =
+   meta.sentence.row_begin = meta.row
+   meta.sentence.col_begin = meta.col
 
-   if new_par:
-      sentence.par_idx += 1
-      new_par = false
+   if meta.new_par:
+      meta.sentence.par_idx += 1
+      meta.new_par = false
 
-   sentence.str.add(stimuli)
+   meta.sentence.str.add(stimuli)
 
-proc append_incr_nl(stimuli: Rune) =
-   sentence.newlines.add(sentence.str.len)
-   sentence.str.add(stimuli)
+proc append_incr_nl(meta: var LexerState, stimuli: Rune) =
+   meta.sentence.newlines.add(meta.sentence.str.len)
+   meta.sentence.str.add(stimuli)
 
-proc insert_space(stimuli: Rune) =
-   sentence.str.add(Rune(' '))
+proc insert_space(meta: var LexerState, stimuli: Rune) =
+   meta.sentence.str.add(Rune(' '))
 
-proc prepend_space(stimuli: Rune) =
-   sentence.str.add(Rune(' '))
-   sentence.str.add(stimuli)
+proc prepend_space(meta: var LexerState, stimuli: Rune) =
+   meta.sentence.str.add(Rune(' '))
+   meta.sentence.str.add(stimuli)
 
-proc paragraph_complete(stimuli: Rune) =
-   new_par = true
+proc paragraph_complete(meta: var LexerState, stimuli: Rune) =
+   meta.new_par = true
 
 proc is_final(sm: PlainTextStateMachine): bool =
    return PlainTextState(sm.current_state).is_final
@@ -184,6 +177,10 @@ proc lex_file*(filename: string) =
       sm: PlainTextStateMachine =
          PlainTextStateMachine(init_state: STATE1,
                                dead_state_cb: dead_state_callback)
+      meta: LexerState = (row: 0, col: 0, new_par: true,
+                          sentence: (str: @[], newlines: @[], par_idx: 0,
+                                     row_begin: 0, col_begin: 0, row_end: 0,
+                                     col_end: 0))
 
    # Open the input file as a file stream since we will have to move around in
    # the file.
@@ -193,12 +190,12 @@ proc lex_file*(filename: string) =
       quit(-1)
 
    # Initialize variables.
-   row = 1
-   col = 1
-   pos_last_final= 0
+   meta.row = 1
+   meta.col = 1
+   meta.sentence.row_end = 1
+   meta.sentence.col_end = 1
+   pos_last_final = 0
    pos_last_line = 0
-   sentence.row_end = 1
-   sentence.col_end = 1
    line = ""
    state_machine.reset(sm)
 
@@ -212,7 +209,7 @@ proc lex_file*(filename: string) =
          # consumed.
          fast_rune_at(line, pos_line, r, true)
          # Process stimuli
-         sm.run(r)
+         sm.run(meta, r)
          # Check resulting state
          if sm.is_dead:
             # Dead state reached, seek to last final position.
@@ -220,25 +217,25 @@ proc lex_file*(filename: string) =
             # Reset the state machine
             state_machine.reset(sm)
             # Reset positional counters
-            row = sentence.row_end
-            col = sentence.col_end + 1
+            meta.row = meta.sentence.row_end
+            meta.col = meta.sentence.col_end + 1
             # Break to continue with the next input character (outer loop
             # re-reads the line from the correct position).
             break
          elif sm.is_final:
             pos_last_final = pos_last_line + pos_line
-            sentence.row_end = row
-            sentence.col_end = col
+            meta.sentence.row_end = meta.row
+            meta.sentence.col_end = meta.col
 
          if (r == Rune('\n')):
-            row += 1
-            col = 1
+            meta.row += 1
+            meta.col = 1
          else:
-            col += 1
+            meta.col += 1
 
       pos_last_line = fs.get_position
 
    if not sm.is_dead:
-      dead_state_callback(Rune(0))
+      dead_state_callback(meta, Rune(0))
 
    echo "Done!"
