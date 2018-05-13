@@ -25,13 +25,13 @@ proc run*[M, S](this: StateMachine[M, S], meta: var M, stimuli: S) =
       return
 
    for i in 0..<this.current_state.transitions.len:
-      if this.current_state.transitions[i].condition_cb != nil:
+      if not is_nil(this.current_state.transitions[i].condition_cb):
          do_transition = this.current_state.transitions[i].condition_cb(meta, stimuli)
       else:
          do_transition = true
 
       if do_transition:
-         if this.current_state.transitions[i].transition_cb != nil:
+         if not is_nil(this.current_state.transitions[i].transition_cb):
             this.current_state.transitions[i].transition_cb(meta, stimuli)
          this.current_state = this.current_state.transitions[i].next_state
          break
@@ -39,14 +39,14 @@ proc run*[M, S](this: StateMachine[M, S], meta: var M, stimuli: S) =
    if not do_transition:
       this.current_state = nil
 
-   if (this.current_state == nil and this.dead_state_cb != nil):
+   if (is_nil(this.current_state) and not is_nil(this.dead_state_cb)):
       this.dead_state_cb(meta, stimuli)
 
 proc is_dead*[M, S](this: StateMachine[M, S]): bool =
-   return this.current_state.is_nil
+   return is_nil(this.current_state)
 
 proc is_final*[M, S](this: StateMachine[M, S]): bool =
-   if this.current_state.is_nil:
+   if is_nil(this.current_state):
       return false
    else:
       return this.current_state.is_final
