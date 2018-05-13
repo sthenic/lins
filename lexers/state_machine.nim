@@ -2,6 +2,7 @@ type
    State*[M, S] = ref object of RootObj
       id*: int
       name*: string
+      is_final*: bool
       transitions*: seq[Transition[M, S]]
 
    Transition*[M, S] = ref object of RootObj
@@ -14,10 +15,10 @@ type
       dead_state_cb*: proc (meta: var M, stimuli: S)
       current_state*: State[M, S]
 
-proc reset*(this: StateMachine) =
+proc reset*[M, S](this: StateMachine[M, S]) =
    this.current_state = this.init_state
 
-proc run*[M, S](this: StateMachine, meta: var M, stimuli: S) =
+proc run*[M, S](this: StateMachine[M, S], meta: var M, stimuli: S) =
    var do_transition = false
 
    if (this.current_state == nil):
@@ -41,4 +42,12 @@ proc run*[M, S](this: StateMachine, meta: var M, stimuli: S) =
    if (this.current_state == nil and this.dead_state_cb != nil):
       this.dead_state_cb(meta, stimuli)
 
-proc is_dead*(this: StateMachine): bool = return this.current_state == nil
+proc is_dead*[M, S](this: StateMachine[M, S]): bool =
+   return this.current_state.is_nil
+
+proc is_final*[M, S](this: StateMachine[M, S]): bool =
+   if this.current_state.is_nil:
+      return false
+   else:
+      return this.current_state.is_final
+

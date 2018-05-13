@@ -8,8 +8,7 @@ type
                     row_begin: int, col_begin: int, row_end: int, col_end: int]
    LexerState = tuple[row, col: int, new_par: bool, sentence: Sentence]
 
-   PlainTextState = ref object of State[LexerState, Rune]
-      is_final*: bool
+   PlainTextState = State[LexerState, Rune]
    PlainTextTransition = Transition[LexerState, Rune]
    PlainTextStateMachine = StateMachine[LexerState, Rune]
 
@@ -165,9 +164,6 @@ proc prepend_space(meta: var LexerState, stimuli: Rune) =
 proc paragraph_complete(meta: var LexerState, stimuli: Rune) =
    meta.new_par = true
 
-proc is_final(sm: PlainTextStateMachine): bool =
-   return PlainTextState(sm.current_state).is_final
-
 proc lex_file*(filename: string) =
    var
       fs: FileStream
@@ -209,7 +205,7 @@ proc lex_file*(filename: string) =
          # consumed.
          fast_rune_at(line, pos_line, r, true)
          # Process stimuli
-         sm.run(meta, r)
+         state_machine.run(sm, meta, r)
          # Check resulting state
          if sm.is_dead:
             # Dead state reached, seek to last final position.
