@@ -21,13 +21,13 @@ const
    WHITESPACE = toRunes(" \t\n\r")
 
 # Forward declarations of conditions and transisiton callback functions.
-proc is_letter(stimuli: Rune): bool
-proc is_not_capital_letter(stimuli: Rune): bool
-proc is_punctuation(stimuli: Rune): bool
-proc is_space(stimuli: Rune): bool
-proc is_newline(stimuli: Rune): bool
-proc is_hyphen(stimuli: Rune): bool
-proc is_ws(stimuli: Rune): bool
+proc is_letter(meta: LexerState, stimuli: Rune): bool
+proc is_not_capital_letter(meta: LexerState, stimuli: Rune): bool
+proc is_punctuation(meta: LexerState, stimuli: Rune): bool
+proc is_space(meta: LexerState, stimuli: Rune): bool
+proc is_newline(meta: LexerState, stimuli: Rune): bool
+proc is_hyphen(meta: LexerState, stimuli: Rune): bool
+proc is_ws(meta: LexerState, stimuli: Rune): bool
 proc append(meta: var LexerState, stimuli: Rune)
 proc append_first(meta: var LexerState, stimuli: Rune)
 proc append_incr_nl(meta: var LexerState, stimuli: Rune)
@@ -108,25 +108,25 @@ STATE5.transitions = STATE5_TRANSITIONS
 STATE6.transitions = STATE6_TRANSITIONS
 
 # Condition callbacks
-proc is_letter(stimuli: Rune): bool =
+proc is_letter(meta: LexerState, stimuli: Rune): bool =
    return stimuli notin PUNCTUATION and stimuli notin WHITESPACE
 
-proc is_not_capital_letter(stimuli: Rune): bool =
-   return is_letter(stimuli) and stimuli notin CAPITAL_LETTERS
+proc is_not_capital_letter(meta: LexerState, stimuli: Rune): bool =
+   return is_letter(meta, stimuli) and stimuli notin CAPITAL_LETTERS
 
-proc is_punctuation(stimuli: Rune): bool =
+proc is_punctuation(meta: LexerState, stimuli: Rune): bool =
    return stimuli in PUNCTUATION
 
-proc is_space(stimuli: Rune): bool =
+proc is_space(meta: LexerState, stimuli: Rune): bool =
    return stimuli in SPACE
 
-proc is_newline(stimuli: Rune): bool =
+proc is_newline(meta: LexerState, stimuli: Rune): bool =
    return stimuli in NEWLINE
 
-proc is_hyphen(stimuli: Rune): bool =
+proc is_hyphen(meta: LexerState, stimuli: Rune): bool =
    return stimuli in HYPHEN
 
-proc is_ws(stimuli: Rune): bool =
+proc is_ws(meta: LexerState, stimuli: Rune): bool =
    return stimuli in WHITESPACE
 
 proc dead_state_callback(meta: var LexerState, stimul: Rune) =

@@ -6,7 +6,7 @@ type
       transitions*: seq[Transition[M, S]]
 
    Transition*[M, S] = ref object of RootObj
-      condition_cb*: proc (stimuli: S): bool
+      condition_cb*: proc (meta: M, stimuli: S): bool
       transition_cb*: proc (meta: var M, stimuli: S)
       next_state*: State[M, S]
 
@@ -26,7 +26,7 @@ proc run*[M, S](this: StateMachine[M, S], meta: var M, stimuli: S) =
 
    for i in 0..<this.current_state.transitions.len:
       if this.current_state.transitions[i].condition_cb != nil:
-         do_transition = this.current_state.transitions[i].condition_cb(stimuli)
+         do_transition = this.current_state.transitions[i].condition_cb(meta, stimuli)
       else:
          do_transition = true
 
