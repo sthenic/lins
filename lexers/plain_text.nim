@@ -4,9 +4,20 @@ import streams
 import state_machine
 
 type
-   Sentence = tuple[str: seq[Rune], newlines: seq[int], par_idx: int,
-                    row_begin: int, col_begin: int, row_end: int, col_end: int]
-   PlainTextMeta = tuple[row, col: int, new_par: bool, sentence: Sentence]
+   Sentence* = tuple
+      str: seq[Rune]
+      newlines: seq[int]
+      par_idx: int
+      row_begin: int
+      col_begin: int
+      row_end: int
+      col_end: int
+
+   PlainTextMeta = tuple
+      row, col: int
+      new_par: bool
+      sentence_callback: proc (s: Sentence)
+      sentence: Sentence
 
    PlainTextState = State[PlainTextMeta, Rune]
    PlainTextTransition = Transition[PlainTextMeta, Rune]
@@ -130,7 +141,9 @@ proc is_ws(meta: PlainTextMeta, stimuli: Rune): bool =
    return stimuli in WHITESPACE
 
 proc dead_state_callback(meta: var PlainTextMeta, stimul: Rune) =
-   echo meta.sentence, "\n"
+   # Invoke the callback function for a completed sentence.
+   if not is_nil(meta.sentence_callback):
+      meta.sentence_callback(meta.sentence)
 
    # Reset
    meta.sentence.str = @[]
@@ -164,7 +177,7 @@ proc prepend_space(meta: var PlainTextMeta, stimuli: Rune) =
 proc paragraph_complete(meta: var PlainTextMeta, stimuli: Rune) =
    meta.new_par = true
 
-proc lex_file*(filename: string) =
+proc lex_file*(filename: string, callback: proc (s: Sentence)) =
    var
       fs: FileStream
       r: Rune
@@ -180,7 +193,7 @@ proc lex_file*(filename: string) =
       # variable is used pass around a mutable container between the state
       # machine's callback functions.
       meta: PlainTextMeta =
-         (row: 1, col: 1, new_par: true,
+         (row: 1, col: 1, new_par: true, sentence_callback: callback,
           sentence: (str: @[], newlines: @[], par_idx: 0, row_begin: 0,
                      col_begin: 0, row_end: 1, col_end: 1))
 
@@ -232,5 +245,3 @@ proc lex_file*(filename: string) =
 
    if not is_dead(sm):
       dead_state_callback(meta, Rune(0))
-
-   echo "Done!"
