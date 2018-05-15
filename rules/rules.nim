@@ -75,6 +75,13 @@ type
       definitions: Table[string, Position]
       par_prev: int
 
+   RuleConditional* = ref object of Rule
+      regex_first: Regex
+      regex_second: Regex
+      scope: Scope
+      par_prev: int
+      second_observed: bool
+
 
 # Constructors
 proc new*(t: typedesc[Rule], kind: string, severity: Severity, message: string,
@@ -443,5 +450,73 @@ method enforce*(r: RuleDefinition, sentence: Sentence): seq[Violation] =
 
       except IndexError:
          echo "ERROR no capture group for definition."
+
+   # Remember the paragraph.
+   r.par_prev = sentence.par_idx
+
+   return violations
+
+
+proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
+          source_file: string, regex_first: string, regex_second: string,
+          scope: Scope, ignore_case: bool): RuleConditional =
+   var regex_flags = ""
+   if ignore_case:
+      regex_flags = "(?i)"
+
+   return RuleConditional(kind: "conditional",
+                          severity: severity,
+                          message: message,
+                          source_file: source_file,
+                          regex_first: re(regex_flags & regex_first),
+                          regex_second: re(regex_flags & regex_second),
+                          scope: scope,
+                          par_prev: 0,
+                          second_observed: false)
+
+
+method enforce*(r: RuleConditional, sentence: Sentence): seq[Violation] =
+   var violations: seq[Violation] = @[]
+
+   # Reset the match counter and alert status depending on the scope.
+   case r.scope
+   of SENTENCE:
+      r.second_observed = false
+   of PARAGRAPH:
+      if not (r.par_prev == sentence.par_idx):
+         r.second_observed = false
+   else:
+      discard
+
+   var
+      row_second = 0
+      col_second = 0
+
+   let m_second = nre.find($sentence.str, r.regex_second)
+   if not is_none(m_second) and not r.second_observed:
+      try:
+         (row_second, col_second) =
+            r.calculate_position(sentence.row_begin, sentence.col_begin,
+                                 m_second.get.capture_bounds[0].get.a + 1,
+                                 sentence.newlines)
+
+         r.second_observed = true
+
+      except IndexError:
+         # TODO: Raise error instead
+         echo "No capture group defined for conditional."
+
+   for m_first in nre.find_iter($sentence.str, r.regex_first):
+      let (row_first, col_first) =
+         r.calculate_position(sentence.row_begin, sentence.col_begin,
+                              m_first.match_bounds.a + 1, # TODO: Group here?
+                              sentence.newlines)
+      if (not r.second_observed or
+          (row_second == row_first and col_second > col_first) or
+          (row_second > row_first)):
+         violations.add(r.create_violation((row_first, col_first), $m_first))
+
+   # Remember the paragraph.
+   r.par_prev = sentence.par_idx
 
    return violations

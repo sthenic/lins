@@ -14,7 +14,10 @@ let RULES = @[
                        r"\bbar\b", Scope.TEXT, true),
    RuleDefinition.new(WARNING, "'$1' has no definition.", "rules.txt",
                        r"(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)",
-                       r"\b([A-Z]{3,5})\b", @["UV"], Scope.TEXT, false)
+                       r"\b([A-Z]{3,5})\b", @["UV"], Scope.TEXT, false),
+   RuleConditional.new(WARNING, "'$1' should not occur first.", "rules.txt",
+                       r"\b(fufu)\b",
+                       r"\b(fantastic)\b", Scope.PARAGRAPH, false)
 ]
 
 proc callback(s: Sentence) =
