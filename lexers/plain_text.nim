@@ -245,3 +245,5 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
 
    if not is_dead(sm):
       dead_state_callback(meta, Rune(0))
+
+   fs.close()
