@@ -31,7 +31,7 @@ type
       message: string
       position: Position
 
-   Rule = ref object of RootObj
+   Rule* = ref object of RootObj
       kind: string
       severity: Severity
       message: string
