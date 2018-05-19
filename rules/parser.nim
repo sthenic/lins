@@ -16,21 +16,21 @@ type
 type
    RuleYAML = object of RootObj
 
-   ExistenceYAML = object of RuleYAML
+   ExistenceYAML = object
       extends: string
       message: string
       ignorecase: bool
       level: string
       tokens: seq[string]
 
-   SubstitutionYAML = object of RuleYAML
+   SubstitutionYAML = object
       extends: string
       message: string
       ignorecase: bool
       level: string
       swap: Table[string, string]
 
-   OccurrenceYAML = object of RuleYAML
+   OccurrenceYAML = object
       extends: string
       message: string
       ignorecase: bool
@@ -40,7 +40,7 @@ type
       limit_kind: string
       token: string
 
-   ConsistencyYAML = object of RuleYAML
+   ConsistencyYAML = object
       extends: string
       message: string
       ignorecase: bool
@@ -48,7 +48,7 @@ type
       scope: string
       either: Table[string, string]
 
-   DefinitionYAML = object of RuleYAML
+   DefinitionYAML = object
       extends: string
       message: string
       ignorecase: bool
@@ -64,6 +64,12 @@ type
       occurrence: OccurrenceYAML
       consistency: ConsistencyYAML
       definition: DefinitionYAML
+
+# Default values for YAML objects
+set_default_value(DefinitionYAML, definition,
+                  r"(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)")
+set_default_value(DefinitionYAML, declaration, r"\b([A-Z]{3,5})\b")
+set_default_value(DefinitionYAML, exceptions, @[])
 
 proc new(t: typedesc[ExistenceYAML]): ExistenceYAML =
    result = ExistenceYAML(extends: "existence",
@@ -135,14 +141,46 @@ template validate_common(data: typed, filename: string, message: untyped,
       raise new_exception(RuleValueError, "STUFF") # TODO
 
 
-method parse_rule(data: RuleYAML, filename: string): Rule {.base.} =
-   raise new_exception(RuleNotImplementedError,
-                       "Called unimplemented base function.")
+template validate_scope(data: typed, filename: string, scope: untyped) =
+   ## Validate scope
+   var scope: Scope
+
+   case to_lower_ascii(data.scope)
+   of "text":
+      scope = Scope.TEXT
+   of "paragraph":
+      scope = Scope.PARAGRAPH
+   of "sentence":
+      scope = Scope.SENTENCE
+   else:
+      log.warning("Unsupported scope '$#' defined for rule in file '$#', " &
+                  "skipping.", data.scope, filename)
+      raise new_exception(RuleValueError, "STUFF") # TODO
 
 
-method parse_rule(data: ExistenceYAML, filename:string): Rule =
+template validate_limit(data: typed, filename: string, limit: untyped,
+                        limit_kind: untyped) =
+   ## Validate limit and limit kind
+   var
+      limit: int = data.limit
+      limit_kind: Limit
+
+   case to_lower_ascii(data.limit_kind):
+   of "min", "minimum":
+      limit_kind = Limit.MIN
+   of "max", "maximum":
+      limit_kind = Limit.MAX
+   else:
+      log.warning("Unsupported limit kind '$#' defined for rule in file " &
+                  "'$#', skipping.", data.scope, filename)
+      raise new_exception(RuleValueError, "STUFF") # TODO
+
+
+proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'existence' and return a
-   ## RuleExistence object.
+   ## sequence of RuleExistence objects.
+   result = @[]
+
    if not (data.extends == "existence"):
       log.error("Stuff") # TODO: Better error message
       raise new_exception(RuleValueError, "Stuff")
@@ -154,7 +192,77 @@ method parse_rule(data: ExistenceYAML, filename:string): Rule =
       token_str &= "|" & data.tokens[i]
    token_str &= r")\b"
 
-   result = RuleExistence.new(level, message, filename, token_str, ignore_case)
+   result.add(RuleExistence.new(level, message, filename, token_str,
+                                ignore_case))
+
+
+proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
+   ## Parse and validate YAML data for the rule 'substitution' and return a
+   ## sequence of RuleSubstitution objects.
+   result = @[]
+
+   if not (data.extends == "substitution"):
+      log.error("Stuff") # TODO: Better error message
+      raise new_exception(RuleValueError, "Stuff")
+
+   validate_common(data, filename, message, ignore_case, level)
+
+   for key, subst in pairs(data.swap):
+      # Add word boundaries
+      let lkey = r"\b" & key & r"\b"
+      result.add(RuleSubstitution.new(level, message, filename, lkey, subst,
+                                      ignore_case))
+
+
+proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
+   ## Parse and validate YAML data for the rule 'occurrence' and return a
+   ## sequence of RuleOccurrence objects.
+   result = @[]
+
+   if not (data.extends == "occurrence"):
+      log.error("Stuff") # TODO: Better error message
+      raise new_exception(RuleValueError, "Stuff")
+
+   validate_common(data, filename, message, ignore_case, level)
+   validate_scope(data, filename, scope)
+   validate_limit(data, filename, limit, limit_kind)
+
+   result.add(RuleOccurrence.new(level, message, filename, data.token,
+                                 limit, limit_kind, scope, ignore_case))
+
+
+proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
+   ## Parse and validate YAML data for the rule 'consistency' and return a
+   ## sequence of RuleConsistency objects.
+   result = @[]
+
+   if not (data.extends == "consistency"):
+      log.error("Stuff") # TODO: Better error message
+      raise new_exception(RuleValueError, "Stuff")
+
+   validate_common(data, filename, message, ignore_case, level)
+   validate_scope(data, filename, scope)
+
+   for first, second in pairs(data.either):
+      result.add(RuleConditional.new(level, message, filename, first, second,
+                                     scope, ignore_case))
+
+
+proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
+   ## Parse and validate YAML data for the rule 'definition' and return a
+   ## sequence of RuleDefinition objects.
+   result = @[]
+
+   if not (data.extends == "definition"):
+      log.error("Stuff") # TODO: Better error message
+      raise new_exception(RuleValueError, "Stuff")
+
+   validate_common(data, filename, message, ignore_case, level)
+   validate_scope(data, filename, scope)
+
+   result.add(RuleDefinition.new(level, message, filename, data.definition,
+                                 data.declaration, data.exceptions, scope,
+                                 ignore_case))
 
 
 proc parse_rule_file(filename: string): seq[Rule] =
@@ -195,8 +303,9 @@ proc parse_rule_file(filename: string): seq[Rule] =
       raise new_exception(RuleParseError, "Parse error in file '" & filename & "'")
 
 try:
-   # discard parse_rule_file("Editorializing.yml")
    discard parse_rule_file("Editorializing.yml")
+   discard parse_rule_file("sub.yml")
+   # discard parse_rule_file("Editorializing.yml")
 except RuleValueError:
    discard
 except RuleParseError:
