@@ -207,11 +207,15 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
 
    validate_common(data, filename, message, ignore_case, level)
 
+   var key_str = r"\b("
    for key, subst in pairs(data.swap):
-      # Add word boundaries
-      let lkey = r"\b" & key & r"\b"
-      result.add(RuleSubstitution.new(level, message, filename, lkey, subst,
-                                      ignore_case))
+      key_str &= key & "|"
+   key_str = key_str[0..^2] & r")\b"
+
+   result.add(RuleSubstitution.new(level, message, filename, key_str, "foo",
+                                   ignore_case))
+
+   # echo key_str
 
 
 proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
@@ -287,7 +291,6 @@ proc parse_rule_file*(filename: string): seq[Rule] =
          load(fs, f)
          result = parse_rule(f, filename)
          success = true
-         echo "Successfully parsed '", filename, "' with type '", f.type.name, "'"
          break
       except YamlConstructionError:
          fs.set_position(0)
