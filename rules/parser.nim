@@ -3,6 +3,9 @@ import streams
 import tables
 import typetraits
 import strutils
+import sequtils
+import os
+import ospaths
 
 import rules
 import ../utils/log
@@ -302,13 +305,29 @@ proc parse_rule_file(filename: string): seq[Rule] =
    if not success:
       raise new_exception(RuleParseError, "Parse error in file '" & filename & "'")
 
-try:
-   discard parse_rule_file("Editorializing.yml")
-   discard parse_rule_file("sub.yml")
-   # discard parse_rule_file("Editorializing.yml")
-except RuleValueError:
-   discard
-except RuleParseError:
-   discard
-except RulePathError:
-   discard
+
+proc parse_rule_dir(rule_root_dir: string): seq[Rule] =
+   if not os.dir_exists(rule_root_dir):
+      log.error("Invalid path '$#'", rule_root_dir)
+      raise new_exception(RulePathError, "'" & rule_root_dir &
+                                         "' is not a valid path")
+
+   result = @[]
+
+   for kind, path in walk_dir(rule_root_dir):
+      let (_, _, ext) = split_file(path)
+
+      if not (ext == ".yml"):
+         continue
+
+      try:
+         result = concat(result, parse_rule_file(path))
+      except RuleValueError:
+         discard
+      except RuleParseError:
+         discard
+      except RulePathError:
+         discard
+
+
+discard parse_rule_dir(".")
