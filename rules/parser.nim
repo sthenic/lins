@@ -12,13 +12,10 @@ import ../utils/log
 
 type
    RuleValueError = object of Exception
-   RuleNotImplementedError = object of Exception
    RuleParseError = object of Exception
    RulePathError = object of Exception
 
 type
-   RuleYAML = object of RootObj
-
    ExistenceYAML = object
       extends: string
       message: string
@@ -268,7 +265,7 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
                                  ignore_case))
 
 
-proc parse_rule_file(filename: string): seq[Rule] =
+proc parse_rule_file*(filename: string): seq[Rule] =
    ##  Parse a YAML-formatted rule file and return a list of rule objects.
    ##
    ##  This function raises RuleValueError when a field has an unexpected or an
@@ -288,16 +285,11 @@ proc parse_rule_file(filename: string): seq[Rule] =
    for f in data.fields:
       try:
          load(fs, f)
-         discard parse_rule(f, filename)
+         result = parse_rule(f, filename)
          success = true
-      except YamlConstructionError:
-         discard
-
-      if success:
          echo "Successfully parsed '", filename, "' with type '", f.type.name, "'"
-         echo f
          break
-      else:
+      except YamlConstructionError:
          fs.set_position(0)
 
    fs.close()
@@ -306,7 +298,7 @@ proc parse_rule_file(filename: string): seq[Rule] =
       raise new_exception(RuleParseError, "Parse error in file '" & filename & "'")
 
 
-proc parse_rule_dir(rule_root_dir: string): seq[Rule] =
+proc parse_rule_dir*(rule_root_dir: string): seq[Rule] =
    if not os.dir_exists(rule_root_dir):
       log.error("Invalid path '$#'", rule_root_dir)
       raise new_exception(RulePathError, "'" & rule_root_dir &
@@ -314,7 +306,8 @@ proc parse_rule_dir(rule_root_dir: string): seq[Rule] =
 
    result = @[]
 
-   for kind, path in walk_dir(rule_root_dir):
+   for path in walk_dir_rec(rule_root_dir):
+   # for kind, path in walk_dir(rule_root_dir):
       let (_, _, ext) = split_file(path)
 
       if not (ext == ".yml"):
@@ -328,6 +321,3 @@ proc parse_rule_dir(rule_root_dir: string): seq[Rule] =
          discard
       except RulePathError:
          discard
-
-
-discard parse_rule_dir(".")
