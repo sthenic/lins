@@ -301,7 +301,10 @@ proc parse_rule_file*(filename: string): seq[Rule] =
    fs.close()
 
    if not success:
-      raise new_exception(RuleParseError, "Parse error in file '" & filename & "'")
+      log.error("Parse error in file '$#', is it a valid YAML file? " &
+                "Skipping for now.", filename)
+      raise new_exception(RuleParseError, "Parse error in file '" &
+                                          filename & "'")
 
 
 proc parse_rule_dir*(rule_root_dir: string): seq[Rule] =
