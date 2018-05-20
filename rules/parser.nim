@@ -30,6 +30,7 @@ type
       message: string
       level: string
       ignorecase: bool
+      nonword: bool
       swap: Table[string, string]
 
    OccurrenceYAML = object
@@ -72,6 +73,8 @@ set_default_value(ExistenceYAML, nonword, false)
 set_default_value(ExistenceYAML, raw, @[])
 set_default_value(ExistenceYAML, tokens, @[])
 
+set_default_value(SubstitutionYAML, nonword, false)
+
 set_default_value(DefinitionYAML, definition,
                   r"(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)")
 set_default_value(DefinitionYAML, declaration, r"\b([A-Z]{3,5})\b")
@@ -90,6 +93,7 @@ proc new(t: typedesc[SubstitutionYAML]): SubstitutionYAML =
                              message: "",
                              level: "",
                              ignorecase: false,
+                             nonword: false,
                              swap: init_table[string, string]())
 
 proc new(t: typedesc[OccurrenceYAML]): OccurrenceYAML =
@@ -197,16 +201,15 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'existence' and return a
    ## sequence of RuleExistence objects.
    result = @[]
-   var word_boundary: string
 
    validate_extension_point(data, "existence", filename)
+   validate_common(data, filename, message, ignore_case, level)
 
+   var word_boundary: string
    if data.nonword:
       word_boundary = ""
    else:
       word_boundary = r"\b"
-
-   validate_common(data, filename, message, ignore_case, level)
 
    var
       token_str = ""
@@ -244,7 +247,13 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
    validate_extension_point(data, "substitution", filename)
    validate_common(data, filename, message, ignore_case, level)
 
-   var key_str = r"\b("
+   var word_boundary: string
+   if data.nonword:
+      word_boundary = ""
+   else:
+      word_boundary = r"\b"
+
+   var key_str = word_boundary & "("
    var subst_table = init_table[string, string]()
    for key, subst in pairs(data.swap):
       key_str &= key & "|"
@@ -252,7 +261,7 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
          log.warning("Empty substitution for key '$#' in file '$#'.",
                      key, filename)
       subst_table[key] = subst
-   key_str = key_str[0..^2] & r")\b"
+   key_str = key_str[0..^2] & ")" & word_boundary
 
    result.add(RuleSubstitution.new(level, message, filename, key_str,
                                    subst_table, ignore_case))
