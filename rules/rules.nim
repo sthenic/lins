@@ -3,7 +3,7 @@ import unicode
 import strutils
 import tables
 
-import ../lexers/plain_text
+import ../lexers/plain_text_lexer
 
 type
    Severity* = enum
