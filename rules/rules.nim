@@ -42,7 +42,7 @@ type
 
    RuleSubstitution* = ref object of Rule
       regex: Regex
-      subst: string
+      subst: Table[string, string]
 
    RuleOccurrence* = ref object of Rule
       regex: Regex
@@ -163,7 +163,7 @@ method enforce*(r: RuleExistence, sentence: Sentence): seq[Violation] =
 
 
 proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
-          source_file: string, regex: string, subst: string,
+          source_file: string, regex: string, subst: Table[string, string],
           ignore_case: bool): RuleSubstitution =
    var regex_flags = ""
    if ignore_case:
@@ -184,7 +184,7 @@ method enforce*(r: RuleSubstitution, sentence: Sentence): seq[Violation] =
                                                m.match_bounds.a + 1,
                                                sentence.newlines)
 
-      violations.add(r.create_violation(violation_pos, r.subst, $m))
+      violations.add(r.create_violation(violation_pos, r.subst[$m], $m))
 
    return violations
 

@@ -208,14 +208,14 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
    validate_common(data, filename, message, ignore_case, level)
 
    var key_str = r"\b("
+   var subst_table = init_table[string, string]()
    for key, subst in pairs(data.swap):
       key_str &= key & "|"
+      subst_table[key] = subst
    key_str = key_str[0..^2] & r")\b"
 
-   result.add(RuleSubstitution.new(level, message, filename, key_str, "foo",
-                                   ignore_case))
-
-   # echo key_str
+   result.add(RuleSubstitution.new(level, message, filename, key_str,
+                                   subst_table, ignore_case))
 
 
 proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
