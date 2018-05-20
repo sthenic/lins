@@ -211,6 +211,9 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
    var subst_table = init_table[string, string]()
    for key, subst in pairs(data.swap):
       key_str &= key & "|"
+      if subst == "":
+         log.warning("Empty substitution for key '$#' in file '$#'.",
+                     key, filename)
       subst_table[key] = subst
    key_str = key_str[0..^2] & r")\b"
 
