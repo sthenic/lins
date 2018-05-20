@@ -1,5 +1,5 @@
 # README
-Lins is a linter for prose, written in [Nim](https://nim-lang.org).
+Lins is a linter for prose, written in [Nim](https://nim-lang.org). The tool is inspired by [Vale](https://github.com/errata-ai/vale).
 
 ## Documentation
 Coming soon.
@@ -14,6 +14,10 @@ If you discover unintended behavior, please report the bug using the [issue boar
 Lins is released under the [MIT license](https://opensource.org/licenses/MIT).
 
 ## Third-party dependencies
+
+* [Nim's standard library](https://github.com/nim-lang/Nim)
+* [NimYAML](https://github.com/flyx/NimYAML)
+* [PCRE](http://pcre.sourceforge.net/license.txt)
 
 ## Author
 Lins is maintained by [Marcus Eriksson](mailto:marcus.jr.eriksson@gmail.com).
