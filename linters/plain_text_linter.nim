@@ -20,10 +20,14 @@ var
 proc print_violation(v: Violation) =
    var message: seq[string] = @[]
    for i in countup(0, v.message.len, 48):
-      message.add(v.message[i..min(i+48, v.message.len)])
+      message.add(v.message[i..min(i+47, v.message.len-1)])
 
    echo &" {v.position.row:>4}:{v.position.col:<5} {v.severity_str:<24} ",
-        &"{message[0]:<48}   \x1B[1m{v.source_file:<20}\x1B[0m"
+        &"{message[0]:<48}    \x1B[1m{v.source_file:<20}\x1B[0m"
+
+   for m in 1..<message.len:
+      let tmp = ""
+      echo &"{tmp:26}{message[m]:<48}"
 
 
 proc print_header(filename: string) =
