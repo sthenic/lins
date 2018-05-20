@@ -39,10 +39,14 @@ proc print_footer(time_ms: float, violation_count: ViolationCount,
    echo &"\n\n\x1B[1mAnalysis completed in \x1B[1;32m",
         format_float(time_ms, ffDecimal, 1), &" ms\x1B[0;1m with \x1B[0m"
 
+   var file_str = "file"
+   if nof_files > 1:
+      file_str &= "s"
+
    echo &"  \x1B[1;31m{violation_count.error} errors\x1B[0m, ",
         &"\x1B[1;33m{violation_count.warning} warnings\x1B[0m and ",
         &"\x1B[1;34m{violation_count.suggestion} suggestions\x1B[0m in ",
-        &"{nof_files} files"
+        &"{nof_files} {file_str}."
 
 
 proc lint_sentence(s: Sentence) =
