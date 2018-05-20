@@ -1,6 +1,7 @@
 import times
 import strutils
-import parseopt2
+import strformat
+import parseopt
 
 import linters.plain_text_linter
 import rules.rules
@@ -51,14 +52,13 @@ for kind, key, val in p.getopt():
    of cmdEnd:
       assert(false)
 
-echo "Parsing rule directory"
-var lrules: seq[Rule] = @[]
 
+var lrules: seq[Rule] = @[]
 let t_start = cpu_time()
 for dir in rule_dirs:
+   echo &"Parsing rule directory '{dir}'."
    lrules = parse_rule_dir(dir)
 let t_diff_ms = (cpu_time() - t_start) * 1000
-
 echo "Parsing rule files took \x1B[1;32m", format_float(t_diff_ms, ffDecimal, 1), "\x1B[0m ms."
 
 if not (files == @[]):
