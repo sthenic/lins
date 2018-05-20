@@ -22,6 +22,7 @@ type
       level: string
       ignorecase: bool
       nonword: bool
+      raw: seq[string]
       tokens: seq[string]
 
    SubstitutionYAML = object
@@ -68,6 +69,9 @@ type
 
 # Default values for YAML objects
 set_default_value(ExistenceYAML, nonword, false)
+set_default_value(ExistenceYAML, raw, @[])
+set_default_value(ExistenceYAML, tokens, @[])
+
 set_default_value(DefinitionYAML, definition,
                   r"(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)")
 set_default_value(DefinitionYAML, declaration, r"\b([A-Z]{3,5})\b")
@@ -204,10 +208,29 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
 
    validate_common(data, filename, message, ignore_case, level)
 
-   var token_str = word_boundary & "(" & data.tokens[0]
-   for i in 1..<data.tokens.len:
-      token_str &= "|" & data.tokens[i]
-   token_str &= ")" & word_boundary
+   var
+      token_str = ""
+      raw_is_defined = false
+      tokens_are_defined = false
+
+   if not (data.raw == @[]):
+      for r in data.raw:
+         token_str &= r
+      raw_is_defined = true
+
+   if not (data.tokens == @[]):
+      token_str &= word_boundary & "(" & data.tokens[0]
+      for i in 1..<data.tokens.len:
+         token_str &= "|" & data.tokens[i]
+      token_str &= ")" & word_boundary
+      tokens_are_defined = true
+
+   if not raw_is_defined and not tokens_are_defined:
+      log.warning("Neither tokens nor raw items are defined for rule in file " &
+                  "'$#', skipping.", filename)
+      raise new_exception(RuleParseError,
+                          format("Missing either tokens or raw items for " &
+                                 "rule in file '$#'.", filename))
 
    result.add(RuleExistence.new(level, message, filename, token_str,
                                 ignore_case))
