@@ -19,22 +19,23 @@ type
    ExistenceYAML = object
       extends: string
       message: string
-      ignorecase: bool
       level: string
+      ignorecase: bool
+      nonword: bool
       tokens: seq[string]
 
    SubstitutionYAML = object
       extends: string
       message: string
-      ignorecase: bool
       level: string
+      ignorecase: bool
       swap: Table[string, string]
 
    OccurrenceYAML = object
       extends: string
       message: string
-      ignorecase: bool
       level: string
+      ignorecase: bool
       scope: string
       limit: int
       limit_kind: string
@@ -43,16 +44,16 @@ type
    ConsistencyYAML = object
       extends: string
       message: string
-      ignorecase: bool
       level: string
+      ignorecase: bool
       scope: string
       either: Table[string, string]
 
    DefinitionYAML = object
       extends: string
       message: string
-      ignorecase: bool
       level: string
+      ignorecase: bool
       scope: string
       definition: string
       declaration: string
@@ -66,6 +67,7 @@ type
       definition: DefinitionYAML
 
 # Default values for YAML objects
+set_default_value(ExistenceYAML, nonword, false)
 set_default_value(DefinitionYAML, definition,
                   r"(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)")
 set_default_value(DefinitionYAML, declaration, r"\b([A-Z]{3,5})\b")
@@ -74,22 +76,23 @@ set_default_value(DefinitionYAML, exceptions, @[])
 proc new(t: typedesc[ExistenceYAML]): ExistenceYAML =
    result = ExistenceYAML(extends: "existence",
                           message: "",
+                          level: "",
                           ignorecase: false,
-                          level: "warning",
+                          nonword: false,
                           tokens: @[])
 
 proc new(t: typedesc[SubstitutionYAML]): SubstitutionYAML =
    result = SubstitutionYAML(extends: "substitution",
                              message: "",
+                             level: "",
                              ignorecase: false,
-                             level: "warning",
                              swap: init_table[string, string]())
 
 proc new(t: typedesc[OccurrenceYAML]): OccurrenceYAML =
    result = OccurrenceYAML(extends: "occurrence",
                            message: "",
+                           level: "",
                            ignorecase: false,
-                           level: "warning",
                            scope: "",
                            limit: 0,
                            limit_kind: "",
@@ -98,16 +101,16 @@ proc new(t: typedesc[OccurrenceYAML]): OccurrenceYAML =
 proc new(t: typedesc[ConsistencyYAML]): ConsistencyYAML =
    result = ConsistencyYAML(extends: "occurrence",
                             message: "",
+                            level: "",
                             ignorecase: false,
-                            level: "warning",
                             scope: "",
                             either: init_table[string, string]())
 
 proc new(t: typedesc[DefinitionYAML]): DefinitionYAML =
    result = DefinitionYAML(extends: "occurrence",
                            message: "",
+                           level: "",
                            ignorecase: false,
-                           level: "warning",
                            scope: "",
                            definition: "",
                            declaration: "",
@@ -119,6 +122,16 @@ proc new(t: typedesc[Rules]): Rules =
              occurrence: OccurrenceYAML.new(),
              consistency: ConsistencyYAML.new(),
              definition: DefinitionYAML.new())
+
+
+template validate_extension_point(data: typed, ext: string, filename: string) =
+   if not (to_lower_ascii(data.extends) == ext):
+      log.error("Invalid extension point '$#' specified in file '$#'.",
+                data.extends, filename)
+      raise new_exception(RuleValueError,
+                          format("Invalid extension point '$#' specified in " &
+                                 "file '$#'.", data.extends, filename))
+
 
 template validate_common(data: typed, filename: string, message: untyped,
                          ignore_case: untyped, level: untyped) =
@@ -180,17 +193,21 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'existence' and return a
    ## sequence of RuleExistence objects.
    result = @[]
+   var word_boundary: string
 
-   if not (data.extends == "existence"):
-      log.error("Stuff") # TODO: Better error message
-      raise new_exception(RuleValueError, "Stuff")
+   validate_extension_point(data, "existence", filename)
+
+   if data.nonword:
+      word_boundary = ""
+   else:
+      word_boundary = r"\b"
 
    validate_common(data, filename, message, ignore_case, level)
 
-   var token_str = r"\b(" & data.tokens[0]
+   var token_str = word_boundary & "(" & data.tokens[0]
    for i in 1..<data.tokens.len:
       token_str &= "|" & data.tokens[i]
-   token_str &= r")\b"
+   token_str &= ")" & word_boundary
 
    result.add(RuleExistence.new(level, message, filename, token_str,
                                 ignore_case))
@@ -201,10 +218,7 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
    ## sequence of RuleSubstitution objects.
    result = @[]
 
-   if not (data.extends == "substitution"):
-      log.error("Stuff") # TODO: Better error message
-      raise new_exception(RuleValueError, "Stuff")
-
+   validate_extension_point(data, "substitution", filename)
    validate_common(data, filename, message, ignore_case, level)
 
    var key_str = r"\b("
@@ -226,10 +240,7 @@ proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
    ## sequence of RuleOccurrence objects.
    result = @[]
 
-   if not (data.extends == "occurrence"):
-      log.error("Stuff") # TODO: Better error message
-      raise new_exception(RuleValueError, "Stuff")
-
+   validate_extension_point(data, "occurrence", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
    validate_limit(data, filename, limit, limit_kind)
@@ -243,10 +254,7 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
    ## sequence of RuleConsistency objects.
    result = @[]
 
-   if not (data.extends == "consistency"):
-      log.error("Stuff") # TODO: Better error message
-      raise new_exception(RuleValueError, "Stuff")
-
+   validate_extension_point(data, "consistency", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
 
@@ -260,10 +268,7 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
    ## sequence of RuleDefinition objects.
    result = @[]
 
-   if not (data.extends == "definition"):
-      log.error("Stuff") # TODO: Better error message
-      raise new_exception(RuleValueError, "Stuff")
-
+   validate_extension_point(data, "definition", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
 
@@ -301,8 +306,9 @@ proc parse_rule_file*(filename: string): seq[Rule] =
    fs.close()
 
    if not success:
-      log.error("Parse error in file '$#', is it a valid YAML file? " &
-                "Skipping for now.", filename)
+      log.error("Parse error in file '$#'. Either it's not a valid YAML " &
+                "file or it doesn't specify the required fields for the " &
+                "extension point. Skipping for now.", filename)
       raise new_exception(RuleParseError, "Parse error in file '" &
                                           filename & "'")
 
