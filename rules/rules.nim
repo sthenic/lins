@@ -4,6 +4,10 @@ import strutils
 import tables
 
 import ../lexers/plain_text_lexer
+import ../utils/log
+
+type
+   EnforceError = object of Exception
 
 type
    Severity* = enum
@@ -414,8 +418,11 @@ method enforce*(r: RuleDefinition, sentence: Sentence): seq[Violation] =
             echo "Defining '", def, "'"
 
       except IndexError:
-         echo "ERROR no capture group for definition."
-
+         # Abort if no capture group can be found. This should not happen due
+         # to validation enforced at an earlier stage.
+         log.error("No capture group defined for declaration in file '$#'. " &
+                   "This should not have occurred.", r.source_file)
+         raise new_exception(EnforceError, "No capture group defined.")
 
    # Run through the sentence looking for declarations. If the declaration
    # has no definition, the rule is violated outright. Otherwise, we have
@@ -449,7 +456,11 @@ method enforce*(r: RuleDefinition, sentence: Sentence): seq[Violation] =
 
 
       except IndexError:
-         echo "ERROR no capture group for definition."
+         # Abort if no capture group can be found. This should not happen due
+         # to validation enforced at an earlier stage.
+         log.error("No capture group defined for definition in file '$#'. " &
+                   "This should not have occurred.", r.source_file)
+         raise new_exception(EnforceError, "No capture group defined.")
 
    # Remember the paragraph.
    r.par_prev = sentence.par_idx
@@ -503,8 +514,11 @@ method enforce*(r: RuleConditional, sentence: Sentence): seq[Violation] =
          r.second_observed = true
 
       except IndexError:
-         # TODO: Raise error instead
-         echo "No capture group defined for conditional."
+         # Abort if no capture group can be found. This should not happen due
+         # to validation enforced at an earlier stage.
+         log.error("No capture group defined for conditional in file '$#'. " &
+                   "This should not have occurred.", r.source_file)
+         raise new_exception(EnforceError, "No capture group defined.")
 
    for m_first in nre.find_iter($sentence.str, r.regex_first):
       let (row_first, col_first) =

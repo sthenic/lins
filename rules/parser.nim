@@ -6,8 +6,9 @@ import strutils
 import sequtils
 import os
 import ospaths
+import nre
 
-import rules
+import ./rules
 import ../utils/log
 
 type
@@ -69,6 +70,12 @@ type
       definition: DefinitionYAML
 
 # Default values for YAML objects
+set_default_value(ExistenceYAML, ignorecase, false)
+set_default_value(SubstitutionYAML, ignorecase, false)
+set_default_value(OccurrenceYAML, ignorecase, false)
+set_default_value(ConsistencyYAML, ignorecase, false)
+set_default_value(DefinitionYAML, ignorecase, false)
+
 set_default_value(ExistenceYAML, nonword, false)
 set_default_value(ExistenceYAML, raw, @[])
 set_default_value(ExistenceYAML, tokens, @[])
@@ -159,7 +166,8 @@ template validate_common(data: typed, filename: string, message: untyped,
    else:
       log.warning("Unsupported severity level '$#' defined for rule in " &
                   "file '$#', skipping.", data.level, filename)
-      raise new_exception(RuleValueError, "STUFF") # TODO
+      raise new_exception(RuleValueError, "Unsupported severity level in " &
+                                          "file '" & filename & "'")
 
 
 template validate_scope(data: typed, filename: string, scope: untyped) =
@@ -176,7 +184,8 @@ template validate_scope(data: typed, filename: string, scope: untyped) =
    else:
       log.warning("Unsupported scope '$#' defined for rule in file '$#', " &
                   "skipping.", data.scope, filename)
-      raise new_exception(RuleValueError, "STUFF") # TODO
+      raise new_exception(RuleValueError, "Unsupported scope in file '" &
+                                          filename & "'")
 
 
 template validate_limit(data: typed, filename: string, limit: untyped,
@@ -194,7 +203,23 @@ template validate_limit(data: typed, filename: string, limit: untyped,
    else:
       log.warning("Unsupported limit kind '$#' defined for rule in file " &
                   "'$#', skipping.", data.scope, filename)
-      raise new_exception(RuleValueError, "STUFF") # TODO
+      raise new_exception(RuleValueError, "Unsupported limit kind in file '" &
+                                          filename & "'")
+
+
+template validate_nof_capture_groups(regex: string, filename: string,
+                                     label: string, nof_capture_groups: int) =
+   var tmp = "group"
+   if nof_capture_groups > 1:
+      tmp &= "s"
+   let cc = capture_count(re(regex))
+   if not (cc == nof_capture_groups):
+      log.warning("The regular expression defined for field '$#' in file " &
+                  "'$#' is expected to have exactly $# capture $#, not $#. " &
+                  "Skipping the file.",
+                  label, filename, $nof_capture_groups, tmp, $cc)
+      raise new_exception(RuleValueError, "Expected " & $nof_capture_groups &
+                                          " capture " & tmp & ".")
 
 
 proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
@@ -291,7 +316,7 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
    validate_scope(data, filename, scope)
 
    for first, second in pairs(data.either):
-      result.add(RuleConditional.new(level, message, filename, first, second,
+      result.add(RuleConsistency.new(level, message, filename, first, second,
                                      scope, ignore_case))
 
 
@@ -303,6 +328,8 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
    validate_extension_point(data, "definition", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
+   validate_nof_capture_groups(data.declaration, filename, "declaration", 1)
+   validate_nof_capture_groups(data.definition, filename, "definition", 1)
 
    result.add(RuleDefinition.new(level, message, filename, data.definition,
                                  data.declaration, data.exceptions, scope,
