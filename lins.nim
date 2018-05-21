@@ -7,6 +7,7 @@ import linters.plain_text_linter
 import rules.rules
 import rules.parser
 import utils.log
+import utils.cfg
 
 const VERSION_MAJOR = 0
 const VERSION_MINOR = 1
@@ -28,6 +29,8 @@ options:
                              'auto', which means that the file extensions are
                              used to infer which lexer to use.
 """
+
+
 
 var p = init_opt_parser()
 var files: seq[string] = @[]
@@ -58,6 +61,8 @@ for kind, key, val in p.getopt():
 if argc == 0:
    echo HELP_TEXT
    quit(-1)
+
+parse_cfg_file()
 
 # Parse rule set
 var lint_rules: seq[Rule] = @[]
