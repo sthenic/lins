@@ -413,9 +413,10 @@ method enforce*(r: RuleDefinition, sentence: Sentence): seq[Violation] =
                                         sentence.newlines)
 
          if r.definitions.has_key_or_put(def, pos):
-            echo "Redefinition of '", def, "'"
-         else:
-            echo "Defining '", def, "'"
+            # TODO: Insert this warning message into a custom violation and
+            #       add that to the sequence.
+            log.warning("Redefinition of '$#' at $#:$#.",
+                        def, $pos.row, $pos.col)
 
       except IndexError:
          # Abort if no capture group can be found. This should not happen due
