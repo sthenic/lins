@@ -8,6 +8,7 @@ import ../utils/log
 
 type
    EnforceError = object of Exception
+   EnforceNotImplementedError = object of Exception
 
 type
    Severity* = enum
@@ -107,7 +108,6 @@ proc create_severity_string(r: Rule): string =
 
    return tmp
 
-# TODO: Fix type of message args and format the message with the arguments.
 proc create_violation(r: Rule, pos: Position,
                       message_args: varargs[string]): Violation =
    (kind: r.kind, severity: r.severity,
@@ -138,9 +138,10 @@ proc calculate_position(r: Rule, row_begin, col_begin: int,
 
       return (row_begin + i, col - offset_closest_newline)
 
-# TODO: Raise exception
 method enforce*(r: Rule, sentence: Sentence): seq[Violation] {.base.}  =
-   echo "ENFORCE NOT IMPLEMENTED FOR RULE!", r.kind
+   raise new_exception(EnforceNotImplementedError,
+                       "Rule enforcement not implemented for rule '" &
+                       r.kind & "'.")
 
 proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
           source_file: string, regex: string, ignore_case: bool): RuleExistence =
