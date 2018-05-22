@@ -47,7 +47,7 @@ type
 
    RuleSubstitution* = ref object of Rule
       regex: Regex
-      subst: Table[string, string]
+      subst_table: Table[string, string]
 
    RuleOccurrence* = ref object of Rule
       regex: Regex
@@ -168,28 +168,45 @@ method enforce*(r: RuleExistence, sentence: Sentence): seq[Violation] =
 
 
 proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
-          source_file: string, regex: string, subst: Table[string, string],
+          source_file: string, regex: string, subst_table: Table[string, string],
           ignore_case: bool): RuleSubstitution =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
 
+   var lsubst_table = init_table[string, string]()
+   for key, value in pairs(subst_table):
+      lsubst_table[regex_flags & key] = value
+
    return RuleSubstitution(kind: "substitution", severity: severity,
                            message: message, source_file: source_file,
                            regex: re(regex_flags & regex),
-                           subst: subst)
+                           subst_table: lsubst_table)
 
 
 method enforce*(r: RuleSubstitution, sentence: Sentence): seq[Violation] =
    var violations: seq[Violation] = @[]
 
    for m in nre.find_iter($sentence.str, r.regex):
+      let mpos = m.match_bounds.a
       let violation_pos = r.calculate_position(sentence.row_begin,
                                                sentence.col_begin,
-                                               m.match_bounds.a + 1,
+                                               mpos + 1,
                                                sentence.newlines)
+      # If we have found a match, we have to do a costly search through the
+      # substitution table in search of a key (an uncompiled regex string)
+      # that will yield a match achored at the position reported above.
+      # TODO: Improve the LUT. If pre-compiled regexes cannot be used as hashed
+      # keys then maybe an array of tuples can be used. Also, if there is any
+      # ambiguity in the keys, i.e. two keys would match at the current
+      # position, it is undefined which substitution will be recommended.
+      var subst = ""
+      for key, value in pairs(r.subst_table):
+         if is_some(nre.match($sentence.str, re(key), mpos)):
+            subst = value
+            break
 
-      violations.add(r.create_violation(violation_pos, r.subst[$m], $m))
+      violations.add(r.create_violation(violation_pos, subst, $m))
 
    return violations
 
