@@ -1,7 +1,8 @@
 import unicode
 import streams
 
-import state_machine
+import ./state_machine
+import ../utils/log
 
 type
    Sentence* = tuple
@@ -221,7 +222,12 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
          # Check resulting state
          if sm.is_dead:
             # Dead state reached, seek to last final position.
-            fs.set_position(pos_last_final)
+            try:
+               fs.set_position(pos_last_final)
+            except IOError:
+               log.error("Failed to seek to position $#.", $pos_last_final)
+               quit(-2)
+
             # Reset the state machine
             state_machine.reset(sm)
             # Reset positional counters
@@ -241,7 +247,11 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
          else:
             meta.col += 1
 
-      pos_last_line = fs.get_position
+      try:
+         pos_last_line = fs.get_position()
+      except IOError:
+         log.error("Failed to retrieve stream position, aborting.")
+         quit(-2)
 
    if not is_dead(sm):
       dead_state_callback(meta, Rune(0))
