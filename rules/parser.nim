@@ -44,6 +44,14 @@ type
       limit_kind: string
       token: string
 
+   RepetitionYAML = object
+      extends: string
+      message: string
+      level: string
+      ignorecase: bool
+      scope: string
+      token: string
+
    ConsistencyYAML = object
       extends: string
       message: string
@@ -66,6 +74,7 @@ type
       existence: ExistenceYAML
       substitution: SubstitutionYAML
       occurrence: OccurrenceYAML
+      repetition: RepetitionYAML
       consistency: ConsistencyYAML
       definition: DefinitionYAML
 
@@ -73,6 +82,7 @@ type
 set_default_value(ExistenceYAML, ignorecase, false)
 set_default_value(SubstitutionYAML, ignorecase, false)
 set_default_value(OccurrenceYAML, ignorecase, false)
+set_default_value(RepetitionYAML, ignorecase, false)
 set_default_value(ConsistencyYAML, ignorecase, false)
 set_default_value(DefinitionYAML, ignorecase, false)
 
@@ -113,8 +123,16 @@ proc new(t: typedesc[OccurrenceYAML]): OccurrenceYAML =
                            limit_kind: "",
                            token: "")
 
+proc new(t: typedesc[RepetitionYAML]): RepetitionYAML =
+   result = RepetitionYAML(extends: "repetition",
+                           message: "",
+                           level: "",
+                           ignorecase: false,
+                           scope: "",
+                           token: "")
+
 proc new(t: typedesc[ConsistencyYAML]): ConsistencyYAML =
-   result = ConsistencyYAML(extends: "occurrence",
+   result = ConsistencyYAML(extends: "consistency",
                             message: "",
                             level: "",
                             ignorecase: false,
@@ -135,6 +153,7 @@ proc new(t: typedesc[Rules]): Rules =
    result = (existence: ExistenceYAML.new(),
              substitution: SubstitutionYAML.new(),
              occurrence: OccurrenceYAML.new(),
+             repetition: RepetitionYAML.new(),
              consistency: ConsistencyYAML.new(),
              definition: DefinitionYAML.new())
 
@@ -304,6 +323,19 @@ proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
 
    result.add(RuleOccurrence.new(level, message, filename, data.token,
                                  limit, limit_kind, scope, ignore_case))
+
+
+proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
+   ## Parse and validate YAML data for the rule 'repetition' and return a
+   ## sequence of RuleRepetition objects.
+   result = @[]
+
+   validate_extension_point(data, "repetition", filename)
+   validate_common(data, filename, message, ignore_case, level)
+   validate_scope(data, filename, scope)
+
+   result.add(RuleRepetition.new(level, message, filename, data.token,
+                                 scope, ignore_case))
 
 
 proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =

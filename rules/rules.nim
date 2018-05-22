@@ -288,6 +288,10 @@ proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
                          par_prev: 0)
 
 
+# TODO: Look at how Vale handles repetitions, there might be some differences
+# to this implementation. For example, \b(\w+)\b seems to be a valid regex. In
+# that case you would need some LUT w/ an entry of each match. Also support a
+# list of tokens, not just one.
 method enforce*(r: RuleRepetition, sentence: Sentence): seq[Violation] =
    var violations: seq[Violation] = @[]
 
