@@ -19,8 +19,8 @@ var
 
 proc print_violation(v: Violation) =
    var message: seq[string] = @[]
-   for i in countup(0, v.message.len, 48):
-      message.add(v.message[i..min(i+47, v.message.len-1)])
+   for i in countup(0, v.message.len - 1, 48):
+      message.add(v.message[i..min(i + 47, v.message.len - 1)])
 
    echo &" {v.position.row:>4}:{v.position.col:<5} {v.severity_str:<24} ",
         &"{message[0]:<48}    \x1B[1m{v.source_file:<20}\x1B[0m"
