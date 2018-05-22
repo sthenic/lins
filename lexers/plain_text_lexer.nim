@@ -201,7 +201,7 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
    # Open the input file as a file stream since we will have to move around in
    # the file.
    fs = new_file_stream(filename, fmRead)
-   if fs.is_nil:
+   if is_nil(fs):
       write(stderr, "Failed to open input file '", filename, "' for lexing.\n")
       quit(-1)
 
@@ -220,7 +220,7 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
          # Process stimuli
          state_machine.run(sm, meta, r)
          # Check resulting state
-         if sm.is_dead:
+         if is_dead(sm):
             # Dead state reached, seek to last final position.
             try:
                fs.set_position(pos_last_final)
@@ -236,7 +236,7 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
             # Break to continue with the next input character (outer loop
             # re-reads the line from the correct position).
             break
-         elif sm.is_final:
+         elif is_final(sm):
             pos_last_final = pos_last_line + pos_line
             meta.sentence.row_end = meta.row
             meta.sentence.col_end = meta.col
