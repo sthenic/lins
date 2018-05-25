@@ -50,6 +50,8 @@ proc is_keyval_rule(meta: Configuration, stimuli: CfgEvent): bool
 proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent)
 proc add_style(meta: var Configuration, stimuli: CfgEvent)
 proc add_style_rule(meta: var Configuration, stimuli: CfgEvent)
+proc add_exception(meta: var Configuration, stimuli: CfgEvent)
+proc add_only(meta: var Configuration, stimuli: CfgEvent)
 
 let
    STATE1 = ConfigurationState(id: 1, name: "Init", is_final: false)
@@ -112,12 +114,12 @@ let
    ]
    STATE7_TRANSITIONS = @[
       ConfigurationTransition(condition_cb: is_keyval,
-                              transition_cb: nil,
+                              transition_cb: add_exception,
                               next_state: STATE9)
    ]
    STATE8_TRANSITIONS = @[
       ConfigurationTransition(condition_cb: is_keyval,
-                              transition_cb: nil,
+                              transition_cb: add_only,
                               next_state: STATE10)
    ]
    STATE9_TRANSITIONS = @[
@@ -125,7 +127,7 @@ let
                               transition_cb: add_style_rule,
                               next_state: STATE6),
       ConfigurationTransition(condition_cb: is_keyval,
-                              transition_cb: nil,
+                              transition_cb: add_exception,
                               next_state: STATE9)
    ]
    STATE10_TRANSITIONS = @[
@@ -133,7 +135,7 @@ let
                               transition_cb: add_style_rule,
                               next_state: STATE6),
       ConfigurationTransition(condition_cb: is_keyval,
-                              transition_cb: nil,
+                              transition_cb: add_only,
                               next_state: STATE10)
    ]
 
@@ -200,6 +202,18 @@ proc add_style_rule(meta: var Configuration, stimuli: CfgEvent) =
    meta.styles[^1].rules.add(StyleRule.new(stimuli.value))
 
 
+proc add_exception(meta: var Configuration, stimuli: CfgEvent) =
+   log.debug("Adding new exception '$#' to style '$#'.",
+             stimuli.key, meta.styles[^1].rules[^1].name)
+   meta.styles[^1].rules[^1].exceptions.add(stimuli.key)
+
+
+proc add_only(meta: var Configuration, stimuli: CfgEvent) =
+   log.debug("Adding new only '$#' to style '$#'.",
+             stimuli.key, meta.styles[^1].rules[^1].name)
+   meta.styles[^1].rules[^1].only.add(stimuli.key)
+
+
 proc parse_error(meta: var Configuration, stimuli: CfgEvent) =
    var tmp = ""
    case stimuli.kind
@@ -257,6 +271,10 @@ proc parse_cfg_file*() =
          break
       else:
          state_machine.run(sm, meta, e)
+
+      if is_dead(sm):
+         log.error("Aborting.")
+         break
 
    p.close()
    fs.close()
