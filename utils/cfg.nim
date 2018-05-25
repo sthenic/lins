@@ -11,6 +11,16 @@ type
    Configuration = object of RootObj
       filename: string
       rule_dirs: seq[string]
+      styles: seq[Style]
+
+   Style = object of RootObj
+      name: string
+      rules: seq[StyleRule]
+
+   StyleRule = object of RootObj
+      name: string
+      exceptions: seq[string]
+      only: seq[string]
 
    ConfigurationState = State[Configuration, CfgEvent]
    ConfigurationTransition = Transition[Configuration, CfgEvent]
@@ -18,7 +28,15 @@ type
 
 
 proc new(t: typedesc[Configuration], filename: string): Configuration =
-   result = Configuration(filename: filename, rule_dirs: @[])
+   result = Configuration(filename: filename, rule_dirs: @[], styles: @[])
+
+
+proc new(t: typedesc[Style], name: string): Style =
+   result = Style(name: name, rules: @[])
+
+
+proc new(t: typedesc[StyleRule], name: string): StyleRule =
+   result = StyleRule(name: name, exceptions: @[], only: @[])
 
 
 proc is_section_ruledirs(meta: Configuration, stimuli: CfgEvent): bool
@@ -30,7 +48,8 @@ proc is_keyval_name(meta: Configuration, stimuli: CfgEvent): bool
 proc is_keyval_rule(meta: Configuration, stimuli: CfgEvent): bool
 
 proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent)
-
+proc add_style(meta: var Configuration, stimuli: CfgEvent)
+proc add_style_rule(meta: var Configuration, stimuli: CfgEvent)
 
 let
    STATE1 = ConfigurationState(id: 1, name: "Init", is_final: false)
@@ -62,12 +81,74 @@ let
    STATE3_TRANSITIONS = @[
       ConfigurationTransition(condition_cb: is_keyval,
                               transition_cb: add_rule_dir,
-                              next_state: STATE3)
+                              next_state: STATE3),
+      ConfigurationTransition(condition_cb: is_section_style,
+                              transition_cb: nil,
+                              next_state: STATE4)
    ]
+   STATE4_TRANSITIONS = @[
+      ConfigurationTransition(condition_cb: is_keyval_name,
+                              transition_cb: add_style,
+                              next_state: STATE5),
+      ConfigurationTransition(condition_cb: is_keyval_rule,
+                              transition_cb: add_style_rule,
+                              next_state: STATE6)
+   ]
+   STATE5_TRANSITIONS = @[
+      ConfigurationTransition(condition_cb: is_keyval_rule,
+                              transition_cb: add_style_rule,
+                              next_state: STATE6)
+   ]
+   STATE6_TRANSITIONS = @[
+      ConfigurationTransition(condition_cb: is_keyval_rule,
+                              transition_cb: add_style_rule,
+                              next_state: STATE6),
+      ConfigurationTransition(condition_cb: is_section_except,
+                              transition_cb: nil,
+                              next_state: STATE7),
+      ConfigurationTransition(condition_cb: is_section_only,
+                              transition_cb: nil,
+                              next_state: STATE8)
+   ]
+   STATE7_TRANSITIONS = @[
+      ConfigurationTransition(condition_cb: is_keyval,
+                              transition_cb: nil,
+                              next_state: STATE9)
+   ]
+   STATE8_TRANSITIONS = @[
+      ConfigurationTransition(condition_cb: is_keyval,
+                              transition_cb: nil,
+                              next_state: STATE10)
+   ]
+   STATE9_TRANSITIONS = @[
+      ConfigurationTransition(condition_cb: is_keyval_rule,
+                              transition_cb: add_style_rule,
+                              next_state: STATE6),
+      ConfigurationTransition(condition_cb: is_keyval,
+                              transition_cb: nil,
+                              next_state: STATE9)
+   ]
+   STATE10_TRANSITIONS = @[
+      ConfigurationTransition(condition_cb: is_keyval_rule,
+                              transition_cb: add_style_rule,
+                              next_state: STATE6),
+      ConfigurationTransition(condition_cb: is_keyval,
+                              transition_cb: nil,
+                              next_state: STATE10)
+   ]
+
 
 STATE1.transitions = STATE1_TRANSITIONS
 STATE2.transitions = STATE2_TRANSITIONS
 STATE3.transitions = STATE3_TRANSITIONS
+STATE4.transitions = STATE4_TRANSITIONS
+STATE5.transitions = STATE5_TRANSITIONS
+STATE6.transitions = STATE6_TRANSITIONS
+STATE7.transitions = STATE7_TRANSITIONS
+STATE8.transitions = STATE8_TRANSITIONS
+STATE9.transitions = STATE9_TRANSITIONS
+STATE10.transitions = STATE10_TRANSITIONS
+
 
 proc is_section_ruledirs(meta: Configuration, stimuli: CfgEvent): bool =
    result = (stimuli.kind == cfgSectionStart) and
@@ -103,9 +184,20 @@ proc is_keyval_rule(meta: Configuration, stimuli: CfgEvent): bool =
    result = (stimuli.kind == cfgKeyValuePair) and
             (stimuli.key == "rule")
 
+
 proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
    log.debug("Adding rule dir '$#'.", stimuli.key)
    meta.rule_dirs.add(stimuli.key)
+
+
+proc add_style(meta: var Configuration, stimuli: CfgEvent) =
+   log.debug("Adding new style '$#'.", stimuli.value)
+   meta.styles.add(Style.new(stimuli.value))
+
+
+proc add_style_rule(meta: var Configuration, stimuli: CfgEvent) =
+   log.debug("Adding new style rule '$#'.", stimuli.value)
+   meta.styles[^1].rules.add(StyleRule.new(stimuli.value))
 
 
 proc parse_error(meta: var Configuration, stimuli: CfgEvent) =
@@ -164,7 +256,6 @@ proc parse_cfg_file*() =
          log.debug("End of configuration file.")
          break
       else:
-         log.debug("Running state machine.")
          state_machine.run(sm, meta, e)
 
    p.close()
