@@ -13,3 +13,6 @@ template debug*(msg: string, args: varargs[string]) =
    when not defined(release):
       echo format("\x1B[1;35mDEBUG: \x1B[0m" & msg, args)
 
+template abort*(e: typedesc[Exception], msg: string, args: varargs[string]) =
+   error(msg, args)
+   raise new_exception(e, format(msg, args))
