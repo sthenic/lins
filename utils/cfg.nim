@@ -232,8 +232,8 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
       while tail == "":
          (head, tail) = split_path(head)
 
-      log.debug("Inferred rule dir '$#' with name '$#'.",
-                meta.dir / stimuli.key, tail)
+      log.debug("Inferred name '$#' for rule dir '$#'.",
+                tail, meta.dir / stimuli.key)
 
       meta.rule_dirs.add(RuleDir.new(tail, meta.dir / stimuli.key))
    else:

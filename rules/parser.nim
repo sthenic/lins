@@ -408,9 +408,7 @@ type Mode* = enum NonRecursive, Recursive
 
 proc parse_rule_dir*(rule_root_dir: string, strategy: Mode): seq[Rule] =
    if not os.dir_exists(rule_root_dir):
-      log.error("Invalid path '$#'", rule_root_dir)
-      raise new_exception(RulePathError, "'" & rule_root_dir &
-                                         "' is not a valid path")
+      log.abort(RulePathError, "Invalid path '$#'.", rule_root_dir)
 
    result = @[]
 
