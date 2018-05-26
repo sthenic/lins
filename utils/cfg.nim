@@ -8,6 +8,10 @@ import ./log
 import ../lexers/state_machine
 
 type
+   ConfigurationPathError = object of Exception
+   ConfigurationParseError = object of Exception
+
+type
    Configuration = object of RootObj
       filename: string
       rule_dirs: seq[string]
@@ -155,7 +159,6 @@ STATE10.transitions = STATE10_TRANSITIONS
 proc is_section_ruledirs(meta: Configuration, stimuli: CfgEvent): bool =
    result = (stimuli.kind == cfgSectionStart) and
             (stimuli.section == "RuleDirs")
-   log.debug("Checking is RuleDirs: '$#'.", $result)
 
 
 proc is_section_style(meta: Configuration, stimuli: CfgEvent): bool =
@@ -243,7 +246,7 @@ proc get_cfg_file(): string =
    if file_exists(tmp):
       return tmp
 
-proc parse_cfg_file*() =
+proc parse_cfg_file*(): Configuration =
    let cfg_file = get_cfg_file()
    if cfg_file == "":
       log.info("Unable to find configuration file.")
@@ -252,8 +255,9 @@ proc parse_cfg_file*() =
 
    var fs = newFileStream(cfg_file, fmRead)
    if fs == nil:
-      log.error("Failed to open configuration file '$#' for reading.", cfg_file)
-      quit(-1)
+      log.abort(ConfigurationPathError,
+                format("Failed to open configuration file '$#' for reading.",
+                       cfg_file))
 
    var p: CfgParser
    var sm: ConfigurationStateMachine =
@@ -273,12 +277,19 @@ proc parse_cfg_file*() =
          state_machine.run(sm, meta, e)
 
       if is_dead(sm):
-         log.error("Aborting.")
-         break
+         # State machine has reached the dead state indicating an error in
+         # the configuration file. We interpret this as an unrecoverable error
+         # and abort the parsing.
+         log.abort(ConfigurationParseError, "Parse error, aborting.")
 
    p.close()
    fs.close()
 
+   result = meta
+
 
 when isMainModule:
-   parse_cfg_file()
+   try:
+      discard parse_cfg_file()
+   except ConfigurationPathError, ConfigurationParseError:
+      discard
