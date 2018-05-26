@@ -26,6 +26,9 @@ arguments:
 options:
   -h, --help                 Print this help message and exit.
   -v, --version              Print version and exit.
+  --no-cfg                   Don't look for a configuration file.
+  --no-default               Don't use a default style (if defined in the
+                             configuration file).
   --style STYLE              Specify which style to use for linting. Styles
                              are defined in the configuration file.
   --rule-dir RULE_DIR        Specify a root directory to traverse in search of
