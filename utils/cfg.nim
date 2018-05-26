@@ -14,6 +14,7 @@ type
 type
    Configuration* = object of RootObj
       filename*: string
+      dir*: string
       rule_dirs*: seq[RuleDir]
       styles*: seq[Style]
 
@@ -35,8 +36,10 @@ type
    ConfigurationStateMachine = StateMachine[Configuration, CfgEvent]
 
 
-proc new(t: typedesc[Configuration], filename: string): Configuration =
-   result = Configuration(filename: filename, rule_dirs: @[], styles: @[])
+proc new(t: typedesc[Configuration], filename, dir: string):
+      Configuration =
+   result = Configuration(filename: filename, dir: dir,
+                          rule_dirs: @[], styles: @[])
 
 
 proc new(t: typedesc[RuleDir], name, path: string): RuleDir =
@@ -211,14 +214,15 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
       while tail == "":
          (head, tail) = split_path(head)
 
-      log.debug("Inferred rule dir name '$#'.", tail)
+      log.debug("Inferred rule dir '$#' with name '$#'.",
+                meta.dir / stimuli.key, tail)
 
-      meta.rule_dirs.add(RuleDir.new(tail, stimuli.key))
+      meta.rule_dirs.add(RuleDir.new(tail, meta.dir / stimuli.key))
    else:
       # The path is given with an explicit name
       log.debug("Adding rule directory '$#' with name '$#'.",
                 stimuli.value, stimuli.key)
-      meta.rule_dirs.add(RuleDir.new(stimuli.key, stimuli.value))
+      meta.rule_dirs.add(RuleDir.new(stimuli.key, meta.dir / stimuli.value))
 
 
 proc add_style(meta: var Configuration, stimuli: CfgEvent) =
@@ -272,6 +276,7 @@ proc get_cfg_file(): string =
    if file_exists(tmp):
       return tmp
 
+
 proc parse_cfg_file*(): Configuration =
    let cfg_file = get_cfg_file()
    if cfg_file == "":
@@ -285,10 +290,12 @@ proc parse_cfg_file*(): Configuration =
                 format("Failed to open configuration file '$#' for reading.",
                        cfg_file))
 
+   let (dir, _, _) = split_file(cfg_file)
+
    var p: CfgParser
    var sm: ConfigurationStateMachine =
       ConfigurationStateMachine(init_state: STATE1, dead_state_cb: parse_error)
-   var meta = Configuration.new(cfg_file)
+   var meta = Configuration.new(cfg_file, dir)
 
    state_machine.reset(sm)
 
@@ -312,10 +319,3 @@ proc parse_cfg_file*(): Configuration =
    fs.close()
 
    result = meta
-
-
-when isMainModule:
-   try:
-      discard parse_cfg_file()
-   except ConfigurationPathError, ConfigurationParseError:
-      discard
