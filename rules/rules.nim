@@ -37,10 +37,10 @@ type
       position: Position
 
    Rule* = ref object of RootObj
-      kind: string
-      severity: Severity
-      message: string
-      source_file: string
+      kind*: string
+      severity*: Severity
+      message*: string
+      source_file*: string
 
    RuleExistence* = ref object of Rule
       regex: Regex

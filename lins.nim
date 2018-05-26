@@ -3,6 +3,7 @@ import strutils
 import strformat
 import parseopt
 import tables
+import ospaths
 
 import linters.plain_text_linter
 import rules.rules
@@ -83,9 +84,32 @@ try:
       log.debug("Building rule objects for style '$#'.", style.name)
       style_db[style.name] = @[]
       for rule in style.rules:
-         log.debug("  Adding $# rule objects from '$#'.",
-                   $rule_db[rule.name].len, rule.name)
-         style_db[style.name].add(rule_db[rule.name])
+         var nof_robj = 0
+         if not (rule.exceptions == @[]):
+            # Add every rule object except the ones whose source file matches an
+            # exception.
+            log.debug("Adding rule objects from exceptions.")
+            for robj in rule_db[rule.name]:
+               let (_, filename, _) = split_file(robj.source_file)
+               if not (filename in rule.exceptions):
+                  style_db[style.name].add(robj)
+                  nof_robj += 1
+
+         elif not (rule.only == @[]):
+            # Only add rule object whose source file matches an 'only' item.
+            for robj in rule_db[rule.name]:
+               let (_, filename, _) = split_file(robj.source_file)
+               if (filename in rule.only):
+                  style_db[style.name].add(robj)
+                  nof_robj += 1
+
+         else:
+            # Add every rule object.
+            style_db[style.name].add(rule_db[rule.name])
+            nof_robj = rule_db[rule.name].len
+
+         log.debug("  Adding $# rule objects from '$#'.", $nof_robj, rule.name)
+
 
 except ConfigurationParseError, ConfigurationPathError, RulePathError:
    discard
