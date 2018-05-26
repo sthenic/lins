@@ -20,11 +20,14 @@ const HELP_TEXT = """
 Lins v0.1.0
 
 arguments:
-  file         Input file to lint
+  file                       Input file to lint. To lint several files, separate
+                             them by whitespace.
 
 options:
   -h, --help                 Print this help message and exit.
   -v, --version              Print version and exit.
+  --style STYLE              Specify which style to use for linting. Styles
+                             are defined in the configuration file.
   --rule-dir RULE_DIR        Specify a root directory to traverse in search of
                              rule files.
   --lexer {auto,plain-text}  Specify the lexing engine to user. Defaults to
