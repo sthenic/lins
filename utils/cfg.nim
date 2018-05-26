@@ -14,8 +14,12 @@ type
 type
    Configuration = object of RootObj
       filename: string
-      rule_dirs: seq[string]
+      rule_dirs: seq[RuleDir]
       styles: seq[Style]
+
+   RuleDir = object of RootObj
+      name: string
+      path: string
 
    Style = object of RootObj
       name: string
@@ -33,6 +37,10 @@ type
 
 proc new(t: typedesc[Configuration], filename: string): Configuration =
    result = Configuration(filename: filename, rule_dirs: @[], styles: @[])
+
+
+proc new(t: typedesc[RuleDir], name, path: string): RuleDir =
+   result = RuleDir(name: name, path: path)
 
 
 proc new(t: typedesc[Style], name: string): Style =
@@ -62,7 +70,7 @@ let
    STATE2 = ConfigurationState(id: 2, name: "SecRuleDirs", is_final: false)
    STATE3 = ConfigurationState(id: 3, name: "AddRuleDir", is_final: false)
    STATE4 = ConfigurationState(id: 4, name: "SecStyle", is_final: false)
-   STATE5 = ConfigurationState(id: 5, name: "AddStyleName", is_final: false)
+   STATE5 = ConfigurationState(id: 5, name: "AddStyle", is_final: false)
    STATE6 = ConfigurationState(id: 6, name: "AddStyleRule", is_final: false)
    STATE7 = ConfigurationState(id: 7, name: "SecExcept", is_final: false)
    STATE8 = ConfigurationState(id: 8, name: "SecOnly", is_final: false)
@@ -191,8 +199,26 @@ proc is_keyval_rule(meta: Configuration, stimuli: CfgEvent): bool =
 
 
 proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("Adding rule dir '$#'.", stimuli.key)
-   meta.rule_dirs.add(stimuli.key)
+   if stimuli.value == "":
+      # The path is given without an explicit name.
+      if stimuli.key == "":
+         log.warning("Empty path given as rule directory in file '$#'.",
+                     meta.filename)
+         return
+
+      # TODO: Investigate how this works on Windows systems.
+      var (head, tail) = split_path(stimuli.key)
+      while tail == "":
+         (head, tail) = split_path(head)
+
+      log.debug("Inferred rule dir name '$#'.", tail)
+
+      meta.rule_dirs.add(RuleDir.new(tail, stimuli.key))
+   else:
+      # The path is given with an explicit name
+      log.debug("Adding rule directory '$#' with name '$#'.",
+                stimuli.value, stimuli.key)
+      meta.rule_dirs.add(RuleDir.new(stimuli.key, stimuli.value))
 
 
 proc add_style(meta: var Configuration, stimuli: CfgEvent) =
