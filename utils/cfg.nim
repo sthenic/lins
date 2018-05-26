@@ -132,7 +132,10 @@ let
                               next_state: STATE7),
       ConfigurationTransition(condition_cb: is_section_only,
                               transition_cb: nil,
-                              next_state: STATE8)
+                              next_state: STATE8),
+      ConfigurationTransition(condition_cb: is_section_style,
+                              transition_cb: nil,
+                              next_state: STATE4)
    ]
    STATE7_TRANSITIONS = @[
       ConfigurationTransition(condition_cb: is_keyval,
@@ -150,7 +153,10 @@ let
                               next_state: STATE6),
       ConfigurationTransition(condition_cb: is_keyval,
                               transition_cb: add_exception,
-                              next_state: STATE9)
+                              next_state: STATE9),
+      ConfigurationTransition(condition_cb: is_section_style,
+                              transition_cb: nil,
+                              next_state: STATE4)
    ]
    STATE10_TRANSITIONS = @[
       ConfigurationTransition(condition_cb: is_keyval_rule,
@@ -158,7 +164,10 @@ let
                               next_state: STATE6),
       ConfigurationTransition(condition_cb: is_keyval,
                               transition_cb: add_only,
-                              next_state: STATE10)
+                              next_state: STATE10),
+      ConfigurationTransition(condition_cb: is_section_style,
+                              transition_cb: nil,
+                              next_state: STATE4)
    ]
    STATE11_TRANSITIONS = @[
       ConfigurationTransition(condition_cb: is_keyval_rule,
