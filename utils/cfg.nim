@@ -8,27 +8,27 @@ import ./log
 import ../lexers/state_machine
 
 type
-   ConfigurationPathError = object of Exception
-   ConfigurationParseError = object of Exception
+   ConfigurationPathError* = object of Exception
+   ConfigurationParseError* = object of Exception
 
 type
-   Configuration = object of RootObj
-      filename: string
-      rule_dirs: seq[RuleDir]
-      styles: seq[Style]
+   Configuration* = object of RootObj
+      filename*: string
+      rule_dirs*: seq[RuleDir]
+      styles*: seq[Style]
 
-   RuleDir = object of RootObj
-      name: string
-      path: string
+   RuleDir* = object of RootObj
+      name*: string
+      path*: string
 
-   Style = object of RootObj
-      name: string
-      rules: seq[StyleRule]
+   Style* = object of RootObj
+      name*: string
+      rules*: seq[StyleRule]
 
-   StyleRule = object of RootObj
-      name: string
-      exceptions: seq[string]
-      only: seq[string]
+   StyleRule* = object of RootObj
+      name*: string
+      exceptions*: seq[string]
+      only*: seq[string]
 
    ConfigurationState = State[Configuration, CfgEvent]
    ConfigurationTransition = Transition[Configuration, CfgEvent]
@@ -227,18 +227,18 @@ proc add_style(meta: var Configuration, stimuli: CfgEvent) =
 
 
 proc add_style_rule(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("Adding new style rule '$#'.", stimuli.value)
+   log.debug("  Adding new style rule '$#'.", stimuli.value)
    meta.styles[^1].rules.add(StyleRule.new(stimuli.value))
 
 
 proc add_exception(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("Adding new exception '$#' to style '$#'.",
+   log.debug("    Adding new exception '$#' to style '$#'.",
              stimuli.key, meta.styles[^1].rules[^1].name)
    meta.styles[^1].rules[^1].exceptions.add(stimuli.key)
 
 
 proc add_only(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("Adding new only '$#' to style '$#'.",
+   log.debug("    Adding new only '$#' to style '$#'.",
              stimuli.key, meta.styles[^1].rules[^1].name)
    meta.styles[^1].rules[^1].only.add(stimuli.key)
 

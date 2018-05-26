@@ -14,7 +14,7 @@ import ../utils/log
 type
    RuleValueError = object of Exception
    RuleParseError = object of Exception
-   RulePathError = object of Exception
+   RulePathError* = object of Exception
 
 type
    ExistenceYAML = object
@@ -404,7 +404,9 @@ proc parse_rule_file*(filename: string): seq[Rule] =
                                           filename & "'")
 
 
-proc parse_rule_dir*(rule_root_dir: string): seq[Rule] =
+type Mode* = enum NonRecursive, Recursive
+
+proc parse_rule_dir*(rule_root_dir: string, strategy: Mode): seq[Rule] =
    if not os.dir_exists(rule_root_dir):
       log.error("Invalid path '$#'", rule_root_dir)
       raise new_exception(RulePathError, "'" & rule_root_dir &
@@ -412,18 +414,39 @@ proc parse_rule_dir*(rule_root_dir: string): seq[Rule] =
 
    result = @[]
 
-   for path in walk_dir_rec(rule_root_dir):
-   # for kind, path in walk_dir(rule_root_dir):
-      let (_, _, ext) = split_file(path)
+   case strategy
+   of NonRecursive:
+      for kind, path in walk_dir(rule_root_dir):
+         # Skip directories.
+         if (kind == pcDir) or (kind == pcLinkToDir):
+            continue
 
-      if not (ext == ".yml"):
-         continue
+         let (_, _, ext) = split_file(path)
 
-      try:
-         result = concat(result, parse_rule_file(path))
-      except RuleValueError:
-         discard
-      except RuleParseError:
-         discard
-      except RulePathError:
-         discard
+         if not (ext == ".yml"):
+            continue
+
+         try:
+            result = concat(result, parse_rule_file(path))
+         except RuleValueError:
+            discard
+         except RuleParseError:
+            discard
+         except RulePathError:
+            discard
+
+   of Recursive:
+      for path in walk_dir_rec(rule_root_dir):
+         let (_, _, ext) = split_file(path)
+
+         if not (ext == ".yml"):
+            continue
+
+         try:
+            result = concat(result, parse_rule_file(path))
+         except RuleValueError:
+            discard
+         except RuleParseError:
+            discard
+         except RulePathError:
+            discard
