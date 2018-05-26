@@ -24,6 +24,7 @@ type
 
    Style* = object of RootObj
       name*: string
+      is_default*: bool
       rules*: seq[StyleRule]
 
    StyleRule* = object of RootObj
@@ -47,7 +48,7 @@ proc new(t: typedesc[RuleDir], name, path: string): RuleDir =
 
 
 proc new(t: typedesc[Style], name: string): Style =
-   result = Style(name: name, rules: @[])
+   result = Style(name: name, is_default: false, rules: @[])
 
 
 proc new(t: typedesc[StyleRule], name: string): StyleRule =
@@ -61,9 +62,11 @@ proc is_section_only(meta: Configuration, stimuli: CfgEvent): bool
 proc is_keyval(meta: Configuration, stimuli: CfgEvent): bool
 proc is_keyval_name(meta: Configuration, stimuli: CfgEvent): bool
 proc is_keyval_rule(meta: Configuration, stimuli: CfgEvent): bool
+proc is_keyval_default(meta: Configuration, stimuli: CfgEvent): bool
 
 proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent)
 proc add_style(meta: var Configuration, stimuli: CfgEvent)
+proc set_style_default(meta: var Configuration, stimuli: CfgEvent)
 proc add_style_rule(meta: var Configuration, stimuli: CfgEvent)
 proc add_exception(meta: var Configuration, stimuli: CfgEvent)
 proc add_only(meta: var Configuration, stimuli: CfgEvent)
@@ -79,6 +82,7 @@ let
    STATE8 = ConfigurationState(id: 8, name: "SecOnly", is_final: false)
    STATE9 = ConfigurationState(id: 9, name: "AddException", is_final: false)
    STATE10 = ConfigurationState(id: 10, name: "AddOnly", is_final: false)
+   STATE11 = ConfigurationState(id: 11, name: "SetDefault", is_final: false)
 
 
 let
@@ -106,20 +110,23 @@ let
    STATE4_TRANSITIONS = @[
       ConfigurationTransition(condition_cb: is_keyval_name,
                               transition_cb: add_style,
-                              next_state: STATE5),
-      ConfigurationTransition(condition_cb: is_keyval_rule,
-                              transition_cb: add_style_rule,
-                              next_state: STATE6)
+                              next_state: STATE5)
    ]
    STATE5_TRANSITIONS = @[
       ConfigurationTransition(condition_cb: is_keyval_rule,
                               transition_cb: add_style_rule,
-                              next_state: STATE6)
+                              next_state: STATE6),
+      ConfigurationTransition(condition_cb: is_keyval_default,
+                              transition_cb: set_style_default,
+                              next_state: STATE11)
    ]
    STATE6_TRANSITIONS = @[
       ConfigurationTransition(condition_cb: is_keyval_rule,
                               transition_cb: add_style_rule,
                               next_state: STATE6),
+      ConfigurationTransition(condition_cb: is_keyval_default,
+                              transition_cb: set_style_default,
+                              next_state: STATE11),
       ConfigurationTransition(condition_cb: is_section_except,
                               transition_cb: nil,
                               next_state: STATE7),
@@ -153,6 +160,11 @@ let
                               transition_cb: add_only,
                               next_state: STATE10)
    ]
+   STATE11_TRANSITIONS = @[
+      ConfigurationTransition(condition_cb: is_keyval_rule,
+                              transition_cb: add_style_rule,
+                              next_state: STATE6)
+   ]
 
 
 STATE1.transitions = STATE1_TRANSITIONS
@@ -165,6 +177,7 @@ STATE7.transitions = STATE7_TRANSITIONS
 STATE8.transitions = STATE8_TRANSITIONS
 STATE9.transitions = STATE9_TRANSITIONS
 STATE10.transitions = STATE10_TRANSITIONS
+STATE11.transitions = STATE11_TRANSITIONS
 
 
 proc is_section_ruledirs(meta: Configuration, stimuli: CfgEvent): bool =
@@ -201,6 +214,11 @@ proc is_keyval_rule(meta: Configuration, stimuli: CfgEvent): bool =
             (stimuli.key == "rule")
 
 
+proc is_keyval_default(meta: Configuration, stimuli: CfgEvent): bool =
+   result = (stimuli.kind == cfgKeyValuePair) and
+            (stimuli.key == "default")
+
+
 proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
    if stimuli.value == "":
       # The path is given without an explicit name.
@@ -230,19 +248,24 @@ proc add_style(meta: var Configuration, stimuli: CfgEvent) =
    meta.styles.add(Style.new(stimuli.value))
 
 
+proc set_style_default(meta: var Configuration, stimuli: CfgEvent) =
+   log.debug("  Setting as default style.")
+   meta.styles[^1].is_default = true
+
+
 proc add_style_rule(meta: var Configuration, stimuli: CfgEvent) =
    log.debug("  Adding new style rule '$#'.", stimuli.value)
    meta.styles[^1].rules.add(StyleRule.new(stimuli.value))
 
 
 proc add_exception(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("    Adding new exception '$#' to style '$#'.",
+   log.debug("    Adding new exception '$#' to rule '$#'.",
              stimuli.key, meta.styles[^1].rules[^1].name)
    meta.styles[^1].rules[^1].exceptions.add(stimuli.key)
 
 
 proc add_only(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("    Adding new only '$#' to style '$#'.",
+   log.debug("    Adding new only '$#' to rule '$#'.",
              stimuli.key, meta.styles[^1].rules[^1].name)
    meta.styles[^1].rules[^1].only.add(stimuli.key)
 

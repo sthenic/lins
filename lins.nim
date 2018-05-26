@@ -73,6 +73,7 @@ if argc == 0:
 # Build rule database.
 var rule_db = init_table[string, seq[Rule]]()
 var style_db = init_table[string, seq[Rule]]()
+var default_style = ""
 let t_start = cpu_time()
 try:
    let config = parse_cfg_file()
@@ -85,7 +86,15 @@ try:
    # Build styles
    for style in config.styles:
       log.debug("Building rule objects for style '$#'.", style.name)
+
       style_db[style.name] = @[]
+      if style.is_default:
+         if (default_style == ""):
+            default_style = style.name
+         else:
+            log.warning("Only one style may be set as the default. Ignoring" &
+                        "default specifier for style '$#'.", style.name)
+
       for rule in style.rules:
          var nof_robj = 0
          if not (rule.exceptions == @[]):
@@ -131,11 +140,16 @@ log.info("Parsing rule files took \x1B[1;32m$#\x1B[0m ms.",
 # Construct list of rule objects to use for linting. The rules specified on the
 # command line are always included.
 var lint_rules = rule_db["cli"]
-for style in cli_styles:
-   try:
-      lint_rules.add(style_db[style])
-   except KeyError:
-      log.warning("Undefined style '$#'.", style)
+if not (cli_styles == @[]):
+   for style in cli_styles:
+      try:
+         lint_rules.add(style_db[style])
+      except KeyError:
+         log.warning("Undefined style '$#'.", style)
+elif not (default_style == ""):
+   # Default style specified.
+   log.info("Using default style '$#'.", default_style)
+   lint_rules.add(style_db[default_style])
 
 
 if lint_rules == @[]:
