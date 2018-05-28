@@ -29,9 +29,11 @@ options:
   --no-cfg                   Don't look for a configuration file.
   --no-default               Don't use a default style (if defined in the
                              configuration file).
-  --style STYLE              Specify which style to use for linting. Styles
+  --style=STYLE              Specify which style to use for linting. Styles
                              are defined in the configuration file.
-  --rule-dir RULE_DIR        Specify a root directory to traverse in search of
+  --rule=RULE                Specify a rule set by name. The rule set will have
+                             to be defined in the configuration file.
+  --rule-dir=RULE_DIR        Specify a root directory to traverse in search of
                              rule files.
   --lexer {auto,plain-text}  Specify the lexing engine to user. Defaults to
                              'auto', which means that the file extensions are
@@ -42,6 +44,7 @@ options:
 
 var p = init_opt_parser()
 var cli_files: seq[string] = @[]
+var cli_rules: seq[string] = @[]
 var cli_rule_dirs: seq[string] = @[]
 var cli_styles: seq[string] = @[]
 var cli_no_cfg = false
@@ -65,6 +68,8 @@ for kind, key, val in p.getopt():
          cli_no_default = true
       of "no-cfg":
          cli_no_cfg = true
+      of "rule":
+         cli_rules.add(val)
       of "rule-dir":
          cli_rule_dirs.add(val)
       of "style":
@@ -111,6 +116,12 @@ block parse_cfg: # TODO: Refactor into a function.
 
          for rule in style.rules:
             var nof_robj = 0
+            # Protect against access violations with undefined keys.
+            if not rule_db.has_key(rule.name):
+               log.warning("Undefined rule name '$#' in configuration file " &
+                           "'$#', skipping.", rule.name, config.filename)
+               continue
+
             if not (rule.exceptions == @[]):
                # Add every rule object except the ones whose source file matches
                # an exception.
@@ -131,11 +142,8 @@ block parse_cfg: # TODO: Refactor into a function.
 
             else:
                # Add every rule object.
-               try:
-                  style_db[style.name].add(rule_db[rule.name])
-                  nof_robj = rule_db[rule.name].len
-               except KeyError:
-                  log.warning("Undefined rule name '$#', skipping.")
+               style_db[style.name].add(rule_db[rule.name])
+               nof_robj = rule_db[rule.name].len
 
             log.debug("  Adding $# rule objects from '$#'.", $nof_robj,
                       rule.name)
@@ -152,6 +160,15 @@ if not (cli_rule_dirs == @[]):
          rule_db["cli"].add(parse_rule_dir(dir, NonRecursive))
       except RulePathError:
          discard
+
+# Parse named rule sets speficied on the command line.
+if not (cli_rules == @[]):
+   for rule_name in cli_rules:
+      try:
+         rule_db["cli"].add(rule_db[rule_name])
+      except KeyError:
+         log.warning("No definition for rule '$#' found in configuration " &
+                     "file, skipping.", rule_name)
 
 let t_diff_ms = (cpu_time() - t_start) * 1000
 log.info("Parsing rule files took \x1B[1;32m$#\x1B[0m ms.",
