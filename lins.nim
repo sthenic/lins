@@ -131,8 +131,11 @@ block parse_cfg: # TODO: Refactor into a function.
 
             else:
                # Add every rule object.
-               style_db[style.name].add(rule_db[rule.name])
-               nof_robj = rule_db[rule.name].len
+               try:
+                  style_db[style.name].add(rule_db[rule.name])
+                  nof_robj = rule_db[rule.name].len
+               except KeyError:
+                  log.warning("Undefined rule name '$#', skipping.")
 
             log.debug("  Adding $# rule objects from '$#'.", $nof_robj,
                       rule.name)
