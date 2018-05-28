@@ -49,6 +49,7 @@ var cli_rule_dirs: seq[string] = @[]
 var cli_styles: seq[string] = @[]
 var cli_no_cfg = false
 var cli_no_default = false
+var cli_list = false
 var argc = 0
 
 for kind, key, val in p.getopt():
@@ -74,6 +75,8 @@ for kind, key, val in p.getopt():
          cli_rule_dirs.add(val)
       of "style":
          cli_styles.add(val)
+      of "list":
+         cli_list = true
       else:
          log.error("Unknown option '$#'.", key)
          quit(-1)
@@ -190,8 +193,26 @@ elif not cli_no_default and not (default_style == ""):
    lint_rules.add(style_db[default_style])
 
 
+if cli_list:
+   echo "\n\x1B[1;4mRule set\x1B[0m"
+   var seen: seq[string] = @[]
+   for rule in lint_rules:
+      if rule.source_file in seen:
+         continue
+      let (_, filename, _) = split_file(rule.source_file)
+      let tmp = &"  \x1B[1m{filename:<20}\x1B[0m"
+      echo tmp, rule.source_file
+
+      seen.add(rule.source_file)
+
+   if seen == @[]:
+      echo "No rule files."
+   quit(0)
+
+
 if lint_rules == @[]:
-   log.error("No rules specified.")
+
+   log.error(&"No rules specified.")
    quit(-2)
 
 
