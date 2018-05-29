@@ -83,10 +83,6 @@ for kind, key, val in p.getopt():
    of cmdEnd:
       assert(false)
 
-if argc == 0:
-   echo HELP_TEXT
-   quit(-1)
-
 # Build rule database.
 var rule_db = init_table[string, seq[Rule]]()
 var style_db = init_table[string, seq[Rule]]()
@@ -211,7 +207,6 @@ if cli_list:
 
 
 if lint_rules == @[]:
-
    log.error(&"No rules specified.")
    quit(-2)
 
@@ -220,4 +215,11 @@ if lint_rules == @[]:
 if not (cli_files == @[]):
    lint_files(cli_files, lint_rules)
 else:
-   log.error("No input files, stopping.")
+   log.info("No input files, reading input from \x1B[1mstdin\x1B[0m.")
+   log.info("End input with the 'end-of-text' character, Ctrl+D on most " &
+            "terminals.")
+   var text = ""
+   var tmp = ""
+   while stdin.read_line(tmp):
+      text.add(tmp & "\n")
+   lint_string(text, lint_rules)

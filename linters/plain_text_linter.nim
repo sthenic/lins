@@ -1,9 +1,11 @@
 import times
 import strutils
 import strformat
+import streams
 
 import ../lexers/plain_text_lexer
 import ../rules/rules
+import ../utils/log
 
 type
    ViolationCount = tuple
@@ -30,23 +32,25 @@ proc print_violation(v: Violation) =
       echo &"{tmp:26}{message[m]:<48}"
 
 
-proc print_header(filename: string) =
-   echo &"\n\x1B[1;4m{filename}\x1B[0m"
+proc print_header(str: string) =
+   echo &"\n\x1B[1;4m{str}\x1B[0m"
 
 
 proc print_footer(time_ms: float, violation_count: ViolationCount,
-                   nof_files: int) =
+                  nof_files: int) =
    echo &"\n\n\x1B[1mAnalysis completed in \x1B[1;32m",
         format_float(time_ms, ffDecimal, 1), &" ms\x1B[0;1m with \x1B[0m"
 
-   var file_str = "file"
-   if nof_files > 1:
-      file_str &= "s"
+   var file_str = ""
+   if nof_files == 1:
+      file_str = "in 1 file."
+   elif nof_files > 1:
+      file_str = &"in {nof_files} files."
 
    echo &"  \x1B[1;31m{violation_count.error} errors\x1B[0m, ",
         &"\x1B[1;33m{violation_count.warning} warnings\x1B[0m and ",
-        &"\x1B[1;34m{violation_count.suggestion} suggestions\x1B[0m in ",
-        &"{nof_files} {file_str}."
+        &"\x1B[1;34m{violation_count.suggestion} suggestions\x1B[0m ",
+        &"{file_str}"
 
 
 proc lint_sentence(s: Sentence) =
@@ -77,8 +81,15 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule]) =
    for filename in file_list:
       print_header(filename)
 
+      # Open the input file as a file stream since we will have to move around
+      # in the file.
+      var fs = new_file_stream(filename, fmRead)
+      if is_nil(fs):
+         log.error("Failed to open input file '$#' for reading.", filename)
+         quit(-1)
+
       t_start = cpu_time()
-      plain_text_lexer.lex_file(filename, lint_sentence)
+      plain_text_lexer.lex_file(fs, lint_sentence)
       t_stop = cpu_time()
 
       delta_analysis += (t_stop - t_start) * 1000.0
@@ -94,3 +105,23 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule]) =
       nof_files += 1
 
    print_footer(delta_analysis, nof_violations_total, nof_files)
+
+
+proc lint_string*(str: string, rules: seq[Rule]) =
+   var t_start, t_stop: float
+   lint_rules = rules
+
+   var ss = new_string_stream(str)
+
+   print_header("String input")
+
+   t_start = cpu_time()
+   plain_text_lexer.lex_file(ss, lint_sentence)
+   t_stop = cpu_time()
+
+   if (nof_violations_file.error == 0 and
+       nof_violations_file.warning == 0 and
+       nof_violations_file.suggestion == 0):
+      echo "No style errors found."
+
+   print_footer((t_stop - t_start) * 1000.0, nof_violations_file, 0)

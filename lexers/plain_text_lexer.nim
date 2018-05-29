@@ -178,9 +178,8 @@ proc prepend_space(meta: var PlainTextMeta, stimuli: Rune) =
 proc paragraph_complete(meta: var PlainTextMeta, stimuli: Rune) =
    meta.new_par = true
 
-proc lex_file*(filename: string, callback: proc (s: Sentence)) =
+proc lex_file*(s: Stream, callback: proc (s: Sentence)) =
    var
-      fs: FileStream
       r: Rune
       pos_line: int = 0
       pos_last_line: int = 0
@@ -198,17 +197,10 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
           sentence: (str: @[], newlines: @[], par_idx: 0, row_begin: 0,
                      col_begin: 0, row_end: 1, col_end: 1))
 
-   # Open the input file as a file stream since we will have to move around in
-   # the file.
-   fs = new_file_stream(filename, fmRead)
-   if is_nil(fs):
-      write(stderr, "Failed to open input file '", filename, "' for lexing.\n")
-      quit(-1)
-
    # Reset the state machine.
    state_machine.reset(sm)
 
-   while fs.read_line(line):
+   while s.read_line(line):
       pos_line = 0
       line.add('\n') # Add the newline character removed by read_line().
       while pos_line < line.len:
@@ -223,7 +215,7 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
          if is_dead(sm):
             # Dead state reached, seek to last final position.
             try:
-               fs.set_position(pos_last_final)
+               s.set_position(pos_last_final)
             except IOError:
                log.error("Failed to seek to position $#.", $pos_last_final)
                quit(-2)
@@ -248,7 +240,7 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
             meta.col += 1
 
       try:
-         pos_last_line = fs.get_position()
+         pos_last_line = s.get_position()
       except IOError:
          log.error("Failed to retrieve stream position, aborting.")
          quit(-2)
@@ -256,4 +248,4 @@ proc lex_file*(filename: string, callback: proc (s: Sentence)) =
    if not is_dead(sm):
       dead_state_callback(meta, Rune(0))
 
-   fs.close()
+   s.close()
