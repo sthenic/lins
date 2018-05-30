@@ -89,9 +89,10 @@ proc lint_sentence(s: Sentence) =
       print_violation(v)
 
 
-proc lint_files*(file_list: seq[string], rules: seq[Rule]) =
+proc lint_files*(file_list: seq[string], rules: seq[Rule]): bool =
    var t_start, t_stop, delta_analysis: float
    lint_rules = rules
+   result = true
 
    delta_analysis = 0
    for filename in file_list:
@@ -113,6 +114,7 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule]) =
       if (nof_violations_file.error == 0 and
           nof_violations_file.warning == 0 and
           nof_violations_file.suggestion == 0):
+         result = false
          echo "No style errors found."
 
       nof_violations_total.error += nof_violations_file.error
@@ -123,9 +125,10 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule]) =
    print_footer(delta_analysis, nof_violations_total, nof_files)
 
 
-proc lint_string*(str: string, rules: seq[Rule]) =
+proc lint_string*(str: string, rules: seq[Rule]): bool =
    var t_start, t_stop: float
    lint_rules = rules
+   result = true
 
    var ss = new_string_stream(str)
 
@@ -138,6 +141,7 @@ proc lint_string*(str: string, rules: seq[Rule]) =
    if (nof_violations_file.error == 0 and
        nof_violations_file.warning == 0 and
        nof_violations_file.suggestion == 0):
+      result = false
       echo "No style errors found."
 
    print_footer((t_stop - t_start) * 1000.0, nof_violations_file, 0)

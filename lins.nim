@@ -11,10 +11,19 @@ import rules.parser
 import utils.log
 import utils.cfg
 
+# Version information
 const VERSION_MAJOR = 0
 const VERSION_MINOR = 1
 const VERSION_PATCH = 0
 let VERSION = $VERSION_MAJOR & "." & $VERSION_MINOR & "." & $VERSION_PATCH
+
+
+# Error and exit codes. Error codes are negative values.
+const EVIOL = 1
+const ESUCCESS = 0
+const EOPTION = -1
+const ENORULES = -2
+
 
 const HELP_TEXT = """
 Lins v0.1.0
@@ -62,10 +71,10 @@ for kind, key, val in p.getopt():
       case key:
       of "help", "h":
          echo HELP_TEXT
-         quit(0)
+         quit(ESUCCESS)
       of "version", "v":
          echo VERSION
-         quit(0)
+         quit(ESUCCESS)
       of "no-default":
          cli_no_default = true
       of "no-cfg":
@@ -83,7 +92,7 @@ for kind, key, val in p.getopt():
          cli_list = true
       else:
          log.error("Unknown option '$#'.", key)
-         quit(-1)
+         quit(EOPTION)
    of cmdEnd:
       assert(false)
 
@@ -207,17 +216,19 @@ if cli_list:
 
    if seen == @[]:
       echo "No rule files."
-   quit(0)
+      quit(ENORULES)
+   quit(ESUCCESS)
 
 
 if lint_rules == @[]:
    log.error("No rules specified.")
-   quit(-2)
+   quit(ENORULES)
 
 
 # Lint files
+var found_violations: bool
 if not (cli_files == @[]):
-   lint_files(cli_files, lint_rules)
+   found_violations = lint_files(cli_files, lint_rules)
 else:
    log.info("No input files, reading input from \x1B[1mstdin\x1B[0m.")
    log.info("End input with the 'end-of-text' character, Ctrl+D on most " &
@@ -226,4 +237,9 @@ else:
    var tmp = ""
    while stdin.read_line(tmp):
       text.add(tmp & "\n")
-   lint_string(text, lint_rules)
+   found_violations = lint_string(text, lint_rules)
+
+if found_violations:
+   quit(EVIOL)
+else:
+   quit(ESUCCESS)
