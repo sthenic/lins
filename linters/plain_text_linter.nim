@@ -109,7 +109,7 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule]): bool =
 
       try:
          t_start = cpu_time()
-         plain_text_lexer.lex_file(fs, lint_sentence)
+         plain_text_lexer.lex(fs, lint_sentence)
          t_stop = cpu_time()
       except PlainTextLexerFileIOError:
          # Catch and reraise the exception with a type local to this module.
@@ -144,7 +144,7 @@ proc lint_string*(str: string, rules: seq[Rule]): bool =
 
    try:
       t_start = cpu_time()
-      plain_text_lexer.lex_file(ss, lint_sentence)
+      plain_text_lexer.lex(ss, lint_sentence)
       t_stop = cpu_time()
    except PlainTextLexerFileIOError:
       raise new_exception(PlainTextLinterFileIOError,

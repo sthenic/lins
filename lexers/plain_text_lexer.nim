@@ -4,6 +4,8 @@ import streams
 import ./state_machine
 import ../utils/log
 
+type PlainTextLexerFileIOError* = object of Exception
+
 type
    Sentence* = tuple
       str: seq[Rune]
@@ -178,7 +180,7 @@ proc prepend_space(meta: var PlainTextMeta, stimuli: Rune) =
 proc paragraph_complete(meta: var PlainTextMeta, stimuli: Rune) =
    meta.new_par = true
 
-proc lex_file*(s: Stream, callback: proc (s: Sentence)) =
+proc lex*(s: Stream, callback: proc (s: Sentence)) =
    var
       r: Rune
       pos_line: int = 0
@@ -217,8 +219,8 @@ proc lex_file*(s: Stream, callback: proc (s: Sentence)) =
             try:
                s.set_position(pos_last_final)
             except IOError:
-               log.error("Failed to seek to position $#.", $pos_last_final)
-               quit(-2)
+               log.abort(PlainTextLexerFileIOError,
+                         "Failed to seek to position $#.", $pos_last_final)
 
             # Reset the state machine
             state_machine.reset(sm)
@@ -242,8 +244,8 @@ proc lex_file*(s: Stream, callback: proc (s: Sentence)) =
       try:
          pos_last_line = s.get_position()
       except IOError:
-         log.error("Failed to retrieve stream position, aborting.")
-         quit(-2)
+         log.abort(PlainTextLexerFileIOError,
+                   "Failed to retrieve stream position, aborting.")
 
    if not is_dead(sm):
       dead_state_callback(meta, Rune(0))
