@@ -21,7 +21,7 @@ let VERSION = $VERSION_MAJOR & "." & $VERSION_MINOR & "." & $VERSION_PATCH
 # Error and exit codes. Error codes are negative values.
 const EVIOL = 1
 const ESUCCESS = 0
-const EOPTION = -1
+const EINVAL = -1
 const ENORULES = -2
 const EFILE = -3
 
@@ -29,22 +29,45 @@ const EFILE = -3
 const HELP_TEXT = """
 Lins v0.1.0
 
+usage:
+  lins [OPTIONS] ARGUMENTS
+
+
 arguments:
   file                       Input file to lint. To lint several files, separate
-                             them by whitespace.
+                             them by whitespace. If no files are specified,
+                             input from stdin is assumed.
+
 
 options:
   -h, --help                 Print this help message and exit.
   -v, --version              Print version and exit.
+
+  --col=COL                  Specify the column index of the first character
+                             in the input data. Default value: 1. See also the
+                             'row' option.
+
   --no-cfg                   Don't look for a configuration file.
+
   --no-default               Don't use a default style (if defined in the
                              configuration file).
+
+  --quiet                    Enable quiet mode. All output except the violation
+                             information is suppressed.
+
   --style=STYLE              Specify which style to use for linting. Styles
                              are defined in the configuration file.
+
+  --row=ROW                  Specify the row index of the first character
+                             in the input data. Default value: 1. See also the
+                             'col' option.
+
   --rule=RULE                Specify a rule set by name. The rule set will have
                              to be defined in the configuration file.
+
   --rule-dir=RULE_DIR        Specify a root directory to traverse in search of
                              rule files.
+
   --lexer {auto,plain-text}  Specify the lexing engine to user. Defaults to
                              'auto', which means that the file extensions are
                              used to infer which lexer to use.
@@ -60,6 +83,8 @@ var cli_styles: seq[string] = @[]
 var cli_no_cfg = false
 var cli_no_default = false
 var cli_list = false
+var cli_row_init = 1
+var cli_col_init = 1
 var argc = 0
 
 # Parse command line options and arguments.
@@ -91,9 +116,21 @@ for kind, key, val in p.getopt():
          cli_styles.add(val)
       of "list":
          cli_list = true
+      of "row":
+         try:
+            cli_row_init = parse_int(val)
+         except ValueError:
+            log.error("Failed to convert '$#' to an integer.", val)
+            quit(EINVAL)
+      of "col":
+         try:
+            cli_col_init = parse_int(val)
+         except ValueError:
+            log.error("Failed to convert '$#' to an integer.", val)
+            quit(EINVAL)
       else:
          log.error("Unknown option '$#'.", key)
-         quit(EOPTION)
+         quit(EINVAL)
    of cmdEnd:
       assert(false)
 
@@ -230,7 +267,8 @@ if lint_rules == @[]:
 var found_violations: bool
 if not (cli_files == @[]):
    try:
-      found_violations = lint_files(cli_files, lint_rules)
+      found_violations = lint_files(cli_files, lint_rules, cli_row_init,
+                                    cli_col_init)
    except PlainTextLinterFileIOError:
       quit(EFILE)
 
@@ -242,7 +280,7 @@ else:
    var tmp = ""
    while stdin.read_line(tmp):
       text.add(tmp & "\n")
-   found_violations = lint_string(text, lint_rules)
+   found_violations = lint_string(text, lint_rules, cli_row_init, cli_col_init)
 
 if found_violations:
    quit(EVIOL)

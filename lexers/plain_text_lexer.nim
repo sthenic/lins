@@ -180,7 +180,7 @@ proc prepend_space(meta: var PlainTextMeta, stimuli: Rune) =
 proc paragraph_complete(meta: var PlainTextMeta, stimuli: Rune) =
    meta.new_par = true
 
-proc lex*(s: Stream, callback: proc (s: Sentence)) =
+proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
    var
       r: Rune
       pos_line: int = 0
@@ -195,7 +195,7 @@ proc lex*(s: Stream, callback: proc (s: Sentence)) =
       # variable is used pass around a mutable container between the state
       # machine's callback functions.
       meta: PlainTextMeta =
-         (row: 1, col: 1, new_par: true, sentence_callback: callback,
+         (row: row_init, col: col_init, new_par: true, sentence_callback: callback,
           sentence: (str: @[], newlines: @[], par_idx: 0, row_begin: 0,
                      col_begin: 0, row_end: 1, col_end: 1))
 

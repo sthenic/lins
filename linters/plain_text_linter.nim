@@ -91,7 +91,8 @@ proc lint_sentence(s: Sentence) =
       print_violation(v)
 
 
-proc lint_files*(file_list: seq[string], rules: seq[Rule]): bool =
+proc lint_files*(file_list: seq[string], rules: seq[Rule],
+                 row_init, col_init: int): bool =
    var t_start, t_stop, delta_analysis: float
    lint_rules = rules
    result = true
@@ -109,7 +110,7 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule]): bool =
 
       try:
          t_start = cpu_time()
-         plain_text_lexer.lex(fs, lint_sentence)
+         plain_text_lexer.lex(fs, lint_sentence, row_init, col_init)
          t_stop = cpu_time()
       except PlainTextLexerFileIOError:
          # Catch and reraise the exception with a type local to this module.
@@ -133,7 +134,8 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule]): bool =
    print_footer(delta_analysis, nof_violations_total, nof_files)
 
 
-proc lint_string*(str: string, rules: seq[Rule]): bool =
+proc lint_string*(str: string, rules: seq[Rule],
+                  row_init, col_init: int): bool =
    var t_start, t_stop: float
    lint_rules = rules
    result = true
@@ -144,7 +146,7 @@ proc lint_string*(str: string, rules: seq[Rule]): bool =
 
    try:
       t_start = cpu_time()
-      plain_text_lexer.lex(ss, lint_sentence)
+      plain_text_lexer.lex(ss, lint_sentence, row_init, col_init)
       t_stop = cpu_time()
    except PlainTextLexerFileIOError:
       raise new_exception(PlainTextLinterFileIOError,
