@@ -18,6 +18,14 @@ var
    nof_violations_file: ViolationCount
    nof_files: int
    lint_rules: seq[Rule]
+   quiet_mode = false
+
+
+proc set_quiet_mode*(state: bool) =
+   ## Enable or disable quiet output mode. This will suppress everything except
+   ## the violation messages.
+   quiet_mode = state
+
 
 proc print_violation(v: Violation) =
    var message: seq[string] = @[]
@@ -33,11 +41,19 @@ proc print_violation(v: Violation) =
 
 
 proc print_header(str: string) =
+   # Suppress headers in quiet mode.
+   if quiet_mode:
+      return
+
    echo &"\n\x1B[1;4m{str}\x1B[0m"
 
 
 proc print_footer(time_ms: float, violation_count: ViolationCount,
                   nof_files: int) =
+   # Suppress footers in quiet mode.
+   if quiet_mode:
+      return
+
    echo &"\n\n\x1B[1mAnalysis completed in \x1B[1;32m",
         format_float(time_ms, ffDecimal, 1), &" ms\x1B[0;1m with \x1B[0m"
 

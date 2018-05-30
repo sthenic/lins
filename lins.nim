@@ -52,6 +52,7 @@ var cli_no_default = false
 var cli_list = false
 var argc = 0
 
+# Parse command line options and arguments.
 for kind, key, val in p.getopt():
    argc += 1
    case kind:
@@ -73,6 +74,9 @@ for kind, key, val in p.getopt():
          cli_rules.add(val)
       of "rule-dir":
          cli_rule_dirs.add(val)
+      of "quiet":
+         log.set_quiet_mode(true)
+         plain_text_linter.set_quiet_mode(true)
       of "style":
          cli_styles.add(val)
       of "list":
@@ -207,7 +211,7 @@ if cli_list:
 
 
 if lint_rules == @[]:
-   log.error(&"No rules specified.")
+   log.error("No rules specified.")
    quit(-2)
 
 
