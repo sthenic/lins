@@ -23,6 +23,7 @@ const EVIOL = 1
 const ESUCCESS = 0
 const EOPTION = -1
 const ENORULES = -2
+const EFILE = -3
 
 
 const HELP_TEXT = """
@@ -228,11 +229,15 @@ if lint_rules == @[]:
 # Lint files
 var found_violations: bool
 if not (cli_files == @[]):
-   found_violations = lint_files(cli_files, lint_rules)
+   try:
+      found_violations = lint_files(cli_files, lint_rules)
+   except PlainTextLinterFileIOError:
+      quit(EFILE)
+
 else:
    log.info("No input files, reading input from \x1B[1mstdin\x1B[0m.")
-   log.info("End input with the 'end-of-text' character, Ctrl+D on most " &
-            "terminals.")
+   log.info("End input with the 'end-of-text' character: Ctrl+D in most " &
+            "shells, Ctrl+Z on Windows.")
    var text = ""
    var tmp = ""
    while stdin.read_line(tmp):

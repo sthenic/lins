@@ -7,6 +7,8 @@ import ../lexers/plain_text_lexer
 import ../rules/rules
 import ../utils/log
 
+type PlainTextLinterFileIOError* = object of Exception
+
 type
    ViolationCount = tuple
       error: int
@@ -96,18 +98,24 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule]): bool =
 
    delta_analysis = 0
    for filename in file_list:
-      print_header(filename)
-
       # Open the input file as a file stream since we will have to move around
       # in the file.
       var fs = new_file_stream(filename, fmRead)
       if is_nil(fs):
-         log.error("Failed to open input file '$#' for reading.", filename)
-         quit(-1)
+         log.abort(PlainTextLinterFileIOError,
+                   "Failed to open input file '$#' for reading.", filename)
 
-      t_start = cpu_time()
-      plain_text_lexer.lex_file(fs, lint_sentence)
-      t_stop = cpu_time()
+      print_header(filename)
+
+      try:
+         t_start = cpu_time()
+         plain_text_lexer.lex_file(fs, lint_sentence)
+         t_stop = cpu_time()
+      except PlainTextLexerFileIOError:
+         # Catch and reraise the exception with a type local to this module.
+         # Callers are not aware of the lexing process.
+         raise new_exception(PlainTextLinterFileIOError,
+                             "FileIO exception while lexing file.")
 
       delta_analysis += (t_stop - t_start) * 1000.0
 
@@ -134,9 +142,13 @@ proc lint_string*(str: string, rules: seq[Rule]): bool =
 
    print_header("String input")
 
-   t_start = cpu_time()
-   plain_text_lexer.lex_file(ss, lint_sentence)
-   t_stop = cpu_time()
+   try:
+      t_start = cpu_time()
+      plain_text_lexer.lex_file(ss, lint_sentence)
+      t_stop = cpu_time()
+   except PlainTextLexerFileIOError:
+      raise new_exception(PlainTextLinterFileIOError,
+                           "FileIO exception while lexing file.")
 
    if (nof_violations_file.error == 0 and
        nof_violations_file.warning == 0 and
