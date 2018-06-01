@@ -4,6 +4,7 @@ import strformat
 import parseopt
 import tables
 import ospaths
+import terminal
 
 import linters.plain_text_linter
 import rules.rules
@@ -221,8 +222,8 @@ if not (cli_rules == @[]):
                      "file, skipping.", rule_name)
 
 let t_diff_ms = (cpu_time() - t_start) * 1000
-log.info("Parsing rule files took \x1B[1;32m$#\x1B[0m ms.",
-         format_float(t_diff_ms, ffDecimal, 1))
+log.info("Parsing rule files took ", fgGreen, styleBright,
+         format_float(t_diff_ms, ffDecimal, 1), " ms", resetStyle, ".")
 
 
 # Construct list of rule objects to use for linting. The rules specified on the
@@ -241,14 +242,15 @@ elif not cli_no_default and not (default_style == ""):
 
 
 if cli_list:
-   echo "\n\x1B[1;4mRule set\x1B[0m"
+   styled_write_line(stdout, "\n", styleBright, styleUnderscore,
+                     "Rule set", resetStyle)
    var seen: seq[string] = @[]
    for rule in lint_rules:
       if rule.source_file in seen:
          continue
       let (_, filename, _) = split_file(rule.source_file)
-      let tmp = &"  \x1B[1m{filename:<20}\x1B[0m"
-      echo tmp, rule.source_file
+      styled_write_line(stdout, styleBright, &"  {filename:<20}", resetStyle,
+                        rule.source_file)
 
       seen.add(rule.source_file)
 
@@ -273,7 +275,7 @@ if not (cli_files == @[]):
       quit(EFILE)
 
 else:
-   log.info("No input files, reading input from \x1B[1mstdin\x1B[0m.")
+   log.info("No input files, reading input from stdin.")
    log.info("End input with the 'end-of-text' character: Ctrl+D in most " &
             "shells, Ctrl+Z on Windows.")
    var text = ""

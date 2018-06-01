@@ -31,7 +31,6 @@ type
    Violation* = tuple
       kind: string
       severity: Severity
-      severity_str: string
       source_file: string
       message: string
       position: Position
@@ -94,24 +93,10 @@ proc new*(t: typedesc[Rule], kind: string, severity: Severity, message: string,
    Rule(kind: kind, severity: severity, message: message,
         source_file: source_file)
 
-proc create_severity_string(r: Rule): string =
-   var tmp = ""
-   case r.severity
-   of SUGGESTION:
-      tmp = "\x1B[1;34msuggestion\x1B[0m"
-   of WARNING:
-      tmp = "\x1B[1;33mwarning\x1B[0m"
-   of ERROR:
-      tmp = "\x1B[1;31merror\x1B[0m"
-   else:
-      echo "ERROR!"
-
-   return tmp
 
 proc create_violation(r: Rule, pos: Position,
                       message_args: varargs[string]): Violation =
-   (kind: r.kind, severity: r.severity,
-    severity_str: r.create_severity_string(), source_file: r.source_file,
+   (kind: r.kind, severity: r.severity, source_file: r.source_file,
     message: format(r.message, message_args), position: pos)
 
 # Compute absolute file position of the rule violation using the absolute

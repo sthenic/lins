@@ -2,12 +2,14 @@ import times
 import strutils
 import strformat
 import streams
+import terminal
 
 import ../lexers/plain_text_lexer
 import ../rules/rules
 import ../utils/log
 
 type PlainTextLinterFileIOError* = object of Exception
+type PlainTextLinterValueError* = object of Exception
 
 type
    ViolationCount = tuple
@@ -34,12 +36,30 @@ proc print_violation(v: Violation) =
    for i in countup(0, v.message.len - 1, 48):
       message.add(v.message[i..min(i + 47, v.message.len - 1)])
 
-   echo &" {v.position.row:>4}:{v.position.col:<5} {v.severity_str:<24} ",
-        &"{message[0]:<48}    \x1B[1m{v.source_file:<20}\x1B[0m"
+   var severity_color: ForegroundColor = fgWhite
+   var severity_str: string = ""
+   case v.severity
+   of SUGGESTION:
+      severity_str = "suggestion"
+      severity_color = fgBlue
+   of WARNING:
+      severity_str = "warning"
+      severity_color = fgYellow
+   of ERROR:
+      severity_str = "error"
+      severity_color = fgRed
+   else:
+      log.abort(PlainTextLinterValueError, "Unsupported severity level '$#'.",
+                $v.severity)
+
+   styled_write_line(stdout, &" {v.position.row:>4}:{v.position.col:<5} ",
+                     styleBright, severity_color, &"{severity_str:<11}",
+                     resetStyle, &"{message[0]:<48}    ",
+                     styleBright, &"{v.source_file:<20}", resetStyle)
 
    for m in 1..<message.len:
       let tmp = ""
-      echo &"{tmp:26}{message[m]:<48}"
+      styled_write_line(stdout, &"{tmp:26}{message[m]:<48}")
 
 
 proc print_header(str: string) =
@@ -47,7 +67,7 @@ proc print_header(str: string) =
    if quiet_mode:
       return
 
-   echo &"\n\x1B[1;4m{str}\x1B[0m"
+   styled_write_line(stdout, styleBright, styleUnderscore, &"\n{str}", resetStyle)
 
 
 proc print_footer(time_ms: float, violation_count: ViolationCount,
@@ -56,8 +76,9 @@ proc print_footer(time_ms: float, violation_count: ViolationCount,
    if quiet_mode:
       return
 
-   echo &"\n\n\x1B[1mAnalysis completed in \x1B[1;32m",
-        format_float(time_ms, ffDecimal, 1), &" ms\x1B[0;1m with \x1B[0m"
+   styled_write_line(stdout, styleBright, "\n\nAnalysis completed in ", fgGreen,
+                     format_float(time_ms, ffDecimal, 1), " ms", resetStyle,
+                     styleBright, " with ", resetStyle)
 
    var file_str = ""
    if nof_files == 1:
@@ -65,10 +86,12 @@ proc print_footer(time_ms: float, violation_count: ViolationCount,
    elif nof_files > 1:
       file_str = &"in {nof_files} files."
 
-   echo &"  \x1B[1;31m{violation_count.error} errors\x1B[0m, ",
-        &"\x1B[1;33m{violation_count.warning} warnings\x1B[0m and ",
-        &"\x1B[1;34m{violation_count.suggestion} suggestions\x1B[0m ",
-        &"{file_str}"
+   styled_write_line(stdout, fgRed, &"  {violation_count.error} errors",
+                     resetStyle, ", ", fgYellow,
+                     &"{violation_count.warning} warnings", resetStyle,
+                     " and ",
+                     fgBlue, &"{violation_count.suggestion} suggestions",
+                     resetStyle, &" {file_str}")
 
 
 proc lint_sentence(s: Sentence) =
