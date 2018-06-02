@@ -8,6 +8,7 @@ import ./log
 import ../lexers/state_machine
 
 type
+   ConfigurationFileNotFoundError* = object of Exception
    ConfigurationPathError* = object of Exception
    ConfigurationParseError* = object of Exception
 
@@ -313,6 +314,8 @@ proc parse_cfg_file*(): Configuration =
    let cfg_file = get_cfg_file()
    if cfg_file == "":
       log.info("Unable to find configuration file.")
+      raise new_exception(ConfigurationFileNotFoundError,
+                          "Unable to find configuration file.")
    else:
       log.info("Using configuration file '$#'.", cfg_file)
 

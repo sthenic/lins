@@ -135,6 +135,12 @@ for kind, key, val in p.getopt():
    of cmdEnd:
       assert(false)
 
+# If not input files have been specified, check in the user has piped input to
+# the application. If not, we show the help text and exit.
+if (cli_files == @[]) and terminal.isatty(stdin):
+   echo HELP_TEXT
+   quit(ESUCCESS)
+
 # Build rule database.
 var rule_db = init_table[string, seq[Rule]]()
 var style_db = init_table[string, seq[Rule]]()
@@ -200,7 +206,8 @@ block parse_cfg: # TODO: Refactor into a function.
                       rule.name)
 
 
-   except ConfigurationParseError, ConfigurationPathError, RulePathError:
+   except ConfigurationFileNotFoundError, ConfigurationParseError,
+          ConfigurationPathError, RulePathError:
       discard
 
 # Parse rule directories specified on the command line.
@@ -275,9 +282,8 @@ if not (cli_files == @[]):
       quit(EFILE)
 
 else:
-   log.info("No input files, reading input from stdin.")
-   log.info("End input with the 'end-of-text' character: Ctrl+D in most " &
-            "shells, Ctrl+Z on Windows.")
+   log.info("No input files, reading input from ", styleBright, "stdin.",
+            resetStyle)
    var text = ""
    var tmp = ""
    while stdin.read_line(tmp):
