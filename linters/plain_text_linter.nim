@@ -86,12 +86,14 @@ proc print_footer(time_ms: float, violation_count: ViolationCount,
    elif nof_files > 1:
       file_str = &"in {nof_files} files."
 
-   styled_write_line(stdout, fgRed, &"  {violation_count.error} errors",
-                     resetStyle, ", ", fgYellow,
-                     &"{violation_count.warning} warnings", resetStyle,
-                     " and ",
-                     fgBlue, &"{violation_count.suggestion} suggestions",
-                     resetStyle, &" {file_str}")
+   styled_write_line(stdout,
+                     styleBright, fgRed,
+                     &"  {violation_count.error} errors", resetStyle, ", ",
+                     styleBright, fgYellow,
+                     &"{violation_count.warning} warnings",  resetStyle, " and ",
+                     styleBright, fgBlue,
+                     &"{violation_count.suggestion} suggestions", resetStyle,
+                     &" {file_str}")
 
 
 proc lint_sentence(s: Sentence) =
