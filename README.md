@@ -1,3 +1,6 @@
+[![NIM](https://img.shields.io/badge/Nim-0.18.0-orange.svg?style=flat-square)]()
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)]()
+
 # README
 Lins is a linter for prose, written in [Nim](https://nim-lang.org). The tool is inspired by [Vale](https://github.com/errata-ai/vale).
 
