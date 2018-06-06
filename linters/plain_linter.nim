@@ -4,7 +4,7 @@ import strformat
 import streams
 import terminal
 
-import ../lexers/plain_text_lexer
+import ../lexers/plain_lexer
 import ../rules/rules
 import ../utils/log
 
@@ -135,7 +135,7 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
 
       try:
          t_start = cpu_time()
-         plain_text_lexer.lex(fs, lint_sentence, row_init, col_init)
+         plain_lexer.lex(fs, lint_sentence, row_init, col_init)
          t_stop = cpu_time()
       except PlainTextLexerFileIOError:
          # Catch and reraise the exception with a type local to this module.
@@ -171,7 +171,7 @@ proc lint_string*(str: string, rules: seq[Rule],
 
    try:
       t_start = cpu_time()
-      plain_text_lexer.lex(ss, lint_sentence, row_init, col_init)
+      plain_lexer.lex(ss, lint_sentence, row_init, col_init)
       t_stop = cpu_time()
    except PlainTextLexerFileIOError:
       raise new_exception(PlainTextLinterFileIOError,

@@ -6,7 +6,7 @@ import tables
 import ospaths
 import terminal
 
-import linters.plain_text_linter
+import linters.plain_linter
 import rules.rules
 import rules.parser
 import utils.log
@@ -108,7 +108,7 @@ for kind, key, val in p.getopt():
          cli_rule_dirs.add(val)
       of "quiet":
          log.set_quiet_mode(true)
-         plain_text_linter.set_quiet_mode(true)
+         plain_linter.set_quiet_mode(true)
       of "style":
          cli_styles.add(val)
       of "list":

@@ -3,7 +3,7 @@ import unicode
 import strutils
 import tables
 
-import ../lexers/plain_text_lexer
+import ../lexers/plain_lexer
 import ../utils/log
 
 type
