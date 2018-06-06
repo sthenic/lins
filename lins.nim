@@ -131,11 +131,11 @@ for kind, key, val in p.getopt():
    of cmdEnd:
       assert(false)
 
-# If not input files have been specified, check in the user has piped input to
+# If no input files have been specified, check if the user has piped input to
 # the application. If not, we show the help text and exit.
 if (cli_files == @[]) and terminal.isatty(stdin):
    echo HELP_TEXT
-   quit(ESUCCESS)
+   quit(EINVAL)
 
 # Build rule database.
 var rule_db = init_table[string, seq[Rule]]()
