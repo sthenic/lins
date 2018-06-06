@@ -237,7 +237,6 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
                      meta.filename)
          return
 
-      # TODO: Investigate how this works on Windows systems.
       var (head, tail) = split_path(stimuli.key)
       while tail == "":
          (head, tail) = split_path(head)
