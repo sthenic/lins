@@ -42,7 +42,7 @@ arguments:
 
 options:
   -h, --help                 Print this help message and exit.
-  -v, --version              Print version and exit.
+  -v, --version              Print the verison information and exit.
 
   --col=COL                  Specify the column index of the first character
                              in the input data. Default value: 1. See also the
@@ -68,10 +68,6 @@ options:
 
   --rule-dir=RULE_DIR        Specify a root directory to traverse in search of
                              rule files.
-
-  --lexer {auto,plain-text}  Specify the lexing engine to user. Defaults to
-                             'auto', which means that the file extensions are
-                             used to infer which lexer to use.
 """
 
 
