@@ -319,7 +319,7 @@ proc parse_cfg_file*(): Configuration =
    else:
       log.info("Using configuration file '$#'.", cfg_file)
 
-   var fs = newFileStream(cfg_file, fmRead)
+   var fs = new_file_stream(cfg_file, fmRead)
    if fs == nil:
       log.abort(ConfigurationPathError,
                 format("Failed to open configuration file '$#' for reading.",
