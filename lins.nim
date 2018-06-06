@@ -142,10 +142,7 @@ var rule_db = init_table[string, seq[Rule]]()
 var style_db = init_table[string, seq[Rule]]()
 var default_style = ""
 let t_start = cpu_time()
-block parse_cfg: # TODO: Refactor into a function.
-   if cli_no_cfg:
-      break parse_cfg
-
+if not cli_no_cfg: # TODO: Refactor into a function.
    try:
       let config = parse_cfg_file()
 
