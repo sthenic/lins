@@ -1,3 +1,5 @@
 nimcache/
+.vscode/
 *.code-workspace
+*.txt
 lins
