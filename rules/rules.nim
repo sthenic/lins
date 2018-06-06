@@ -85,7 +85,7 @@ type
       regex_second: Regex
       scope: Scope
       par_prev: int
-      second_observed: bool
+      first_observed: bool
 
 
 # Constructors
@@ -496,7 +496,7 @@ proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
                           regex_second: re(regex_flags & regex_second),
                           scope: scope,
                           par_prev: 0,
-                          second_observed: false)
+                          first_observed: false)
 
 
 method enforce*(r: RuleConditional, sentence: Sentence): seq[Violation] =
@@ -505,26 +505,26 @@ method enforce*(r: RuleConditional, sentence: Sentence): seq[Violation] =
    # Reset the match counter and alert status depending on the scope.
    case r.scope
    of SENTENCE:
-      r.second_observed = false
+      r.first_observed = false
    of PARAGRAPH:
       if not (r.par_prev == sentence.par_idx):
-         r.second_observed = false
+         r.first_observed = false
    else:
       discard
 
    var
-      row_second = 0
-      col_second = 0
+      row_first = 0
+      col_first = 0
 
-   let m_second = nre.find($sentence.str, r.regex_second)
-   if not is_none(m_second) and not r.second_observed:
+   let m_first = nre.find($sentence.str, r.regex_first)
+   if not is_none(m_first) and not r.first_observed:
       try:
-         (row_second, col_second) =
+         (row_first, col_first) =
             r.calculate_position(sentence.row_begin, sentence.col_begin,
-                                 m_second.get.capture_bounds[0].get.a + 1,
+                                 m_first.get.capture_bounds[0].get.a + 1,
                                  sentence.newlines)
 
-         r.second_observed = true
+         r.first_observed = true
 
       except IndexError:
          # Abort if no capture group can be found. This should not happen due
@@ -533,15 +533,15 @@ method enforce*(r: RuleConditional, sentence: Sentence): seq[Violation] =
                    "This should not have occurred.", r.source_file)
          raise new_exception(EnforceError, "No capture group defined.")
 
-   for m_first in nre.find_iter($sentence.str, r.regex_first):
-      let (row_first, col_first) =
+   for m_second in nre.find_iter($sentence.str, r.regex_second):
+      let (row_second, col_second) =
          r.calculate_position(sentence.row_begin, sentence.col_begin,
-                              m_first.match_bounds.a + 1, # TODO: Group here?
+                              m_second.match_bounds.a + 1, # TODO: Group here?
                               sentence.newlines)
-      if (not r.second_observed or
-          (row_second == row_first and col_second > col_first) or
-          (row_second > row_first)):
-         violations.add(r.create_violation((row_first, col_first), $m_first))
+      if (not r.first_observed or
+          (row_first == row_second and col_first > col_second) or
+          (row_first > row_second)):
+         violations.add(r.create_violation((row_second, col_second), $m_second))
 
    # Remember the paragraph.
    r.par_prev = sentence.par_idx

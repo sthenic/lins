@@ -70,6 +70,15 @@ type
       declaration: string
       exceptions: seq[string]
 
+   ConditionalYAML = object
+      extends: string
+      message: string
+      level: string
+      ignorecase: bool
+      scope: string
+      first: string
+      second: string
+
    Rules = tuple
       existence: ExistenceYAML
       substitution: SubstitutionYAML
@@ -77,6 +86,7 @@ type
       repetition: RepetitionYAML
       consistency: ConsistencyYAML
       definition: DefinitionYAML
+      conditional: ConditionalYAML
 
 # Default values for YAML objects
 set_default_value(ExistenceYAML, ignorecase, false)
@@ -85,6 +95,7 @@ set_default_value(OccurrenceYAML, ignorecase, false)
 set_default_value(RepetitionYAML, ignorecase, false)
 set_default_value(ConsistencyYAML, ignorecase, false)
 set_default_value(DefinitionYAML, ignorecase, false)
+set_default_value(ConditionalYAML, ignorecase, false)
 
 set_default_value(ExistenceYAML, nonword, false)
 set_default_value(ExistenceYAML, raw, @[])
@@ -97,6 +108,7 @@ set_default_value(DefinitionYAML, definition,
 set_default_value(DefinitionYAML, declaration, r"\b([A-Z]{3,5})\b")
 set_default_value(DefinitionYAML, exceptions, @[])
 
+
 proc new(t: typedesc[ExistenceYAML]): ExistenceYAML =
    result = ExistenceYAML(extends: "existence",
                           message: "",
@@ -105,6 +117,7 @@ proc new(t: typedesc[ExistenceYAML]): ExistenceYAML =
                           nonword: false,
                           tokens: @[])
 
+
 proc new(t: typedesc[SubstitutionYAML]): SubstitutionYAML =
    result = SubstitutionYAML(extends: "substitution",
                              message: "",
@@ -112,6 +125,7 @@ proc new(t: typedesc[SubstitutionYAML]): SubstitutionYAML =
                              ignorecase: false,
                              nonword: false,
                              swap: init_table[string, string]())
+
 
 proc new(t: typedesc[OccurrenceYAML]): OccurrenceYAML =
    result = OccurrenceYAML(extends: "occurrence",
@@ -123,6 +137,7 @@ proc new(t: typedesc[OccurrenceYAML]): OccurrenceYAML =
                            limit_kind: "",
                            token: "")
 
+
 proc new(t: typedesc[RepetitionYAML]): RepetitionYAML =
    result = RepetitionYAML(extends: "repetition",
                            message: "",
@@ -130,6 +145,7 @@ proc new(t: typedesc[RepetitionYAML]): RepetitionYAML =
                            ignorecase: false,
                            scope: "",
                            token: "")
+
 
 proc new(t: typedesc[ConsistencyYAML]): ConsistencyYAML =
    result = ConsistencyYAML(extends: "consistency",
@@ -139,8 +155,9 @@ proc new(t: typedesc[ConsistencyYAML]): ConsistencyYAML =
                             scope: "",
                             either: init_table[string, string]())
 
+
 proc new(t: typedesc[DefinitionYAML]): DefinitionYAML =
-   result = DefinitionYAML(extends: "occurrence",
+   result = DefinitionYAML(extends: "definition",
                            message: "",
                            level: "",
                            ignorecase: false,
@@ -149,13 +166,25 @@ proc new(t: typedesc[DefinitionYAML]): DefinitionYAML =
                            declaration: "",
                            exceptions: @[])
 
+
+proc new(t: typedesc[ConditionalYAML]): ConditionalYAML =
+   result = ConditionalYAML(extends: "conditional",
+                            message: "",
+                            level: "",
+                            ignorecase: false,
+                            scope: "",
+                            first: "",
+                            second: "")
+
+
 proc new(t: typedesc[Rules]): Rules =
    result = (existence: ExistenceYAML.new(),
              substitution: SubstitutionYAML.new(),
              occurrence: OccurrenceYAML.new(),
              repetition: RepetitionYAML.new(),
              consistency: ConsistencyYAML.new(),
-             definition: DefinitionYAML.new())
+             definition: DefinitionYAML.new(),
+             conditional: ConditionalYAML.new())
 
 
 template validate_extension_point(data: typed, ext: string, filename: string) =
@@ -366,6 +395,21 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
    result.add(RuleDefinition.new(level, message, filename, data.definition,
                                  data.declaration, data.exceptions, scope,
                                  ignore_case))
+
+
+proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
+   ## Parse and validate YAML data for the rule 'definition' and return a
+   ## sequence of RuleDefinition objects.
+   result = @[]
+
+   validate_extension_point(data, "conditional", filename)
+   validate_common(data, filename, message, ignore_case, level)
+   validate_scope(data, filename, scope)
+   validate_nof_capture_groups(data.first, filename, "first", 1)
+   validate_nof_capture_groups(data.second, filename, "second", 1)
+
+   result.add(RuleConditional.new(level, message, filename, data.first,
+                                  data.second, scope, ignore_case))
 
 
 proc parse_rule_file*(filename: string): seq[Rule] =
