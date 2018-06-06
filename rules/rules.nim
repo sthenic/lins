@@ -61,7 +61,8 @@ type
       regex: Regex
       scope: Scope
       par_prev: int
-      nof_matches: int
+      ignore_case: bool
+      matches: Table[string, int]
 
    RuleConsistency* = ref object of Rule
       regex_first: Regex
@@ -269,30 +270,34 @@ proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
                          source_file: source_file,
                          regex: re(regex_flags & regex),
                          scope: scope,
-                         nof_matches: 0,
-                         par_prev: 0)
+                         par_prev: 0,
+                         matches: init_table[string, int](),
+                         ignore_case: ignore_case)
 
 
-# TODO: Look at how Vale handles repetitions, there might be some differences
-# to this implementation. For example, \b(\w+)\b seems to be a valid regex. In
-# that case you would need some LUT w/ an entry of each match. Also support a
-# list of tokens, not just one.
 method enforce*(r: RuleRepetition, sentence: Sentence): seq[Violation] =
    var violations: seq[Violation] = @[]
 
    case r.scope
    of SENTENCE:
-      r.nof_matches = 0
+      r.matches.clear()
    of PARAGRAPH:
       if not (r.par_prev == sentence.par_idx):
-         r.nof_matches = 0
+         r.matches.clear()
    else:
       discard
 
    for m in nre.find_iter($sentence.str, r.regex):
-      r.nof_matches += 1
+      var tmp: string
+      if r.ignore_case:
+         tmp = to_lower_ascii($m)
+      else:
+         tmp = $m
 
-      if (r.nof_matches > 1):
+      if r.matches.has_key_or_put(tmp, 1):
+         r.matches[tmp] += 1
+
+      if (r.matches[tmp] > 1):
          let violation_pos = r.calculate_position(sentence.row_begin,
                                                   sentence.col_begin,
                                                   m.match_bounds.a + 1,
