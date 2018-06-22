@@ -241,15 +241,23 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
       while tail == "":
          (head, tail) = split_path(head)
 
-      log.debug("Inferred name '$#' for rule dir '$#'.",
-                tail, meta.dir / stimuli.key)
+      var path = stimuli.key
+      if not is_absolute(stimuli.key):
+         path = meta.dir / path
 
-      meta.rule_dirs.add(RuleDir.new(tail, meta.dir / stimuli.key))
+      log.debug("Inferred name '$#' for rule dir '$#'.", tail, path)
+
+      meta.rule_dirs.add(RuleDir.new(tail, path))
    else:
       # The path is given with an explicit name
+      var path = stimuli.value
+      if not is_absolute(stimuli.value):
+         path = meta.dir / path
+
       log.debug("Adding rule directory '$#' with name '$#'.",
                 stimuli.value, stimuli.key)
-      meta.rule_dirs.add(RuleDir.new(stimuli.key, meta.dir / stimuli.value))
+
+      meta.rule_dirs.add(RuleDir.new(stimuli.key, path))
 
 
 proc add_style(meta: var Configuration, stimuli: CfgEvent) =
