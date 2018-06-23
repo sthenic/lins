@@ -27,17 +27,15 @@ const ENORULES = -2
 const EFILE = -3
 
 
-const HELP_TEXT = """
-Lins v0.1.0
-
+let HELP_TEXT = "Lins v" & VERSION & "\n\n" & """
 usage:
   lins [OPTIONS] ARGUMENTS
 
 
 arguments:
-  file                       Input file to lint. To lint several files, separate
-                             them by whitespace. If no files are specified,
-                             input from stdin is assumed.
+  file [file [file ...]]     Input file(s) to lint. To lint several files,
+                             separate them by whitespace. If no files are
+                             specified, piped input from stdin is assumed.
 
 
 options:
