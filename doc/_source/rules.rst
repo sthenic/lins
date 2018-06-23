@@ -1,4 +1,4 @@
-.. _`chap_rules`:
+.. _`lins_rules`:
 
 *****
 Rules

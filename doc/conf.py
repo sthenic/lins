@@ -6,12 +6,12 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'lins'
+project = 'Lins'
 copyright = '2018 Marcus Eriksson'
 author = 'Marcus Eriksson'
 
 # The short X.Y version
-version = '0.1'
+version = ''
 # The full version, including alpha/beta/rc tags
 release = '0.1.0'
 
@@ -70,7 +70,6 @@ pygments_style = 'sphinx'
 html_theme_options = {
     'description': 'A lightweight, extensible linter for prose.',
     'fixed_sidebar': True,
-    'sidebar_link_underscore': False,
     'logo': 'logo.png'
 }
 

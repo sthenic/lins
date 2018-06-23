@@ -36,7 +36,12 @@ The documentation is organized into the following sections:
 .. toctree::
   :maxdepth: 1
 
+  _source/installation
+  _source/usage
+  _source/configuration
   _source/rules
+  _source/examples
+
 
 Reporting Issues
 ================
