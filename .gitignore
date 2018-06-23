@@ -2,4 +2,5 @@ nimcache/
 .vscode/
 *.code-workspace
 *.txt
+!help_cli.txt
 lins

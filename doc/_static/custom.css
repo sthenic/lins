@@ -1,0 +1,5 @@
+/* Reduce left-hand side padding in code blocks. */
+pre {
+    padding: 7px 15px;
+    font-size: 0.8em;
+}

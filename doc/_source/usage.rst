@@ -4,4 +4,8 @@
 Usage
 *****
 
-Usage
+Command Line Interface
+======================
+
+.. literalinclude:: /../help_cli.txt
+    :language: text
