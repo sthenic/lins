@@ -26,49 +26,8 @@ const EINVAL = -1
 const ENORULES = -2
 const EFILE = -3
 
-
-let HELP_TEXT = "Lins v" & VERSION & "\n\n" & """
-usage:
-  lins [OPTIONS] ARGUMENTS
-
-
-arguments:
-  file [file [file ...]]     Input file(s) to lint. To lint several files,
-                             separate them by whitespace. If no files are
-                             specified, piped input from stdin is assumed.
-
-
-options:
-  -h, --help                 Print this help message and exit.
-  -v, --version              Print the verison information and exit.
-
-  --col=COL                  Specify the column index of the first character
-                             in the input data. Default value: 1. See also the
-                             'row' option.
-
-  --no-cfg                   Don't look for a configuration file.
-
-  --no-default               Don't use a default style (if defined in the
-                             configuration file).
-
-  --quiet                    Enable quiet mode. All output except the violation
-                             information is suppressed.
-
-  --style=STYLE              Specify which style to use for linting. Styles
-                             are defined in the configuration file.
-
-  --row=ROW                  Specify the row index of the first character
-                             in the input data. Default value: 1. See also the
-                             'col' option.
-
-  --rule=RULE                Specify a rule set by name. The rule set will have
-                             to be defined in the configuration file.
-
-  --rule-dir=RULE_DIR        Specify a root directory to traverse in search of
-                             rule files.
-"""
-
-
+const STATIC_HELP_TEXT = static_read("help_cli.txt")
+let HELP_TEXT = "Lins v" & VERSION & "\n\n" & STATIC_HELP_TEXT
 
 var p = init_opt_parser()
 var cli_files: seq[string] = @[]
