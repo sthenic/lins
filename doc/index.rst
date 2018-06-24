@@ -34,7 +34,7 @@ Contents
 The documentation is organized into the following sections:
 
 .. toctree::
-  :maxdepth: 1
+  :maxdepth: 2
 
   _source/installation
   _source/usage
