@@ -3,6 +3,7 @@ import strutils
 import strformat
 import streams
 import terminal
+import unicode
 
 import ../lexers/plain_lexer
 import ../rules/rules
@@ -17,12 +18,16 @@ type
       warning: int
       suggestion: int
 
+   PlainDebugOptions* = tuple
+      lexer_output_filename: string
+
 var
    nof_violations_total: ViolationCount
    nof_violations_file: ViolationCount
    nof_files: int
    lint_rules: seq[Rule]
    quiet_mode = false
+   lexer_output_fs : FileStream
 
 
 proc set_quiet_mode*(state: bool) =
@@ -95,9 +100,24 @@ proc print_footer(time_ms: float, violation_count: ViolationCount,
                      &"{violation_count.suggestion} suggestions", resetStyle,
                      &" {file_str}")
 
+proc parse_debug_options(debug_options: PlainDebugOptions) =
+   if not (debug_options.lexer_output_filename == ""):
+      # User has asked for lexer output in a separate file.
+      lexer_output_fs = new_file_stream(debug_options.lexer_output_filename,
+                                        fmWrite)
+      if is_nil(lexer_output_fs):
+         log.error("Failed to open file '$#' for writing.",
+                   debug_options.lexer_output_filename)
+      else:
+         log.info("Lexer output will be written to file '$#'.",
+                  debug_options.lexer_output_filename)
 
 proc lint_sentence(s: Sentence) =
    var violations: seq[Violation] = @[]
+
+   if not is_nil(lexer_output_fs):
+      # Dump the lexer output if the file stream is defined.
+      lexer_output_fs.write_line(s, "\n")
 
    for r in lint_rules:
       violations.add(r.enforce(s))
@@ -117,10 +137,14 @@ proc lint_sentence(s: Sentence) =
 
 
 proc lint_files*(file_list: seq[string], rules: seq[Rule],
-                 row_init, col_init: int): bool =
+                 row_init, col_init: int,
+                 debug_options: PlainDebugOptions): bool =
    var t_start, t_stop, delta_analysis: float
    lint_rules = rules
    result = true
+
+   # Handle debug options.
+   parse_debug_options(debug_options)
 
    delta_analysis = 0
    for filename in file_list:
@@ -160,10 +184,13 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
 
 
 proc lint_string*(str: string, rules: seq[Rule],
-                  row_init, col_init: int): bool =
+                  row_init, col_init: int,
+                  debug_options: PlainDebugOptions): bool =
    var t_start, t_stop: float
    lint_rules = rules
    result = true
+
+   parse_debug_options(debug_options)
 
    var ss = new_string_stream(str)
 

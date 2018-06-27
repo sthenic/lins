@@ -39,6 +39,7 @@ var cli_no_default = false
 var cli_list = false
 var cli_row_init = 1
 var cli_col_init = 1
+var cli_lexer_output_filename = ""
 var argc = 0
 
 # Parse command line options and arguments.
@@ -70,6 +71,12 @@ for kind, key, val in p.getopt():
          cli_styles.add(val)
       of "list":
          cli_list = true
+      of "lexer-output":
+         if val == "":
+            log.error("Option --lexer-output expects a filename.")
+            quit(EINVAL)
+
+         cli_lexer_output_filename = val
       of "row":
          try:
             cli_row_init = parse_int(val)
@@ -221,13 +228,17 @@ if lint_rules == @[]:
    log.error("No rules specified.")
    quit(ENORULES)
 
+# Construct debug options
+let debug_options: PlainDebugOptions = (
+   lexer_output_filename: cli_lexer_output_filename
+)
 
 # Lint files
 var found_violations: bool
 if not (cli_files == @[]):
    try:
       found_violations = lint_files(cli_files, lint_rules, cli_row_init,
-                                    cli_col_init)
+                                    cli_col_init, debug_options)
    except PlainTextLinterFileIOError:
       quit(EFILE)
 
@@ -238,7 +249,8 @@ else:
    var tmp = ""
    while stdin.read_line(tmp):
       text.add(tmp & "\n")
-   found_violations = lint_string(text, lint_rules, cli_row_init, cli_col_init)
+   found_violations = lint_string(text, lint_rules, cli_row_init, cli_col_init,
+                                  debug_options)
 
 if found_violations:
    quit(EVIOL)

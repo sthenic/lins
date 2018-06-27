@@ -36,3 +36,7 @@ options:
 
   --rule-dir=RULE_DIR      Specify a root directory to traverse in search of
                            rule files.
+
+debug options:
+  --lexer-output=FILENAME  Write the output from the lexer to the specified
+                           file.
