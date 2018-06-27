@@ -238,7 +238,7 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
          return
 
       var (head, tail) = split_path(stimuli.key)
-      while tail == "":
+      while (tail == "") and not (head == ""):
          (head, tail) = split_path(head)
 
       var path = stimuli.key
