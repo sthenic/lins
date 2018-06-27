@@ -270,6 +270,23 @@ template validate_nof_capture_groups(regex: string, filename: string,
                                           " capture " & tmp & ".")
 
 
+proc get_short_rule_name(rule_filename: string): string =
+   var (dir, name, _) = split_file(rule_filename)
+   if name == "":
+      log.abort(RulePathError,
+                "Attempted to get short name for an invalid path '$#'.",
+                rule_filename)
+
+   if dir == "":
+      result = name
+   else:
+      var (head, tail) = split_path(dir)
+      while (tail == "") and not (head == ""):
+         (head, tail) = split_path(head)
+
+      result = tail & "." & name
+
+
 proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'existence' and return a
    ## sequence of RuleExistence objects.
@@ -308,7 +325,8 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
                           format("Missing either tokens or raw items for " &
                                  "rule in file '$#'.", filename))
 
-   result.add(RuleExistence.new(level, message, filename, token_str,
+   let short_name = get_short_rule_name(filename)
+   result.add(RuleExistence.new(level, message, short_name, token_str,
                                 ignore_case))
 
 
@@ -336,7 +354,8 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
       subst_table[key] = subst
    key_str = key_str[0..^2] & ")" & word_boundary
 
-   result.add(RuleSubstitution.new(level, message, filename, key_str,
+   let short_name = get_short_rule_name(filename)
+   result.add(RuleSubstitution.new(level, message, short_name, key_str,
                                    subst_table, ignore_case))
 
 
@@ -350,7 +369,8 @@ proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
    validate_scope(data, filename, scope)
    validate_limit(data, filename, limit, limit_kind)
 
-   result.add(RuleOccurrence.new(level, message, filename, data.token,
+   let short_name = get_short_rule_name(filename)
+   result.add(RuleOccurrence.new(level, message, short_name, data.token,
                                  limit, limit_kind, scope, ignore_case))
 
 
@@ -363,7 +383,8 @@ proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
 
-   result.add(RuleRepetition.new(level, message, filename, data.token,
+   let short_name = get_short_rule_name(filename)
+   result.add(RuleRepetition.new(level, message, short_name, data.token,
                                  scope, ignore_case))
 
 
@@ -376,8 +397,9 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
 
+   let short_name = get_short_rule_name(filename)
    for first, second in pairs(data.either):
-      result.add(RuleConsistency.new(level, message, filename, first, second,
+      result.add(RuleConsistency.new(level, message, short_name, first, second,
                                      scope, ignore_case))
 
 
@@ -392,7 +414,8 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
    validate_nof_capture_groups(data.declaration, filename, "declaration", 1)
    validate_nof_capture_groups(data.definition, filename, "definition", 1)
 
-   result.add(RuleDefinition.new(level, message, filename, data.definition,
+   let short_name = get_short_rule_name(filename)
+   result.add(RuleDefinition.new(level, message, short_name, data.definition,
                                  data.declaration, data.exceptions, scope,
                                  ignore_case))
 
@@ -408,7 +431,8 @@ proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
    validate_nof_capture_groups(data.first, filename, "first", 1)
    validate_nof_capture_groups(data.second, filename, "second", 1)
 
-   result.add(RuleConditional.new(level, message, filename, data.first,
+   let short_name = get_short_rule_name(filename)
+   result.add(RuleConditional.new(level, message, short_name, data.first,
                                   data.second, scope, ignore_case))
 
 
