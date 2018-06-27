@@ -125,9 +125,8 @@ proc calculate_position(r: Rule, row_begin, col_begin: int,
       return (row_begin + i, col - offset_closest_newline)
 
 method enforce*(r: Rule, sentence: Sentence): seq[Violation] {.base.}  =
-   raise new_exception(EnforceNotImplementedError,
-                       "Rule enforcement not implemented for rule '" &
-                       r.kind & "'.")
+   log.abort(EnforceNotImplementedError,
+             "Rule enforcement not implemented for rule '$#'.", r.kind)
 
 proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
           source_file: string, regex: string, ignore_case: bool): RuleExistence =
@@ -433,9 +432,9 @@ method enforce*(r: RuleDefinition, sentence: Sentence): seq[Violation] =
       except IndexError:
          # Abort if no capture group can be found. This should not happen due
          # to validation enforced at an earlier stage.
-         log.error("No capture group defined for declaration in file '$#'. " &
+         log.abort(EnforceError,
+                   "No capture group defined for declaration in file '$#'. " &
                    "This should not have occurred.", r.source_file)
-         raise new_exception(EnforceError, "No capture group defined.")
 
    # Run through the sentence looking for declarations. If the declaration
    # has no definition, the rule is violated outright. Otherwise, we have
@@ -471,9 +470,9 @@ method enforce*(r: RuleDefinition, sentence: Sentence): seq[Violation] =
       except IndexError:
          # Abort if no capture group can be found. This should not happen due
          # to validation enforced at an earlier stage.
-         log.error("No capture group defined for definition in file '$#'. " &
+         log.abort(EnforceError,
+                   "No capture group defined for definition in file '$#'. " &
                    "This should not have occurred.", r.source_file)
-         raise new_exception(EnforceError, "No capture group defined.")
 
    # Remember the paragraph.
    r.par_prev = sentence.par_idx
@@ -529,9 +528,9 @@ method enforce*(r: RuleConditional, sentence: Sentence): seq[Violation] =
       except IndexError:
          # Abort if no capture group can be found. This should not happen due
          # to validation enforced at an earlier stage.
-         log.error("No capture group defined for conditional in file '$#'. " &
+         log.abort(EnforceError,
+                   "No capture group defined for conditional in file '$#'. " &
                    "This should not have occurred.", r.source_file)
-         raise new_exception(EnforceError, "No capture group defined.")
 
    for m_second in nre.find_iter($sentence.str, r.regex_second):
       let (row_second, col_second) =

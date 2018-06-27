@@ -189,11 +189,9 @@ proc new(t: typedesc[Rules]): Rules =
 
 template validate_extension_point(data: typed, ext: string, filename: string) =
    if not (to_lower_ascii(data.extends) == ext):
-      log.error("Invalid extension point '$#' specified in file '$#'.",
+      log.abort(RuleValueError,
+                "Invalid extension point '$#' specified in file '$#'.",
                 data.extends, filename)
-      raise new_exception(RuleValueError,
-                          format("Invalid extension point '$#' specified in " &
-                                 "file '$#'.", data.extends, filename))
 
 
 template validate_common(data: typed, filename: string, message: untyped,
@@ -465,11 +463,10 @@ proc parse_rule_file*(filename: string): seq[Rule] =
    fs.close()
 
    if not success:
-      log.error("Parse error in file '$#'. Either it's not a valid YAML " &
+      log.abort(RuleParseError,
+                "Parse error in file '$#'. Either it's not a valid YAML " &
                 "file or it doesn't specify the required fields for the " &
                 "extension point. Skipping for now.", filename)
-      raise new_exception(RuleParseError, "Parse error in file '" &
-                                          filename & "'")
 
 
 type Mode* = enum NonRecursive, Recursive
