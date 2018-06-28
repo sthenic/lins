@@ -202,7 +202,7 @@ method enforce*(r: RuleSubstitution, sentence: Sentence): seq[Violation] =
             subst = value
             break
 
-      violations.add(r.create_violation(violation_pos, subst, $m))
+      violations.add(r.create_violation(violation_pos, $m, subst))
 
    return violations
 
