@@ -34,12 +34,14 @@ type
       source_file: string
       message: string
       position: Position
+      display_name: string
 
    Rule* = ref object of RootObj
       kind*: string
       severity*: Severity
       message*: string
       source_file*: string
+      display_name*: string
 
    RuleExistence* = ref object of Rule
       regex: Regex
@@ -90,15 +92,16 @@ type
 
 # Constructors
 proc new*(t: typedesc[Rule], kind: string, severity: Severity, message: string,
-          source_file: string): Rule =
+          source_file: string, display_name: string): Rule =
    Rule(kind: kind, severity: severity, message: message,
-        source_file: source_file)
+        source_file: source_file, display_name: display_name)
 
 
 proc create_violation(r: Rule, pos: Position,
                       message_args: varargs[string]): Violation =
    (kind: r.kind, severity: r.severity, source_file: r.source_file,
-    message: format(r.message, message_args), position: pos)
+    message: format(r.message, message_args), position: pos,
+    display_name: r.display_name)
 
 # Compute absolute file position of the rule violation using the absolute
 # sentence position, the relative rule violation position within the
@@ -129,13 +132,17 @@ method enforce*(r: Rule, sentence: Sentence): seq[Violation] {.base.}  =
              "Rule enforcement not implemented for rule '$#'.", r.kind)
 
 proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
-          source_file: string, regex: string, ignore_case: bool): RuleExistence =
+          source_file: string, display_name: string, regex: string,
+          ignore_case: bool): RuleExistence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
 
-   return RuleExistence(kind: "existence", severity: severity, message: message,
+   return RuleExistence(kind: "existence",
+                        severity: severity,
+                        message: message,
                         source_file: source_file,
+                        display_name: display_name,
                         regex: re(regex_flags & regex))
 
 method enforce*(r: RuleExistence, sentence: Sentence): seq[Violation] =
@@ -153,7 +160,8 @@ method enforce*(r: RuleExistence, sentence: Sentence): seq[Violation] =
 
 
 proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
-          source_file: string, regex: string, subst_table: Table[string, string],
+          source_file: string, display_name: string, regex: string,
+          subst_table: Table[string, string],
           ignore_case: bool): RuleSubstitution =
    var regex_flags = ""
    if ignore_case:
@@ -163,8 +171,11 @@ proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
    for key, value in pairs(subst_table):
       lsubst_table[regex_flags & key] = value
 
-   return RuleSubstitution(kind: "substitution", severity: severity,
-                           message: message, source_file: source_file,
+   return RuleSubstitution(kind: "substitution",
+                           severity: severity,
+                           message: message,
+                           source_file: source_file,
+                           display_name: display_name,
                            regex: re(regex_flags & regex),
                            subst_table: lsubst_table)
 
@@ -196,8 +207,9 @@ method enforce*(r: RuleSubstitution, sentence: Sentence): seq[Violation] =
    return violations
 
 proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
-          source_file: string, regex: string, limit_val: int, limit_kind: Limit,
-          scope: Scope, ignore_case: bool): RuleOccurrence =
+          source_file: string,  display_name: string, regex: string,
+          limit_val: int, limit_kind: Limit, scope: Scope,
+          ignore_case: bool): RuleOccurrence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -206,6 +218,7 @@ proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
                          severity: severity,
                          message: message,
                          source_file: source_file,
+                         display_name: display_name,
                          regex: re(regex_flags & regex),
                          limit_val: limit_val,
                          limit_kind: limit_kind,
@@ -257,8 +270,8 @@ method enforce*(r: RuleOccurrence, sentence: Sentence): seq[Violation] =
 
 
 proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
-          source_file: string, regex: string, scope: Scope,
-          ignore_case: bool): RuleRepetition =
+          source_file: string,  display_name: string, regex: string,
+          scope: Scope, ignore_case: bool): RuleRepetition =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -267,6 +280,7 @@ proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
                          severity: severity,
                          message: message,
                          source_file: source_file,
+                         display_name: display_name,
                          regex: re(regex_flags & regex),
                          scope: scope,
                          par_prev: 0,
@@ -311,8 +325,9 @@ method enforce*(r: RuleRepetition, sentence: Sentence): seq[Violation] =
 
 
 proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
-          source_file: string, regex_first: string, regex_second: string,
-          scope: Scope, ignore_case: bool): RuleConsistency =
+          source_file: string, display_name: string, regex_first: string,
+          regex_second: string, scope: Scope,
+          ignore_case: bool): RuleConsistency =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -321,6 +336,7 @@ proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
                          severity: severity,
                          message: message,
                          source_file: source_file,
+                         display_name: display_name,
                          regex_first: re(regex_flags & regex_first),
                          regex_second: re(regex_flags & regex_second),
                          scope: scope,
@@ -380,8 +396,8 @@ method enforce*(r: RuleConsistency, sentence: Sentence): seq[Violation] =
 #   regex_def = r'(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)'
 #   regex_decl = r'\b([A-Z]{3,5})\b'
 proc new*(t: typedesc[RuleDefinition], severity: Severity, message: string,
-          source_file: string, regex_def: string, regex_decl: string,
-          exceptions: seq[string], scope: Scope,
+          source_file: string,  display_name: string, regex_def: string,
+          regex_decl: string, exceptions: seq[string], scope: Scope,
           ignore_case: bool): RuleDefinition =
    var regex_flags = ""
    if ignore_case:
@@ -391,6 +407,7 @@ proc new*(t: typedesc[RuleDefinition], severity: Severity, message: string,
                          severity: severity,
                          message: message,
                          source_file: source_file,
+                         display_name: display_name,
                          regex_def: re(regex_flags & regex_def),
                          regex_decl: re(regex_flags & regex_decl),
                          exceptions: exceptions,
@@ -481,8 +498,9 @@ method enforce*(r: RuleDefinition, sentence: Sentence): seq[Violation] =
 
 
 proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
-          source_file: string, regex_first: string, regex_second: string,
-          scope: Scope, ignore_case: bool): RuleConditional =
+          source_file: string,  display_name: string, regex_first: string,
+          regex_second: string, scope: Scope,
+          ignore_case: bool): RuleConditional =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -491,6 +509,7 @@ proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
                           severity: severity,
                           message: message,
                           source_file: source_file,
+                          display_name: display_name,
                           regex_first: re(regex_flags & regex_first),
                           regex_second: re(regex_flags & regex_second),
                           scope: scope,

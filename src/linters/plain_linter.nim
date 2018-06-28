@@ -60,7 +60,7 @@ proc print_violation(v: Violation) =
    styled_write_line(stdout, &" {v.position.row:>4}:{v.position.col:<5} ",
                      styleBright, severity_color, &"{severity_str:<11}",
                      resetStyle, &"{message[0]:<48}    ",
-                     styleBright, &"{v.source_file:<20}", resetStyle)
+                     styleBright, &"{v.display_name:<20}", resetStyle)
 
    for m in 1..<message.len:
       let tmp = ""
