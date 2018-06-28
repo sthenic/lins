@@ -397,8 +397,10 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    for first, second in pairs(data.either):
+      let lfirst = r"\b(" & first & r")\b"
+      let lsecond = r"\b(" & second & r")\b"
       result.add(RuleConsistency.new(level, message, filename, display_name,
-                                     first, second, scope, ignore_case))
+                                     lfirst, lsecond, scope, ignore_case))
 
 
 proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
