@@ -57,6 +57,7 @@ type
       message: string
       level: string
       ignorecase: bool
+      nonword: bool
       scope: string
       either: Table[string, string]
 
@@ -102,6 +103,8 @@ set_default_value(ExistenceYAML, raw, @[])
 set_default_value(ExistenceYAML, tokens, @[])
 
 set_default_value(SubstitutionYAML, nonword, false)
+
+set_default_value(ConsistencyYAML, nonword, false)
 
 set_default_value(DefinitionYAML, definition,
                   r"(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)")
@@ -152,6 +155,7 @@ proc new(t: typedesc[ConsistencyYAML]): ConsistencyYAML =
                             message: "",
                             level: "",
                             ignorecase: false,
+                            nonword: false,
                             scope: "",
                             either: init_table[string, string]())
 
@@ -395,10 +399,16 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
 
+   var word_boundary: tuple[l: string, r: string]
+   if data.nonword:
+      word_boundary = ("", "")
+   else:
+      word_boundary = (r"\b(", r")\b")
+
    let display_name = get_rule_display_name(filename)
    for first, second in pairs(data.either):
-      let lfirst = r"\b(" & first & r")\b"
-      let lsecond = r"\b(" & second & r")\b"
+      let lfirst = word_boundary.l & first & word_boundary.r
+      let lsecond = word_boundary.l & second & word_boundary.r
       result.add(RuleConsistency.new(level, message, filename, display_name,
                                      lfirst, lsecond, scope, ignore_case))
 

@@ -173,6 +173,23 @@ accepts the ``scope`` field.
       recognize: recognise
       analog: analogue
 
+The keys and values may be general regular expressions but unless the
+``nonword`` field is set to ``true``, word boundary tokens ``\b`` are
+automatically added to the expression.
+
+We can generalize the example above as:
+
+.. code-block:: YAML
+
+    extends: consistency
+    message: "Inconsistent spelling of '$1'."
+    level: error
+    ignorecase: true
+    scope: text
+    either:
+      (?:\w+)nize: (?:\w+)nise
+      (?:\w+)log: (?:\w+)logue
+
 .. _`rule_definition`:
 
 Definition
