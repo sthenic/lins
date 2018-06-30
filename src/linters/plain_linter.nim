@@ -26,14 +26,14 @@ var
    nof_violations_file: ViolationCount
    nof_files: int
    lint_rules: seq[Rule]
-   quiet_mode = false
+   minimal_mode = false
    lexer_output_fs : FileStream
 
 
-proc set_quiet_mode*(state: bool) =
-   ## Enable or disable quiet output mode. This will suppress everything except
-   ## the violation messages.
-   quiet_mode = state
+proc set_minimal_mode*(state: bool) =
+   ## Enable or disable minimal output mode. This will suppress everything
+   ## except the violation messages.
+   minimal_mode = state
 
 
 proc print_violation(v: Violation) =
@@ -68,8 +68,8 @@ proc print_violation(v: Violation) =
 
 
 proc print_header(str: string) =
-   # Suppress headers in quiet mode.
-   if quiet_mode:
+   # Suppress headers in minimal mode.
+   if minimal_mode:
       return
 
    styled_write_line(stdout, styleBright, styleUnderscore, &"\n{str}", resetStyle)
@@ -77,8 +77,8 @@ proc print_header(str: string) =
 
 proc print_footer(time_ms: float, violation_count: ViolationCount,
                   nof_files: int) =
-   # Suppress footers in quiet mode.
-   if quiet_mode:
+   # Suppress footers in minimal mode.
+   if minimal_mode:
       return
 
    styled_write_line(stdout, styleBright, "\n\nAnalysis completed in ", fgGreen,

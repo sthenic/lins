@@ -19,7 +19,7 @@ const VERSION_PATCH = 0
 let VERSION = $VERSION_MAJOR & "." & $VERSION_MINOR & "." & $VERSION_PATCH
 
 
-# Error and exit codes. Error codes are negative values.
+# Exit codes: negative values are errors.
 const EVIOL = 1
 const ESUCCESS = 0
 const EINVAL = -1
@@ -64,9 +64,9 @@ for kind, key, val in p.getopt():
          cli_rules.add(val)
       of "rule-dir":
          cli_rule_dirs.add(val)
-      of "quiet":
+      of "minimal":
          log.set_quiet_mode(true)
-         plain_linter.set_quiet_mode(true)
+         plain_linter.set_minimal_mode(true)
       of "style":
          cli_styles.add(val)
       of "list":

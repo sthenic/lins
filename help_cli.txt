@@ -21,8 +21,8 @@ options:
   --no-default             Don't use a default style (if defined in the
                            configuration file).
 
-  --quiet                  Enable quiet mode. All output except the violation
-                           information is suppressed.
+  --minimal                Enable minimal output mode. All output except the
+                           violation information is suppressed.
 
   --style=STYLE            Specify which style to use for linting. Styles
                            are defined in the configuration file.
