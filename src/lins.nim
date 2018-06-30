@@ -6,11 +6,11 @@ import tables
 import ospaths
 import terminal
 
-import src/linters/plain_linter
-import src/rules/rules
-import src/rules/parser
-import src/utils/log
-import src/utils/cfg
+import linters/plain_linter
+import rules/rules
+import rules/parser
+import utils/log
+import utils/cfg
 
 # Version information
 const VERSION_MAJOR = 0
