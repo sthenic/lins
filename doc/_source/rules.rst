@@ -23,7 +23,19 @@ on one of these types.
 Severity Levels
 ===============
 
-There are three severity levels: ``error``, ``warning`` and ``suggestion``.
+.. There are three severity levels: ``error``, ``warning`` and ``suggestion``.
+
+Documentation coming soon.
+
+.. _`rule_message_strings`:
+
+Message Strings
+===============
+
+.. * Explain Nim format specifiers
+.. * Quoted strings are interpreted literally by the YAML parser \n
+
+Documentation coming soon.
 
 .. _`rule_existence`:
 

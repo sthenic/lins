@@ -4,4 +4,4 @@
 Examples
 ********
 
-Some examples to follow.
+Documentation coming soon.

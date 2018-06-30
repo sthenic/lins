@@ -11,7 +11,7 @@ Lins is a lightweight, extensible linter for prose. The tool is written in
 
     The source code may be found in the project's `Gitlab repository`_.
 
-.. _Gitlab repository: http://gitlab.com/sthenic/lins
+.. _Gitlab repository: https://gitlab.com/sthenic/lins
 
 This documentation is generated with `Sphinx`_ using the `Alabaster`_ theme.
 
@@ -22,9 +22,9 @@ Features
 ========
 
 * Full Unicode support
-* Able to handle in-sentence line breaks
-* Rules are defined using `YAML`_
-* Define styles from a collection of rules
+* Ability to handle in-sentence line breaks
+* Define :ref:`rules <lins_rules>` using `YAML`_
+* Define :ref:`styles <cfg_styles>` from a collection of rules
 
 .. _YAML: http://yaml.org/
 

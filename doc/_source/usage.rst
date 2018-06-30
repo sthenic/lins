@@ -4,6 +4,8 @@
 Usage
 *****
 
+Documentation coming soon.
+
 Command Line Interface
 ======================
 

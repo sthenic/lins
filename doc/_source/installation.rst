@@ -4,4 +4,4 @@
 Installation
 ************
 
-Installing the tool.
+Documentation coming soon.
