@@ -4,10 +4,17 @@
 Configuration
 *************
 
+Documentation coming soon.
+
 .. _`cfg_file`:
 
 Configuration File
 ==================
+
+Documentation coming soon.
+
+.. literalinclude:: lins.cfg
+    :language: cfg
 
 .. * File naming
 .. * Search behavior
@@ -18,8 +25,20 @@ Configuration File
 Rule Directories
 ================
 
-.. * Specifiying rule dirs
-.. * No recursive search
+.. literalinclude:: lins.cfg
+    :language: cfg
+    :lines: 1-3
+
+Rule directories are specified in the ``RuleDirs`` section. The directories are
+not traversed recursively so only rule files residing on the top level are
+added. Entries are separated by line breaks and may explicitly be assigned a
+*label* by using the ``=`` character. Entries without an explicit label will
+use the name of their lowest-level directory.
+
+.. note::
+
+    Relative paths are computed w.r.t. the path of the configuration file.
+
 
 .. _`cfg_styles`:
 
@@ -55,8 +74,17 @@ Defining a Style
 .. * Default style
 .. * Adding rule dirs (by name)
 
+Documentation coming soon.
+
+.. literalinclude:: lins.cfg
+    :language: cfg
+    :lines: 5-14
+
 Except and Only
 ###############
 
+Documentation coming soon.
 
-
+.. literalinclude:: lins.cfg
+    :language: cfg
+    :lines: 9-13,19-21

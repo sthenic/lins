@@ -49,7 +49,7 @@ will be supplied the matching text as a replacement field.
 .. code-block:: YAML
 
     extends: existence
-    message: "Consider removing '$#'."
+    message: "Consider removing '$1'."
     ignorecase: true
     level: warning
     tokens:

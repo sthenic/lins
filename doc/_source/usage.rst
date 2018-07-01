@@ -9,5 +9,5 @@ Documentation coming soon.
 Command Line Interface
 ======================
 
-.. literalinclude:: /../help_cli.txt
+.. literalinclude:: /../src/help_cli.txt
     :language: text
