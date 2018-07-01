@@ -58,7 +58,7 @@ proc print_violation(v: Violation) =
                 $v.severity)
 
    styled_write_line(stdout, &" {v.position.row:>4}:{v.position.col:<5} ",
-                     styleBright, severity_color, &"{severity_str:<11}",
+                     styleBright, severity_color, &"{severity_str:<12}",
                      resetStyle, &"{message[0]:<48}    ",
                      styleBright, &"{v.display_name:<20}", resetStyle)
 
