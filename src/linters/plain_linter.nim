@@ -64,7 +64,7 @@ proc print_violation(v: Violation) =
 
    for m in 1..<message.len:
       let tmp = ""
-      styled_write_line(stdout, &"{tmp:26}{message[m]:<48}")
+      styled_write_line(stdout, &"{tmp:24}{message[m]:<48}")
 
 
 proc print_header(str: string) =
