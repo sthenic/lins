@@ -1,0 +1,7 @@
+extends: existence
+message: "Label '$1' has no prefix."
+ignorecase: true
+nonword: true
+level: warning
+raw:
+  - \\(eq)?ref{\w+(?!:)\w+}
