@@ -67,16 +67,24 @@ template error*(msg: string, args: varargs[string]) =
 
 template debug*(args: varargs[typed]) =
    when not defined(release):
-      if not quiet_mode:
-         call_styled_write_line(styleBright, DEBUG_COLOR, "DEBUG:   ",
-                                resetStyle, args)
+      debug_always(args)
 
 
 template debug*(msg: string, args: varargs[string]) =
    when not defined(release):
-      if not quiet_mode:
-         call_styled_write_line(styleBright, DEBUG_COLOR, "DEBUG:   ",
-                                resetStyle, format(msg, args))
+      debug_always(msg, args)
+
+
+template debug_always*(args: varargs[typed]) =
+   if not quiet_mode:
+      call_styled_write_line(styleBright, DEBUG_COLOR, "DEBUG:   ",
+                             resetStyle, args)
+
+
+template debug_always*(msg: string, args: varargs[string]) =
+   if not quiet_mode:
+      call_styled_write_line(styleBright, DEBUG_COLOR, "DEBUG:   ",
+                             resetStyle, format(msg, args))
 
 
 template abort*(e: typedesc[Exception], msg: string, args: varargs[string]) =
