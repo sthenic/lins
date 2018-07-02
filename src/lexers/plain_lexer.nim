@@ -195,7 +195,8 @@ proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
       # variable is used pass around a mutable container between the state
       # machine's callback functions.
       meta: PlainTextMeta =
-         (row: row_init, col: col_init, new_par: true, sentence_callback: callback,
+         (row: row_init, col: col_init, new_par: true,
+          sentence_callback: callback,
           sentence: (str: @[], newlines: @[], par_idx: 0, row_begin: 0,
                      col_begin: 0, row_end: 1, col_end: 1))
 
