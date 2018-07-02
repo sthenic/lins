@@ -25,6 +25,7 @@ type
       nonword: bool
       raw: seq[string]
       tokens: seq[string]
+      debug: bool
 
    SubstitutionYAML = object
       extends: string
@@ -33,6 +34,7 @@ type
       ignorecase: bool
       nonword: bool
       swap: Table[string, string]
+      debug: bool
 
    OccurrenceYAML = object
       extends: string
@@ -43,6 +45,7 @@ type
       limit: int
       limit_kind: string
       token: string
+      debug: bool
 
    RepetitionYAML = object
       extends: string
@@ -51,6 +54,7 @@ type
       ignorecase: bool
       scope: string
       token: string
+      debug: bool
 
    ConsistencyYAML = object
       extends: string
@@ -60,6 +64,7 @@ type
       nonword: bool
       scope: string
       either: Table[string, string]
+      debug: bool
 
    DefinitionYAML = object
       extends: string
@@ -70,6 +75,7 @@ type
       definition: string
       declaration: string
       exceptions: seq[string]
+      debug: bool
 
    ConditionalYAML = object
       extends: string
@@ -79,6 +85,7 @@ type
       scope: string
       first: string
       second: string
+      debug: bool
 
    Rules = tuple
       existence: ExistenceYAML
@@ -97,6 +104,14 @@ set_default_value(RepetitionYAML, ignorecase, false)
 set_default_value(ConsistencyYAML, ignorecase, false)
 set_default_value(DefinitionYAML, ignorecase, false)
 set_default_value(ConditionalYAML, ignorecase, false)
+
+set_default_value(ExistenceYAML, debug, false)
+set_default_value(SubstitutionYAML, debug, false)
+set_default_value(OccurrenceYAML, debug, false)
+set_default_value(RepetitionYAML, debug, false)
+set_default_value(ConsistencyYAML, debug, false)
+set_default_value(DefinitionYAML, debug, false)
+set_default_value(ConditionalYAML, debug, false)
 
 set_default_value(ExistenceYAML, nonword, false)
 set_default_value(ExistenceYAML, raw, @[])
@@ -289,6 +304,55 @@ proc get_rule_display_name(rule_filename: string): string =
       result = tail & "." & name
 
 
+template debug_header(data: typed, filename: string) =
+   if data.debug:
+      log.debug_always("Debug information for rule '$#'.", filename)
+
+
+template debug_existence(data: typed, filename, token_str: string) =
+   debug_header(data, filename)
+   if data.debug:
+      log.debug("  $#", token_str)
+
+
+template debug_substitution(data: typed, filename, key_str: string) =
+   debug_header(data, filename)
+   if data.debug:
+      log.debug("  $#", key_str)
+
+
+template debug_occurrence(data: typed, filename: string) =
+   debug_header(data, filename)
+   if data.debug:
+      log.debug("  $#", data.token)
+
+
+template debug_repetition(data: typed, filename: string) =
+   debug_header(data, filename)
+   if data.debug:
+      log.debug("  $#", data.token)
+
+
+template debug_consistency_entry(data: typed, first, second: string) =
+   if data.debug:
+      log.debug_always("  First:  $#", first)
+      log.debug_always("  Second: $#", second)
+
+
+template debug_definition(data: typed, filename: string) =
+   debug_header(data, filename)
+   if data.debug:
+      log.debug_always("  Definition:  $#", data.definition)
+      log.debug_always("  Declaration: $#", data.declaration)
+
+
+template debug_conditional(data: typed, filename: string) =
+   debug_header(data, filename)
+   if data.debug:
+      log.debug_always("  First:  $#", data.first)
+      log.debug_always("  Second: $#", data.second)
+
+
 proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'existence' and return a
    ## sequence of RuleExistence objects.
@@ -327,6 +391,8 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
                           format("Missing either tokens or raw items for " &
                                  "rule in file '$#'.", filename))
 
+   debug_existence(data, filename, token_str)
+
    let display_name = get_rule_display_name(filename)
    result.add(RuleExistence.new(level, message, filename, display_name,
                                 token_str, ignore_case))
@@ -356,6 +422,8 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
       subst_table[key] = subst
    key_str = key_str[0..^2] & ")" & word_boundary
 
+   debug_substitution(data, filename, key_str)
+
    let display_name = get_rule_display_name(filename)
    result.add(RuleSubstitution.new(level, message, filename, display_name,
                                    key_str, subst_table, ignore_case))
@@ -371,6 +439,8 @@ proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
    validate_scope(data, filename, scope)
    validate_limit(data, filename, limit, limit_kind)
 
+   debug_occurrence(data, filename)
+
    let display_name = get_rule_display_name(filename)
    result.add(RuleOccurrence.new(level, message, filename, display_name,
                                  data.token, limit, limit_kind, scope, ignore_case))
@@ -384,6 +454,8 @@ proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
    validate_extension_point(data, "repetition", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
+
+   debug_repetition(data, filename)
 
    let display_name = get_rule_display_name(filename)
    result.add(RuleRepetition.new(level, message, filename, display_name,
@@ -405,10 +477,15 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
    else:
       word_boundary = (r"\b(", r")\b")
 
+   debug_header(data, filename)
+
    let display_name = get_rule_display_name(filename)
    for first, second in pairs(data.either):
       let lfirst = word_boundary.l & first & word_boundary.r
       let lsecond = word_boundary.l & second & word_boundary.r
+
+      debug_consistency_entry(data, lfirst, lsecond)
+
       result.add(RuleConsistency.new(level, message, filename, display_name,
                                      lfirst, lsecond, scope, ignore_case))
 
@@ -423,6 +500,8 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
    validate_scope(data, filename, scope)
    validate_nof_capture_groups(data.declaration, filename, "declaration", 1)
    validate_nof_capture_groups(data.definition, filename, "definition", 1)
+
+   debug_definition(data, filename)
 
    let display_name = get_rule_display_name(filename)
    result.add(RuleDefinition.new(level, message, filename, display_name,
@@ -440,6 +519,8 @@ proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
    validate_scope(data, filename, scope)
    validate_nof_capture_groups(data.first, filename, "first", 1)
    validate_nof_capture_groups(data.second, filename, "second", 1)
+
+   debug_conditional(data, filename)
 
    let display_name = get_rule_display_name(filename)
    result.add(RuleConditional.new(level, message, filename, display_name,
