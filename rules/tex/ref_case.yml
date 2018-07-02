@@ -1,0 +1,9 @@
+extends: substitution
+message: "Label case '$2', not '$1'."
+ignorecase: false
+nonword: true
+level: error
+swap:
+  fig\.(?=[\s~]*\\ref): Fig.
+  table(?=[\s~]*\\ref): Table
+  section(?=[\s~]*\\ref): Section

@@ -1,0 +1,10 @@
+extends: substitution
+message: "Use a tie between the reference label and \\ref, i.e. '$2'."
+ignorecase: false
+nonword: true
+level: error
+swap:
+  Fig\.(?!~)\\ref: Fig.~
+  Table(?!~)\\ref: Table~
+  Section(?!~)\\ref: Section~
+  Equation(?!~)\\eqref: Equation~
