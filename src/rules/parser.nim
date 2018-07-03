@@ -312,25 +312,25 @@ template debug_header(data: typed, filename: string) =
 template debug_existence(data: typed, filename, token_str: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug("  $#", token_str)
+      log.debug_always("  $#", token_str)
 
 
 template debug_substitution(data: typed, filename, key_str: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug("  $#", key_str)
+      log.debug_always("  $#", key_str)
 
 
 template debug_occurrence(data: typed, filename: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug("  $#", data.token)
+      log.debug_always("  $#", data.token)
 
 
 template debug_repetition(data: typed, filename: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug("  $#", data.token)
+      log.debug_always("  $#", data.token)
 
 
 template debug_consistency_entry(data: typed, first, second: string) =
