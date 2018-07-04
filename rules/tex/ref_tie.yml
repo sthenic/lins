@@ -1,9 +1,10 @@
 extends: existence
 message: "Use a tie '~' between the reference label and \\ref, i.e. '$1~\\ref{...}'."
 ignorecase: false
+nonword: true
 level: error
 tokens:
-  - Figs?\.(?!~)(?=\s*\\ref)
+  - Fig\.(?!~)(?=\s*\\ref)
   - Tables?(?!~)(?=\s*\\ref)
   - Sections?(?!~)(?=\s*\\ref)
   - Equations?(?!~)(?=\s*\\eqref)

@@ -1,6 +1,7 @@
 extends: existence
 message: "Unknown label prefix in '$1'."
 ignorecase: true
+nonword: true
 level: error
 tokens:
   - (?<=\\ref{)(?!(fig|tab|sec|ch|itm|lst|alg|app):\w+)(.*?)(?=})
