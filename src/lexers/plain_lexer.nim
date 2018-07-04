@@ -90,6 +90,8 @@ let
       PlainTextTransition(condition_cb: is_not_capital_letter,
                           transition_cb: prepend_space,
                           next_state: STATE2),
+      PlainTextTransition(condition_cb: is_ws, transition_cb: insert_space,
+                          next_state: STATE4),
       PlainTextTransition(condition_cb: is_newline,
                           transition_cb: paragraph_complete,
                           next_state: nil)
