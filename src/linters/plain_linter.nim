@@ -4,6 +4,8 @@ import strformat
 import streams
 import terminal
 import unicode
+import nre
+import sequtils
 
 import ../lexers/plain_lexer
 import ../rules/rules
@@ -36,10 +38,18 @@ proc set_minimal_mode*(state: bool) =
    minimal_mode = state
 
 
+proc split_message(msg: string, limit: int): seq[string] =
+   proc helper(s: string): bool =
+      result = s != ""
+
+   let regex_break = re("(.{1," & $limit & "})(?<!')(?:\\b|$|(?=_))(?!')")
+   result = filter(split(msg, regex_break), helper)
+   for i in 0..<result.len:
+      result[i] = result[i].strip()
+
+
 proc print_violation(v: Violation) =
-   var message: seq[string] = @[]
-   for i in countup(0, v.message.len - 1, 48):
-      message.add(v.message[i..min(i + 47, v.message.len - 1)])
+   let message = split_message(v.message, 48)
 
    var severity_color: ForegroundColor = fgWhite
    var severity_str: string = ""
