@@ -1,11 +1,10 @@
 extends: existence
-message: "Use a tie '~' between the value and the unit."
+message: "Use a tie '~' between the value and the unit, i.e. '$1~...'."
 ignorecase: false
-nonword: true
 level: error
 tokens:
-  - \d+(?!~)\s*[munpf]?(\$.*\$)?s\b
-  - \d+(?!~)\s*[kMGPT]?(\$.*\$)?B\b
-  - \d+(?!~)\s*[kMGPT]?(\$.*\$)?SPS\b
-  - \d+(?!~)\s*[kMGPT]?(\$.*\$)?bit\b
-  - \d+(?!~)\s*[kMGPT]?(\$.*\$)?Hz\b
+  - (\d+)(?=(?!~)\s*[munpf]?(\$.*\$)?s)
+  - (\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?B)
+  - (\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?SPS)
+  - (\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?bit)
+  - (\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?Hz)

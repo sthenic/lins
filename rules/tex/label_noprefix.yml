@@ -4,4 +4,4 @@ ignorecase: true
 nonword: true
 level: warning
 raw:
-  - \\(eq)?ref{\w+(?!:)\w+}
+  - \\label{\w+(?!:)\w+}

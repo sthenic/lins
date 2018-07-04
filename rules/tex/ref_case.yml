@@ -5,5 +5,10 @@ nonword: true
 level: error
 swap:
   fig\.(?=[\s~]*\\ref): Fig.
+  figs\.(?=[\s~]*\\ref): Figs.
   table(?=[\s~]*\\ref): Table
+  tables(?=[\s~]*\\ref): Tables
   section(?=[\s~]*\\ref): Section
+  sections(?=[\s~]*\\ref): Sections
+  equation(?=[\s~]*\\ref): Equation
+  equations(?=[\s~]*\\ref): Equations

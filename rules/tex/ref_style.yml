@@ -6,6 +6,10 @@ level: error
 swap:
   fig(?!\.)(?=[\s~]*\\ref): Fig.
   figure(?=[\s~]*\\ref): Fig.
+  figs(?!\.)(?=[\s~]*\\ref): Figs.
+  figures(?=[\s~]*\\ref): Figs.
   tab(\.)?(?=[\s~]*\\ref): Table
+  tabs(\.)?(?=[\s~]*\\ref): Tables
   sec(\.)?(?=[\s~]*\\ref): Section
+  secs(\.)?(?=[\s~]*\\ref): Sections
   \\ref{eq:\w+}: \eqref

@@ -4,4 +4,4 @@ ignorecase: true
 nonword: true
 level: error
 raw:
-  - (?<!^)(equation|eq.)(?=[\s~]*\\eqref)
+  - (?<!^)(equations?|eqs?.)(?=[\s~]*\\eqref)
