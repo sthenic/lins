@@ -3,5 +3,5 @@ message: "Unknown label prefix in '$1'."
 ignorecase: true
 level: error
 tokens:
-  - (?<=\\ref{)(?!(fig|tab|sec|eq|ch|itm|lst|alg|app):\w+)(.*?)(?=})
-
+  - (?<=\\ref{)(?!(fig|tab|sec|ch|itm|lst|alg|app):\w+)(.*?)(?=})
+  - (?<=\\eqref{)(?!eq:\w+)(.*?)(?=})
