@@ -4,5 +4,4 @@ ignorecase: true
 nonword: true
 level: error
 tokens:
-  - (?<=\\ref{)(?!(fig|tab|sec|ch|itm|lst|alg|app):\w+)(.*?)(?=})
-  - (?<=\\eqref{)(?!eq:\w+)(.*?)(?=})
+  - (?<=\\label{)(?!(fig|tab|eq|sec|ch|itm|lst|alg|app):\w+)(.*?)(?=})

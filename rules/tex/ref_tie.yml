@@ -4,7 +4,7 @@ ignorecase: false
 nonword: true
 level: error
 tokens:
-  - Fig\.(?!~)(?=\s*\\ref)
+  - Figs?\.(?!~)(?=\s*\\ref)
   - Tables?(?!~)(?=\s*\\ref)
   - Sections?(?!~)(?=\s*\\ref)
   - Equations?(?!~)(?=\s*\\eqref)
