@@ -14,11 +14,27 @@ pages:
   only:
   - master
 
-build:
-  image: nimlang/nim
+# build:
+#   image: nimlang/nim
+#   script:
+#   - nimble install yaml -y
+#   - nim build
+#   artifacts:
+#     paths:
+#     - lins
+#     expire_in: 1 day
+#   only:
+# - master
+
+build-win64:
+  image: pivotaldata/centos-mingw
   script:
+  - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
+  - sh init.sh -y
+  - export PATH=$HOME/.nimble/bin:$PATH
+  - nimble refresh -y
   - nimble install yaml -y
-  - nim build
+  - nim buildwin
   artifacts:
     paths:
     - lins
