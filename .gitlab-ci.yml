@@ -1,6 +1,5 @@
-image: alpine
-
 pages:
+  image: alpine
   script:
   - cd doc
   - apk --no-cache add py3-pip python3-dev
@@ -12,5 +11,16 @@ pages:
   artifacts:
     paths:
     - public
+  only:
+  - master
+
+build:
+  image: nimlang/nim
+  script:
+  - nim build
+  artifacts:
+    paths:
+    - lins
+    expire_in: 1 day
   only:
   - master
