@@ -17,6 +17,7 @@ pages:
 build:
   image: nimlang/nim
   script:
+  - nimble install yaml
   - nim build
   artifacts:
     paths:
