@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Add symbolic link
+ln -s /usr/share/lins/lins /usr/bin/lins

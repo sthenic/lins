@@ -2,6 +2,11 @@
 echo -n "Organizing artifacts..."
 mkdir -p "deb/usr/share"
 cp "../lins" "deb/usr/share/lins"
+
+mkdir -p "deb/usr/share/doc/lins"
+cp "../LICENSE" "deb/usr/share/doc/lins/copyright"
+echo  >> "deb/usr/share/doc/lins/copyright"
+cat "../THIRD_PARTY_LICENSES.md" >> "deb/usr/share/doc/lins/copyright"
 echo " done."
 
 # Update version information
