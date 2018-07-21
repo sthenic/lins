@@ -20,6 +20,7 @@ build:
   - nimble install yaml -y
   - nim build
   - cd build
+  - chmod 755 deb/DEBIAN
   - sh build_deb.sh
   - cp *.deb ../
   artifacts:
@@ -30,16 +31,17 @@ build:
   - master
 
 build-win64:
-  image: ubuntu
+  image: nimlang/nim
   script:
   - apt update
   - apt install -y build-essential mingw-w64 curl xz-utils git
-  - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
-  - sh init.sh -y
-  - export PATH=$HOME/.nimble/bin:$PATH
+  # - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
+  # - sh init.sh -y
+  # - export PATH=$HOME/.nimble/bin:$PATH
   - nimble refresh -y
   - nimble install yaml -y
   - nim buildxwin64
+  - ls -l
   artifacts:
     paths:
     - lins.exe
