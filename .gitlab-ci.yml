@@ -27,7 +27,6 @@ build-deb-x86_64:
     paths:
     - "*.deb"
     name: "lins-$(cat VERSION)-deb-x86_64"
-    expire_in: 1 day
   only:
   - tags
 
@@ -45,6 +44,5 @@ build-win-x86_64:
     - LICENSE
     - THIRD_PARTY_LICENSES.md
     name: "lins-$(cat VERSION)-win-x86_64"
-    expire_in: 1 day
   only:
   - tags
