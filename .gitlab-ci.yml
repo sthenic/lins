@@ -30,7 +30,7 @@ build-win64:
   image: ubuntu
   script:
   - apt update
-  - apt install -y build-essential mingw-w64 curl xz-utils
+  - apt install -y build-essential mingw-w64 curl xz-utils git
   - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
   - sh init.sh -y
   - export PATH=$HOME/.nimble/bin:$PATH
