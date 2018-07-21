@@ -20,7 +20,7 @@ build-deb64:
   - nimble install yaml -y
   - nim build
   - cd build
-  - chmod 755 deb/DEBIAN
+  - chmod -r 755 deb/DEBIAN
   - sh build_deb.sh
   - cp *.deb ../
   artifacts:
@@ -38,13 +38,12 @@ build-win64:
   - nimble refresh -y
   - nimble install yaml -y
   - nim buildxwin64
-  - LINS_VERSION=$(cat VERSION)
   artifacts:
     paths:
     - lins.exe
     - LICENSE
     - THIRD_PARTY_LICENSES.md
-    name: "lins-$LINS_VERSION-win-x86_64"
+    name: "lins-$(cat VERSION)-win-x86_64"
     expire_in: 1 day
   only:
   - master
