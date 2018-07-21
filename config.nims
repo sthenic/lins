@@ -12,8 +12,8 @@ task buildxwin64, "Compile the application into an executable.":
    withDir("src"):
       exec("nim c -d:release --os:windows -d:xwin --passC:-flto --passL:-s --gc:markAndSweep lins")
 
-   rmFile("lins".toExe)
-   mvFile("src/lins".toExe, "lins".toExe)
+   rmFile("lins.exe")
+   mvFile("src/lins.exe", "lins.exe")
    setCommand "nop"
 
 
