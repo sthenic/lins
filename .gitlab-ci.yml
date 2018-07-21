@@ -34,14 +34,12 @@ build-win64:
   image: nimlang/nim
   script:
   - apt update
-  - apt install -y build-essential mingw-w64 curl xz-utils git
-  # - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
-  # - sh init.sh -y
-  # - export PATH=$HOME/.nimble/bin:$PATH
+  - apt install -y mingw-w64
   - nimble refresh -y
   - nimble install yaml -y
   - nim buildxwin64
   - ls -l
+  - ls -l src/
   artifacts:
     paths:
     - lins.exe
