@@ -1,0 +1,10 @@
+Package: lins
+Version: 0.1.0
+Section: misc
+Priority: optional
+Architecture: amd64
+Maintainer: Marcus Eriksson <marcus.eriksson+lins@protonmail.com>
+Provides: lins
+Conflicts: lins
+Replaces: lins
+Description: A lightweight, extensible linter for prose.

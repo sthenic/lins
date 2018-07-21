@@ -13,11 +13,7 @@ import utils/log
 import utils/cfg
 
 # Version information
-const VERSION_MAJOR = 0
-const VERSION_MINOR = 1
-const VERSION_PATCH = 0
-let VERSION = $VERSION_MAJOR & "." & $VERSION_MINOR & "." & $VERSION_PATCH
-
+const VERSION_STR = static_read("../VERSION").strip()
 
 # Exit codes: negative values are errors.
 const EVIOL = 1
@@ -27,7 +23,7 @@ const ENORULES = -2
 const EFILE = -3
 
 const STATIC_HELP_TEXT = static_read("help_cli.txt")
-let HELP_TEXT = "Lins v" & VERSION & "\n\n" & STATIC_HELP_TEXT
+let HELP_TEXT = "Lins v" & VERSION_STR & "\n\n" & STATIC_HELP_TEXT
 
 var p = init_opt_parser()
 var cli_files: seq[string] = @[]
@@ -54,7 +50,7 @@ for kind, key, val in p.getopt():
          echo HELP_TEXT
          quit(ESUCCESS)
       of "version", "v":
-         echo VERSION
+         echo VERSION_STR
          quit(ESUCCESS)
       of "no-default":
          cli_no_default = true
