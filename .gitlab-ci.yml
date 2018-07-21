@@ -19,9 +19,12 @@ build:
   script:
   - nimble install yaml -y
   - nim build
+  - cd build
+  - sh build_deb.sh
+  - cp *.deb ../
   artifacts:
     paths:
-    - lins
+    - *.deb
     expire_in: 1 day
   only:
   - master
