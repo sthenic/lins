@@ -30,7 +30,7 @@ build-win64:
   image: ubuntu
   script:
   - apt update
-  - apt install -y mingw-w64 curl
+  - apt install -y mingw-w64 curl tar
   - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
   - sh init.sh -y
   - export PATH=$HOME/.nimble/bin:$PATH
