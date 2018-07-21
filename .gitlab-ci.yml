@@ -12,7 +12,7 @@ pages:
     paths:
     - public
   only:
-  - master
+  - tags
 
 build-deb-x86_64:
   image: nimlang/nim
@@ -29,7 +29,7 @@ build-deb-x86_64:
     name: "lins-$(cat VERSION)-deb-x86_64"
     expire_in: 1 day
   only:
-  - master
+  - tags
 
 build-win-x86_64:
   image: nimlang/nim
@@ -47,4 +47,4 @@ build-win-x86_64:
     name: "lins-$(cat VERSION)-win-x86_64"
     expire_in: 1 day
   only:
-  - master
+  - tags
