@@ -39,7 +39,7 @@ build-win64:
   - nim buildxwin64
   artifacts:
     paths:
-    - lins
+    - lins.exe
     expire_in: 1 day
   only:
   - master
