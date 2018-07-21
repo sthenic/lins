@@ -29,6 +29,8 @@ build:
 build-win64:
   image: ubuntu
   script:
+  - apt update
+  - apt search --names-only mingw
   - apt install mingw-w64
   - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
   - sh init.sh -y
