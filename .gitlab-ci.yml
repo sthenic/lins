@@ -38,8 +38,6 @@ build-win64:
   - nimble refresh -y
   - nimble install yaml -y
   - nim buildxwin64
-  - ls -l
-  - ls -l src/
   artifacts:
     paths:
     - lins.exe

@@ -10,8 +10,5 @@ echo -n "Updating version information..."
 sed -i "s/Version:.*$/Version: $LINS_VERSION/g" "deb/DEBIAN/control"
 echo " done."
 
-ls -l
-ls -l deb/
-
 # Create .deb
 dpkg-deb -b deb/ lins-$LINS_VERSION-$(uname -m).deb
