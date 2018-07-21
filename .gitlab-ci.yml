@@ -14,23 +14,24 @@ pages:
   only:
   - master
 
-build-deb64:
+build-deb-x86_64:
   image: nimlang/nim
   script:
   - nimble install yaml -y
   - nim build
   - cd build
-  - chmod -r 755 deb/DEBIAN
+  - chmod -R 755 deb/DEBIAN
   - sh build_deb.sh
   - cp *.deb ../
   artifacts:
     paths:
     - "*.deb"
+    name: "lins-$(cat VERSION)-deb-x86_64"
     expire_in: 1 day
   only:
   - master
 
-build-win64:
+build-win-x86_64:
   image: nimlang/nim
   script:
   - apt update
