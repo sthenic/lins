@@ -13,7 +13,8 @@ author = 'Marcus Eriksson'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+with open('../VERSION') as f:
+    release = f.readline()
 
 # -- General configuration ---------------------------------------------------
 
