@@ -4,14 +4,40 @@
 Configuration
 *************
 
-Documentation coming soon.
+Configuring the tool through a *configuration file*  allows you to specify paths
+to :ref:`directories <cfg_rule_dirs>` containing :ref:`rule files <lins_rules>`
+and to define :ref:`styles <cfg_styles>` from these files.
 
 .. _`cfg_file`:
 
 Configuration File
 ==================
 
-Documentation coming soon.
+The configuration file is expected to be named ``.lins.cfg`` and uses a syntax
+similar to Windows' ``.ini`` files. The tool determines which configuration file
+to use through a search that follows these parameters:
+
+* The path to the current working directory is traversed in ascending order
+  until a configuration file is found or the root directory is reached.
+
+* If the directory traversal yields no results, the tool looks in current user's
+  home directory (e.g. ``/home/<user>`` on Unix systems and ``C:\Users\<user>``
+  on Windows systems).
+
+Upon finding a configuration file, the search is aborted and its contents are
+parsed.
+
+.. note::
+
+    The absolute path of the selected configuration file is reported at runtime.
+
+.. note::
+
+    You can disable the use of a configuration file by specifying the option
+    ``--no-cfg``.
+
+Below is an example of a configuration file. The following sections break down
+and explain its contents.
 
 .. literalinclude:: lins.cfg
     :language: cfg
@@ -48,7 +74,7 @@ Styles
 :ref:`Rule files <lins_rules>` may be grouped together to form a *style*. Styles
 are important for a few reasons:
 
-.. Something about that sharing rule files between styles are made simple?
+.. Something about that sharing rule files between styles is made simple?
 
 * *Flexibility*---by adding an abstraction layer between the rule files and the
   user, you gain flexibility.
@@ -70,21 +96,46 @@ example, two styles may share the same core rule set but one may enforce the
 Defining a Style
 ----------------
 
-.. * Naming the style
-.. * Default style
-.. * Adding rule dirs (by name)
-
-Documentation coming soon.
+Each style is defined in its own ``Style`` section. Immediately following the
+section title, the style's ``name`` is expected. Additionally, ``default``
+keyword may be used to select this as the *default style*. Unless another style
+is specified using the ``--style`` option, the default style will automatically
+be selected when invoking the tool.
 
 .. literalinclude:: lins.cfg
     :language: cfg
-    :lines: 5-14
+    :lines: 5-7
+
+To assign rules to a style the ``rule`` keyword is used together with a target
+label (defined in the ``RuleDirs`` section). This will include all rules defined
+in the label's target directory (unless the ``Except`` or ``Only`` sections are
+used).
+
+.. literalinclude:: lins.cfg
+    :language: cfg
+    :lines: 14
 
 Except and Only
 ###############
 
-Documentation coming soon.
+The ``Except`` and ``Only`` sections applies to the latest ``rule`` keyword and
+are mutually exclusive, i.e. a rule can make use of either the ``Except``
+section or the ``Only`` section, but not both.
+
+The purpose of each section is straight-forward:
+
+* The ``Except`` section includes all rule files *except* the ones listed in
+  the section.
 
 .. literalinclude:: lins.cfg
     :language: cfg
-    :lines: 9-13,19-21
+    :lines: 9-13
+
+* The ``Only`` section *only* includes the rule files listed in the section.
+
+.. literalinclude:: lins.cfg
+    :language: cfg
+    :lines: 19-21
+
+In both cases, the lists consist of filenames (case sensitive and without the
+extension) with one entry per line.
