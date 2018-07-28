@@ -1,4 +1,8 @@
+stages:
+  - build
+
 pages:
+  stage: build
   image: alpine
   script:
   - cd doc
@@ -14,7 +18,26 @@ pages:
   only:
   - tags
 
+
+build-linux-x86_64:
+  stage: build
+  image: nimlang/nim
+  script:
+  - nimble install yaml -y
+  - nim build
+  artifacts:
+    expire_in: 5 mins
+    paths:
+    - lins
+    - LICENSE
+    - THIRD_PARTY_LICENSES.md
+    name: "lins-$(cat VERSION)-linux-x86_64"
+  only:
+  - master
+
+
 build-deb-x86_64:
+  stage: build
   image: nimlang/nim
   script:
   - nimble install yaml -y
@@ -24,13 +47,16 @@ build-deb-x86_64:
   - sh build_deb.sh
   - cp *.deb ../
   artifacts:
+    expire_in: 5 mins
     paths:
     - "*.deb"
     name: "lins-$(cat VERSION)-deb-x86_64"
   only:
-  - tags
+  - master
+
 
 build-win-x86_64:
+  stage: build
   image: nimlang/nim
   script:
   - apt update
@@ -39,10 +65,11 @@ build-win-x86_64:
   - nimble install yaml -y
   - nim buildxwin64
   artifacts:
+    expire_in: 5 mins
     paths:
     - lins.exe
     - LICENSE
     - THIRD_PARTY_LICENSES.md
     name: "lins-$(cat VERSION)-win-x86_64"
   only:
-  - tags
+  - master
