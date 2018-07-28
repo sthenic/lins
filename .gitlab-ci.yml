@@ -31,11 +31,14 @@ build-linux-x86_64:
   - cp *.deb ../
   - cd ..
   - tar -czf "lins-$(cat VERSION)-linux-x86_64.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
+  - md5sum "lins-$(cat VERSION)-linux-x86_64.tar.gz" > lins-$(cat VERSION)-linux-x86_64.md5
+  - md5sum "lins-$(cat VERSION)-deb-x86_64.deb" > lins-$(cat VERSION)-deb-x86_64.md5
   artifacts:
     expire_in: 5 mins
     paths:
     - "*.tar.gz"
     - "*.deb"
+    - "*.md5"
     name: "lins-$(cat VERSION)-build-linux-x86_64"
   only:
   - master
@@ -51,10 +54,12 @@ build-win-x86_64:
   - nimble install yaml -y
   - nim buildxwin64
   - zip "lins-$(cat VERSION)-win-x86_64.zip" lins.exe LICENSE THIRD_PARTY_LICENSES.md
+  - md5sum "lins-$(cat VERSION)-win-x86_64.zip" > lins-$(cat VERSION)-win-x86_64.md5
   artifacts:
     expire_in: 5 mins
     paths:
     - "*.zip"
+    - "*.md5"
     name: "lins-$(cat VERSION)-build-win-x86_64"
   only:
   - master
