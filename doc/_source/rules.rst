@@ -35,10 +35,36 @@ warnings.
 Message Strings
 ===============
 
-.. * Explain Nim format specifiers
-.. * Quoted strings are interpreted literally by the YAML parser \n
+When a rule is violated, a *message* is displayed, providing the user with
+information about the matching text. The message string is defined in the rule
+file together with the other parameters and may have *static* and *dynamic*
+content. The dynamic content is controlled by *format specifiers* such as ``$1``
+and ``$2``. These entries indicates where to insert the match's dynamic content.
+Precisely what constitutes the dynamic content depends on the rule type but a
+common is the matching text. Consider the following string,
 
-Documentation coming soon.
+.. code-block:: text
+
+    Please remove '$1'.
+
+If the parent rule matches the word 'foo', the message presented to the user
+will be
+
+.. code-block:: text
+
+    Please remove 'foo'.
+
+The remaining sections will demonstrate the use of message strings in the
+context of each rule type.
+
+.. note::
+
+    Strings *without* quotation marks and strings enclosed in *single* quotation
+    marks (``'``) are interpreted literally, i.e. ``\n`` will print the two
+    characters ``\`` and ``n``. Strings enclosed in *double* quotation marks
+    (``"``) will interpret the contents using escape sequences.
+
+.. * Quoted strings are interpreted literally by the YAML parser \n
 
 .. _`rule_existence`:
 
