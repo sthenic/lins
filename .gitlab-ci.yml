@@ -1,10 +1,5 @@
-stages:
-  - build
-  - build-deb
-
 pages:
   image: alpine
-  stage: build
   script:
   - cd doc
   - apk --no-cache add py3-pip python3-dev
@@ -19,18 +14,11 @@ pages:
   only:
   - tags
 
-build-linux-x86_64:
-  stage: build
+build-deb-x86_64:
   image: nimlang/nim
   script:
   - nimble install yaml -y
   - nim build
-  only:
-  - master
-
-build-deb-x86_64:
-  stage: build-deb
-  script:
   - cd build
   - chmod -R 755 deb/DEBIAN
   - sh build_deb.sh
@@ -39,24 +27,22 @@ build-deb-x86_64:
     paths:
     - "*.deb"
     name: "lins-$(cat VERSION)-deb-x86_64"
-    expire_in: 2 mins
   only:
-  - master
+  - tags
 
-# build-win-x86_64:
-#   stage: build
-#   image: nimlang/nim
-#   script:
-#   - apt update
-#   - apt install -y mingw-w64
-#   - nimble refresh -y
-#   - nimble install yaml -y
-#   - nim buildxwin64
-#   artifacts:
-#     paths:
-#     - lins.exe
-#     - LICENSE
-#     - THIRD_PARTY_LICENSES.md
-#     name: "lins-$(cat VERSION)-win-x86_64"
-#   only:
-#   - tags
+build-win-x86_64:
+  image: nimlang/nim
+  script:
+  - apt update
+  - apt install -y mingw-w64
+  - nimble refresh -y
+  - nimble install yaml -y
+  - nim buildxwin64
+  artifacts:
+    paths:
+    - lins.exe
+    - LICENSE
+    - THIRD_PARTY_LICENSES.md
+    name: "lins-$(cat VERSION)-win-x86_64"
+  only:
+  - tags
