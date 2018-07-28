@@ -46,7 +46,7 @@ build-win-x86_64:
   image: nimlang/nim
   script:
   - apt update
-  - apt install -y mingw-w64
+  - apt install -y mingw-w64 zip
   - nimble refresh -y
   - nimble install yaml -y
   - nim buildxwin64
