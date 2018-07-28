@@ -23,9 +23,12 @@ on one of these types.
 Severity Levels
 ===============
 
-.. There are three severity levels: ``error``, ``warning`` and ``suggestion``.
-
-Documentation coming soon.
+There are three severity levels: ``error``, ``warning`` and ``suggestion``. You
+may set up a threshold to filter the output and suppress undesired violations
+using the ``--severity`` option. By default, the threshold is set to
+``suggestion`` which provides full output. If instead the severity is lowered to
+``warning``, this would suppress suggestions but still display errors and
+warnings.
 
 .. _`rule_message_strings`:
 
