@@ -14,7 +14,7 @@ on one of these types.
     A rule is *violated* if the condition it defines matches at any point in the
     linted text.
 
-.. something about regular expressions
+.. Something about regular expressions
 
 .. _YAML: http://yaml.org/
 
@@ -63,8 +63,6 @@ context of each rule type.
     marks (``'``) are interpreted literally, i.e. ``\n`` will print the two
     characters ``\`` and ``n``. Strings enclosed in *double* quotation marks
     (``"``) will interpret the contents using escape sequences.
-
-.. * Quoted strings are interpreted literally by the YAML parser \n
 
 .. _`rule_existence`:
 
