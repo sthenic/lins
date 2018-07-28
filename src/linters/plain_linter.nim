@@ -29,6 +29,7 @@ var
    nof_files: int
    lint_rules: seq[Rule]
    minimal_mode = false
+   severity_threshold = SUGGESTION
    lexer_output_fs : FileStream
 
 
@@ -36,6 +37,13 @@ proc set_minimal_mode*(state: bool) =
    ## Enable or disable minimal output mode. This will suppress everything
    ## except the violation messages.
    minimal_mode = state
+
+
+proc set_severity_threshold*(threshold: Severity) =
+   ## Set the severity level. Only violations reaching this level is printed.
+   ## For example, WARNING would print both errors and warnings but not
+   ## suggestions.
+   severity_threshold = threshold
 
 
 proc split_message(msg: string, limit: int): seq[string] =
@@ -49,6 +57,10 @@ proc split_message(msg: string, limit: int): seq[string] =
 
 
 proc print_violation(v: Violation) =
+   # Ignore violation if the log level is set too low.
+   if v.severity > severity_threshold:
+      return
+
    let message = split_message(v.message, 48)
 
    var severity_color: ForegroundColor = fgWhite

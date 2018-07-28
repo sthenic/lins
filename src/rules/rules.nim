@@ -12,9 +12,9 @@ type
 
 type
    Severity* = enum
-      SUGGESTION
-      WARNING
       ERROR
+      WARNING
+      SUGGESTION
 
    Scope* = enum
       TEXT

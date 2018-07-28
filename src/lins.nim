@@ -63,6 +63,18 @@ for kind, key, val in p.getopt():
       of "minimal":
          log.set_quiet_mode(true)
          plain_linter.set_minimal_mode(true)
+      of "severity":
+         case val.to_lower_ascii()
+         of "error":
+            plain_linter.set_severity_threshold(ERROR)
+         of "warning":
+            plain_linter.set_severity_threshold(WARNING)
+         of "suggestion":
+            plain_linter.set_severity_threshold(SUGGESTION)
+         else:
+            log.error("Option --severity expects the values 'suggestion', " &
+                      "'warning' or 'error'.")
+            quit(EINVAL)
       of "style":
          cli_styles.add(val)
       of "list":

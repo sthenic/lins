@@ -24,6 +24,11 @@ options:
   --minimal                Enable minimal output mode. All output except the
                            violation information is suppressed.
 
+  --severity=SEVERITY      Set the severity threshold. Only violations reaching
+                           this level are printed. For example, 'warning' would
+                           print both errors and warnings but not suggestions.
+                           Valid values are 'error', 'warning' and 'suggestion'.
+
   --style=STYLE            Specify which style to use for linting. Styles
                            are defined in the configuration file.
 
