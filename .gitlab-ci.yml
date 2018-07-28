@@ -25,32 +25,18 @@ build-linux-x86_64:
   script:
   - nimble install yaml -y
   - nim build
-  artifacts:
-    expire_in: 5 mins
-    paths:
-    - lins
-    - LICENSE
-    - THIRD_PARTY_LICENSES.md
-    name: "lins-$(cat VERSION)-linux-x86_64"
-  only:
-  - master
-
-
-build-deb-x86_64:
-  stage: build
-  image: nimlang/nim
-  script:
-  - nimble install yaml -y
-  - nim build
   - cd build
   - chmod -R 755 deb/DEBIAN
   - sh build_deb.sh
   - cp *.deb ../
+  - cd ..
+  - tar -czf "lins-$(cat VERSION)-linux-x86_64.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
   artifacts:
     expire_in: 5 mins
     paths:
+    - "*.tar.gz"
     - "*.deb"
-    name: "lins-$(cat VERSION)-deb-x86_64"
+    name: "lins-$(cat VERSION)-build-linux-x86_64"
   only:
   - master
 
@@ -64,12 +50,11 @@ build-win-x86_64:
   - nimble refresh -y
   - nimble install yaml -y
   - nim buildxwin64
+  - zip "lins-$(cat VERSION)-win-x86_64.zip" lins.exe LICENSE THIRD_PARTY_LICENSES.md
   artifacts:
     expire_in: 5 mins
     paths:
-    - lins.exe
-    - LICENSE
-    - THIRD_PARTY_LICENSES.md
-    name: "lins-$(cat VERSION)-win-x86_64"
+    - "*.zip"
+    name: "lins-$(cat VERSION)-build-win-x86_64"
   only:
   - master
