@@ -40,7 +40,6 @@ The documentation is organized into the following sections:
   _source/usage
   _source/configuration
   _source/rules
-  _source/examples
 
 
 Reporting Issues
