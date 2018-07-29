@@ -22,7 +22,7 @@ approach is required:
 
 .. TODO: Proper links
 
-1. Get the latest release archive `here <https://gitlab.com/sthenic/lins/-/jobs/artifacts/master/browse?job=build-linux-x86_64>`_.
+1. Get the latest release archive `here <https://gitlab.com/sthenic/lins/-/jobs/artifacts/latest/browse?job=build-linux-x86_64>`_.
 
 2. Verify the MD5 checksum of the archive. (*OPTIONAL*)
 
@@ -44,7 +44,7 @@ Debian-based Distributions
 For Debian-based distributions: Debian, Ubuntu and the likes, there is a
 ``.deb`` package for each release to simplify the installation process.
 
-1. Get the latest ``.deb`` package `here <https://gitlab.com/sthenic/lins/-/jobs/artifacts/master/browse?job=build-linux-x86_64>`_.
+1. Get the latest ``.deb`` package `here <https://gitlab.com/sthenic/lins/-/jobs/artifacts/latest/browse?job=build-linux-x86_64>`_.
 
 2. Verify the MD5 checksum of the package. (*OPTIONAL*)
 
@@ -68,7 +68,7 @@ To remove the package call
 Windows
 =======
 
-1. Get the latest release archive for 64-bit Windows `here <https://gitlab.com/sthenic/lins/-/jobs/artifacts/master/browse?job=build-win-x86_64>`_.
+1. Get the latest release archive for 64-bit Windows `here <https://gitlab.com/sthenic/lins/-/jobs/artifacts/latest/browse?job=build-win-x86_64>`_.
 
 2. Verify the MD5 checksum of the archive. (*OPTIONAL*)
 
