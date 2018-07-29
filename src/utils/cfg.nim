@@ -241,8 +241,8 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
       while (tail == "") and not (head == ""):
          (head, tail) = split_path(head)
 
-      var path = stimuli.key
-      if not is_absolute(stimuli.key):
+      var path = expand_tilde(stimuli.key)
+      if not is_absolute(path):
          path = meta.dir / path
 
       log.debug("Inferred name '$#' for rule dir '$#'.", tail, path)
@@ -250,8 +250,8 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
       meta.rule_dirs.add(RuleDir.new(tail, path))
    else:
       # The path is given with an explicit name
-      var path = stimuli.value
-      if not is_absolute(stimuli.value):
+      var path = expand_tilde(stimuli.value)
+      if not is_absolute(path):
          path = meta.dir / path
 
       log.debug("Adding rule directory '$#' with name '$#'.",
