@@ -35,13 +35,13 @@ warnings.
 Message Strings
 ===============
 
-When a rule is violated, a *message* is displayed, providing the user with
+When a rule is violated, a *message* is displayed providing the user with
 information about the matching text. The message string is defined in the rule
 file together with the other parameters and may have *static* and *dynamic*
 content. The dynamic content is controlled by *format specifiers* such as ``$1``
-and ``$2``. These entries indicates where to insert the match's dynamic content.
-Precisely what constitutes the dynamic content depends on the rule type but a
-common is the matching text. Consider the following string,
+and ``$2``. These entries indicate where to insert the match's dynamic content.
+Precisely what constitutes dynamic content depends on the rule type but a
+common field is the matching text. Consider the following string,
 
 .. code-block:: text
 

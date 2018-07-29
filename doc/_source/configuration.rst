@@ -42,10 +42,6 @@ and explain its contents.
 .. literalinclude:: lins.cfg
     :language: cfg
 
-.. * File naming
-.. * Search behavior
-.. * Format?
-
 .. _`cfg_rule_dirs`:
 
 Rule Directories
