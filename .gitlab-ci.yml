@@ -16,7 +16,7 @@ pages:
     paths:
     - public
   only:
-  - master
+  - latest
 
 
 build-linux-x86_64:
