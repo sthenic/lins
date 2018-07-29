@@ -50,7 +50,7 @@ proc split_message(msg: string, limit: int): seq[string] =
    proc helper(s: string): bool =
       result = s != ""
 
-   let regex_break = re("(.{1," & $limit & "})(?<!')(?:\\b|$|(?=_))(?!')")
+   let regex_break = re("(.{1," & $limit & "})(?:(?<!')|$)(?:\\b|$|(?=_))(?!')")
    result = filter(split(msg, regex_break), helper)
    for i in 0..<result.len:
       result[i] = result[i].strip()
