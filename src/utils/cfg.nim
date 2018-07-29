@@ -267,7 +267,13 @@ proc add_style(meta: var Configuration, stimuli: CfgEvent) =
 
 proc set_style_default(meta: var Configuration, stimuli: CfgEvent) =
    log.debug("  Setting as default style.")
-   meta.styles[^1].is_default = true
+   if (stimuli.value == "") or (stimuli.value.to_lower_ascii() == "true"):
+      meta.styles[^1].is_default = true
+   elif (stimuli.value.to_lower_ascii() == "false"):
+      meta.styles[^1].is_default = false
+   else:
+      log.warning("Unsupported value given to the style keyword 'default', " &
+                  "got '$#'.", stimuli.value)
 
 
 proc add_style_rule(meta: var Configuration, stimuli: CfgEvent) =
