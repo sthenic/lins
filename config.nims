@@ -1,3 +1,4 @@
+
 task build, "Compile the application into an executable.":
    withDir("src"):
       exec("nim c -d:release --passC:-flto --passL:-s --gc:markAndSweep lins")
@@ -7,21 +8,12 @@ task build, "Compile the application into an executable.":
    setCommand "nop"
 
 
-task buildxwin64, "Cross-compile the application into an executable for 64-bit Windows.":
+task buildxwin64, "Compile the application into an executable.":
    withDir("src"):
       exec("nim c -d:release --os:windows -d:xwin --passC:-flto --passL:-s --gc:markAndSweep lins")
 
    rmFile("lins.exe")
    mvFile("src/lins.exe", "lins.exe")
-   setCommand "nop"
-
-
-task buildxmac64, "Cross-compile the application into an executable for 64-bit Mac OSX.":
-   withDir("src"):
-      exec("nim c -d:release --os:macosx -d:xmac --passC:-flto --passL:-s --gc:markAndSweep lins")
-
-   rmFile("lins")
-   mvFile("src/lins", "lins")
    setCommand "nop"
 
 
