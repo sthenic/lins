@@ -61,3 +61,24 @@ build-win-x86_64:
     name: "lins-$(cat VERSION)-build-win-x86_64"
   only:
   - tags
+
+
+build-macosx-x86_64:
+  stage: build
+  image: nimlang/nim
+  script:
+  - apt update
+  - apt install -y clang zip
+  - nimble refresh -y
+  - nimble install yaml -y
+  - nim buildxmac64
+  - tar -czf "lins-$(cat VERSION)-linux-x86_64.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
+  - md5sum "lins-$(cat VERSION)-macosx-x86_64.tar.gz" > lins-$(cat VERSION)-macosx-x86_64.tar.gz.md5
+  artifacts:
+    paths:
+    - "*.tar.gz"
+    - "*.md5"
+    name: "lins-$(cat VERSION)-build-macosx-x86_64"
+    expire_in: 5 min
+  only:
+  - master
