@@ -1,7 +1,7 @@
 # Organize artifacts
 echo -n "Organizing artifacts..."
-mkdir -p "deb/usr/share"
-cp "../lins" "deb/usr/share/lins"
+mkdir -p "deb/usr/share/lins"
+cp "../lins" "deb/usr/share/lins/lins"
 
 mkdir -p "deb/usr/share/doc/lins"
 cp "../LICENSE" "deb/usr/share/doc/lins/copyright"
