@@ -3,6 +3,7 @@ import strutils
 import strformat
 import parseopt
 import tables
+import os
 import ospaths
 import terminal
 
@@ -26,6 +27,7 @@ const STATIC_HELP_TEXT = static_read("help_cli.txt")
 let HELP_TEXT = "Lins v" & VERSION_STR & "\n\n" & STATIC_HELP_TEXT
 
 var p = init_opt_parser()
+var cli_has_arguments = false
 var cli_files: seq[string] = @[]
 var cli_rules: seq[string] = @[]
 var cli_rule_dirs: seq[string] = @[]
@@ -43,7 +45,17 @@ for kind, key, val in p.getopt():
    argc += 1
    case kind:
    of cmdArgument:
-      cli_files.add(key)
+      var added_file = false
+      cli_has_arguments = true
+
+      for file in walk_files(key):
+         log.debug("Adding file '$1'.", file)
+         cli_files.add(file)
+         added_file = true
+
+      if not added_file:
+         log.warning("Failed to find any files matching the pattern '$1'.", key)
+
    of cmdLongOption, cmdShortOption:
       case key:
       of "help", "h":
@@ -103,9 +115,9 @@ for kind, key, val in p.getopt():
    of cmdEnd:
       assert(false)
 
-# If no input files have been specified, check if the user has piped input to
-# the application. If not, we show the help text and exit.
-if (cli_files == @[]) and terminal.isatty(stdin):
+# If no file matching patterns have been specified, check if the user has piped
+# input to the application. If not, we show the help text and exit.
+if (not cli_has_arguments) and terminal.isatty(stdin):
    echo HELP_TEXT
    quit(EINVAL)
 
@@ -244,13 +256,22 @@ let debug_options: PlainDebugOptions = (
 # Lint files
 var found_violations: bool
 if not (cli_files == @[]):
+   # If there are any files in the list of input files, run the linter.
    try:
       found_violations = lint_files(cli_files, lint_rules, cli_row_init,
                                     cli_col_init, debug_options)
    except PlainTextLinterFileIOError:
       quit(EFILE)
 
+elif cli_has_arguments:
+   # If the input file list is empty but the user has provided at least one
+   # file matching pattern we report an error.
+   log.error("No input files, aborting.")
+   quit(EINVAL)
+
 else:
+   # If the list of input files is empty and the user did not provide any file
+   # matching pattern, assume input from stdin.
    log.info("No input files, reading input from ", styleBright, "stdin.",
             resetStyle)
    var text = ""
