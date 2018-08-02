@@ -1,5 +1,5 @@
-[![NIM](https://img.shields.io/badge/Nim-0.18.0-orange.svg?style=flat-square)]()
-[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)]()
+[![NIM](https://img.shields.io/badge/Nim-0.18.0-orange.svg?style=flat-square)](https://nim-lang.org)
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![pipeline status](https://gitlab.com/sthenic/lins/badges/latest/pipeline.svg)](https://gitlab.com/sthenic/lins/commits/latest)
 
 # README
