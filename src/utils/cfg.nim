@@ -310,17 +310,20 @@ proc parse_error(meta: var Configuration, stimuli: CfgEvent) =
 proc get_cfg_file(): string =
    ## Walk from the current directory up to the root directory searching for
    ## a configuraiton file. Lastly, look in the user's home directory.
-   const CFG_FILENAME = ".lins.cfg"
+   const CFG_FILENAME = @[".lins.cfg", "lins.cfg",
+                          ".lins/.lins.cfg", ".lins/lins.cfg"]
    result = ""
 
    for path in parent_dirs(expand_filename("./"), false, true):
-      let tmp = path / CFG_FILENAME
+      for filename in CFG_FILENAME:
+         let tmp = path / filename
+         if file_exists(tmp):
+            return tmp
+
+   for filename in CFG_FILENAME:
+      let tmp = get_home_dir() / filename
       if file_exists(tmp):
          return tmp
-
-   let tmp = get_home_dir() / CFG_FILENAME
-   if file_exists(tmp):
-      return tmp
 
 
 proc parse_cfg_file*(): Configuration =

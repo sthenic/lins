@@ -13,12 +13,14 @@ and to define :ref:`styles <cfg_styles>` from these files.
 Configuration File
 ==================
 
-The configuration file is expected to be named ``.lins.cfg`` and uses a syntax
-similar to Windows' ``.ini`` files. The tool determines which configuration file
-to use through a search that follows these parameters:
+The configuration file is expected to be named ``.lins.cfg`` or ``lins.cfg`` and
+uses a syntax similar to Windows' ``.ini`` files. The tool determines which
+configuration file to use through a search that follows these parameters:
 
 * The path to the current working directory is traversed in ascending order
   until a configuration file is found or the root directory is reached.
+  Additionally, the search algorithm descends into any directory named ``.lins``
+  on its way to the root.
 
 * If the directory traversal yields no results, the tool looks in current user's
   home directory (e.g. ``/home/<user>`` on Unix systems and ``C:\Users\<user>``
