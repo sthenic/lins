@@ -191,18 +191,26 @@ method enforce*(r: RuleSubstitution, sentence: Sentence): seq[Violation] =
                                                sentence.newlines)
       # If we have found a match, we have to do a costly search through the
       # substitution table in search of a key (an uncompiled regex string)
-      # that will yield a match achored at the position reported above.
+      # that will yield a match achored at the position reported above. If the
+      # match is identical to the substitution, we don't report a violation.
+      # This allows the user to define more flexible regexes, for example
+      #   analog[ -]to[ -]digital: analog-to-digital
+      # allows coverage of all error combinations with one single regex but
+      # also covers the correct case, which the substitution protects against.
+
       # TODO: Improve the LUT. If pre-compiled regexes cannot be used as hashed
       # keys then maybe an array of tuples can be used. Also, if there is any
       # ambiguity in the keys, i.e. two keys would match at the current
       # position, it is undefined which substitution will be recommended.
       var subst = ""
       for key, value in pairs(r.subst_table):
-         if is_some(nre.match($sentence.str, re(key), mpos)):
+         if is_some(nre.match($sentence.str, re(key), mpos)) and
+               ($m != value):
             subst = value
             break
 
-      violations.add(r.create_violation(violation_pos, $m, subst))
+      if subst != "":
+         violations.add(r.create_violation(violation_pos, $m, subst))
 
    return violations
 
