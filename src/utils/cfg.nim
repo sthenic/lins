@@ -308,12 +308,20 @@ proc parse_error(meta: var Configuration, stimuli: CfgEvent) =
 
 
 proc get_cfg_file(): string =
-   ## Walk from the current directory up to the root directory searching for
-   ## a configuraiton file. Lastly, look in the user's home directory.
+   ## Returns the full path to a configuration file, if one exists.
    const CFG_FILENAME = @[".lins.cfg", "lins.cfg",
                           ".lins/.lins.cfg", ".lins/lins.cfg"]
    result = ""
 
+   # Check for the environment variable 'LINS_CFG'. A valid configuration file
+   # specified in this way takes precedence over the regular search.
+   if exists_env("LINS_CFG"):
+      let path = expand_tilde(get_env("LINS_CFG"))
+      if file_exists(path):
+         return path
+
+   # Walk from the current directory up to the root directory searching for
+   # a configuraiton file. Lastly, look in the user's home directory.
    for path in parent_dirs(expand_filename("./"), false, true):
       for filename in CFG_FILENAME:
          let tmp = path / filename

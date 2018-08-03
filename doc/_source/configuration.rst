@@ -29,6 +29,10 @@ configuration file to use through a search that follows these parameters:
 Upon finding a configuration file, the search is aborted and its contents are
 parsed.
 
+You are also able to specify a configuration file by setting the ``LINS_CFG``
+environment variable to the full path of the configuration file. This method
+takes precedence over any file found through the search outlined above.
+
 .. note::
 
     The absolute path of the selected configuration file is reported at runtime.
