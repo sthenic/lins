@@ -135,18 +135,13 @@ if not cli_no_cfg: # TODO: Refactor into a function.
       for dir in config.rule_dirs:
          rule_db[dir.name] = parse_rule_dir(dir.path, NonRecursive)
 
+      default_style = get_default_style(config.styles)
+
       # Build styles
       for style in config.styles:
          log.debug("Building rule objects for style '$#'.", style.name)
 
          style_db[style.name] = @[]
-         if style.is_default:
-            if (default_style == ""):
-               default_style = style.name
-            else:
-               log.warning("Only one style may be set as the default. " &
-                           "Ignoring default specifier for style '$#'.",
-                           style.name)
 
          for rule in style.rules:
             var nof_robj = 0

@@ -307,6 +307,29 @@ proc parse_error(meta: var Configuration, stimuli: CfgEvent) =
    log.error("Failed to parse configuration file '$#'. $#", meta.filename, tmp)
 
 
+proc get_default_style*(styles: seq[Style]): string =
+   result = ""
+
+   if exists_env("LINS_DEFAULT_STYLE"):
+      let default_style_env = get_env("LINS_DEFAULT_STYLE")
+      # Validate style
+      for style in styles:
+         if style.name == default_style_env:
+            return default_style_env
+
+      log.warning("Environment variable 'LINS_DEFAULT_STYLE' ('$1') does " &
+                  "not match any defined style.", default_style_env)
+
+   for style in styles:
+      if style.is_default:
+         if (result == ""):
+            result = style.name
+         else:
+            log.warning("Only one style may be set as the default. " &
+                        "Ignoring default specifier for style '$#'.",
+                        style.name)
+
+
 proc get_cfg_file(): string =
    ## Returns the full path to a configuration file, if one exists.
    const CFG_FILENAME = @[".lins.cfg", "lins.cfg",
