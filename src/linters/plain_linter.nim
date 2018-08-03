@@ -57,10 +57,6 @@ proc split_message(msg: string, limit: int): seq[string] =
 
 
 proc print_violation(v: Violation) =
-   # Ignore violation if the log level is set too low.
-   if v.severity > severity_threshold:
-      return
-
    let message = split_message(v.message, 48)
 
    var severity_color: ForegroundColor = fgWhite
@@ -142,6 +138,9 @@ proc lint_sentence(s: Sentence) =
       lexer_output_fs.write_line(s, "\n")
 
    for r in lint_rules:
+      # Ignore rules if the log level is set too low.
+      if r.severity > severity_threshold:
+         continue
       violations.add(r.enforce(s))
 
    for v in violations:
