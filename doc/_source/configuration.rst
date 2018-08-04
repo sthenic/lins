@@ -150,11 +150,11 @@ Environment Variables
 Environment variables offer yet another way of configuring the tool in a
 persistent manner.
 
-* ``LINS_CFG``---full path to a configuration file. This takes precedence over
-  any file located through the search described in :ref:`cfg_file`, provided
-  the specified file exists.
+* ``LINS_CFG``---full path to a :ref:`configuration file <cfg_file>`. Provided
+  the specified file exists, this file takes precedence over any file located
+  through the regular search method described in :ref:`cfg_file`.
 
 * ``LINS_DEFAULT_STYLE``---name of the default :ref:`style <cfg_styles>`. This
   name is case sensitive and must match a style defined in the active
   configuration file. If these criteria are met, this takes precedence over any
-  default style defined in the configuration file.
+  other default style.
