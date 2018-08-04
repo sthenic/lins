@@ -142,6 +142,20 @@ defines multiple capture groups, the *first* group will be used for the message
 replacement text. Non-capturing groups ``(?:`` may be used to modify the
 behavior as needed.
 
+Lastly, there is one additional feature to this rule: if the expression given as
+the *key* matches text which is already equal to the substitution value, the
+violation is ignored. This is needed to write compact key expressions which
+sometimes cover the 'correct' case in addition to all error cases. For example,
+
+.. code-block:: text
+
+    swap:
+      analog[ -]to[ -]digital: analog-to-digital
+
+covers all the error combinations with one single regex, but also covers the
+correct case. This feature prevents the latter from being reported as a
+violation.
+
 .. TODO: Revise last sentence, add an example.
 
 .. _`rule_occurence`:
