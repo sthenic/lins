@@ -16,6 +16,8 @@ options:
                            in the input data. Default value: 1. See also the
                            'row' option.
 
+  --list                   List available styles and current rule set.
+
   --no-cfg                 Don't look for a configuration file.
 
   --no-default             Don't use a default style (if defined in the

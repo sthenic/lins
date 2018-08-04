@@ -38,6 +38,8 @@ var cli_list = false
 var cli_row_init = 1
 var cli_col_init = 1
 var cli_lexer_output_filename = ""
+var cli_ok = false # cli_ok signals an input combination that's allowed to
+                   # continue past the parsing stage.
 var argc = 0
 
 # Parse command line options and arguments.
@@ -47,6 +49,7 @@ for kind, key, val in p.getopt():
    of cmdArgument:
       var added_file = false
       cli_has_arguments = true
+      cli_ok = true
 
       for file in walk_files(key):
          log.debug("Adding file '$1'.", file)
@@ -91,6 +94,7 @@ for kind, key, val in p.getopt():
          cli_styles.add(val)
       of "list":
          cli_list = true
+         cli_ok = true
       of "lexer-output":
          if val == "":
             log.error("Option --lexer-output expects a filename.")
@@ -115,9 +119,10 @@ for kind, key, val in p.getopt():
    of cmdEnd:
       assert(false)
 
-# If no file matching patterns have been specified, check if the user has piped
-# input to the application. If not, we show the help text and exit.
-if (not cli_has_arguments) and terminal.isatty(stdin):
+# If the CLI parsing resulted in a state that is not allowed to continue any
+# further, check if the user has piped input to the application (isatty call
+# returns false). If not, we show the help text and exit.
+if (not cli_ok) and terminal.isatty(stdin):
    echo HELP_TEXT
    quit(EINVAL)
 
@@ -221,15 +226,23 @@ elif not cli_no_default and not (default_style == ""):
 
 
 if cli_list:
+   # List styles.
    styled_write_line(stdout, "\n", styleBright, styleUnderscore,
-                     "Rule set", resetStyle)
+                     "Styles", resetStyle)
+
+   for style_name, rules in style_db:
+      styled_write_line(stdout, styleBright, &"  {style_name:<15}", resetStyle)
+      styled_write_line(stdout, "    ", $len(rules), " rules")
+
+   # List current rule set.
+   styled_write_line(stdout, "\n", styleBright, styleUnderscore,
+                     "Current rule set", resetStyle)
    var seen: seq[string] = @[]
    for rule in lint_rules:
       if rule.source_file in seen:
          continue
-      let (_, filename, _) = split_file(rule.source_file)
-      styled_write_line(stdout, styleBright, &"  {filename:<20}", resetStyle,
-                        rule.source_file)
+      styled_write_line(stdout, styleBright, &"  {rule.display_name:<30}",
+                        resetStyle, rule.source_file)
 
       seen.add(rule.source_file)
 
