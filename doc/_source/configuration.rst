@@ -30,8 +30,9 @@ Upon finding a configuration file, the search is aborted and its contents are
 parsed.
 
 You are also able to specify a configuration file by setting the ``LINS_CFG``
-environment variable to the full path of the configuration file. This method
-takes precedence over any file found through the search outlined above.
+:ref:`environment variable <cfg_env>` to the full path of the configuration
+file. This method takes precedence over any file found through the search
+outlined above.
 
 .. note::
 
@@ -102,7 +103,9 @@ Each style is defined in its own ``Style`` section. Immediately following the
 section title, the style's ``name`` is expected. Additionally, ``default``
 keyword may be used to select this as the *default style*. Unless another style
 is specified using the ``--style`` option, the default style will automatically
-be selected when invoking the tool.
+be selected when invoking the tool. Additionally, you are able to overwrite the
+default specifier and assign this property to another style by setting the
+``LINS_DEFAULT_STYLE`` :ref:`environment variable <cfg_env>`.
 
 .. literalinclude:: lins.cfg
     :language: cfg
