@@ -52,21 +52,21 @@ pages:
   - latest
 
 
-build-ubuntu-18.04-x86_64:
+build:ubuntu-18.04-x86_64:
   <<: *ubuntu_definition
   image: ubuntu:18.04
   variables:
     UBUNTU_RELEASE: "18.04"
 
 
-build-ubuntu-16.04-x86_64:
+build:ubuntu-16.04-x86_64:
   <<: *ubuntu_definition
   image: ubuntu:16.04
   variables:
     UBUNTU_RELEASE: "16.04"
 
 
-build-win-x86_64:
+build:win-x86_64:
   stage: build
   image: nimlang/nim
   script:
