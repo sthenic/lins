@@ -21,7 +21,7 @@ pages:
 
 build-linux-x86_64:
   stage: build
-  image: ubuntu:xenial
+  image: ubuntu
   script:
   - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
   - sh init.sh -y
