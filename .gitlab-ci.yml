@@ -29,10 +29,9 @@ stages:
     - "*.tar.gz"
     - "*.deb"
     - "*.md5"
-    name: "lins-${VERSION}-build-ubuntu-${UBUNTU_RELEASE}-x86_64"
-    expire_in: 10 mins
+    name: "lins-$(cat VERSION)-build-ubuntu-${UBUNTU_RELEASE}-x86_64"
   only:
-  - master
+  - tags
 
 
 # Build
@@ -84,7 +83,7 @@ build:win-x86_64:
     paths:
     - "*.zip"
     - "*.md5"
-    name: "lins-${VERSION}-build-win-x86_64"
+    name: "lins-$(cat VERSION)-build-win-x86_64"
   only:
   - tags
 
@@ -93,15 +92,13 @@ build:win-x86_64:
 deploy:
   stage: deploy
   script:
-  - VERSION=$(cat VERSION)
-  - ls -l .
+  - echo "Deploy"
   artifacts:
     paths:
     - "*.tar.gz"
     - "*.deb"
     - "*.zip"
     - "*.md5"
-    name: "lins-${VERSION}-build-artifacts"
-    expire_in: 10 mins
+    name: "lins-$(cat VERSION)-build-artifacts"
   only:
-  - master
+  - tags
