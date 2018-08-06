@@ -89,6 +89,8 @@ build-win-x86_64:
 # Deploy
 deploy:
   stage: deploy
+  script:
+  - ls -l .
   artifacts:
     paths:
     - "*.tar.gz"
