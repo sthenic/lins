@@ -16,19 +16,23 @@ stages:
   - nim build
   - cd build
   - chmod -R 755 deb/DEBIAN
-  - sh build_deb.sh "ubuntu-${UBUNTU_RELEASE}-x86_64"
+  - sh build_deb.sh "${PACKAGE_NAME}-x86_64"
   - cp *.deb ../
   - cd ..
-  - tar -czf "lins-$(cat VERSION)-ubuntu-${UBUNTU_RELEASE}-x86_64.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
-  - md5sum "lins-$(cat VERSION)-ubuntu-${UBUNTU_RELEASE}-x86_64.tar.gz" > lins-$(cat VERSION)-ubuntu-${UBUNTU_RELEASE}-x86_64.tar.gz.md5
-  - md5sum "lins-$(cat VERSION)-ubuntu-${UBUNTU_RELEASE}-x86_64.deb" > lins-$(cat VERSION)-ubuntu-${UBUNTU_RELEASE}-x86_64.deb.md5
+  - tar -czf "lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
+  - md5sum "lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.tar.gz" > lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.tar.gz.md5
+  - md5sum "lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.deb" > lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.deb.md5
+  - echo ${VERSION}
   artifacts:
     paths:
     - "*.tar.gz"
     - "*.deb"
     - "*.md5"
-    name: "lins-$(cat VERSION)-build-ubuntu-${UBUNTU_RELEASE}-x86_64"
+    name: "lins-$(cat VERSION)-build-${PACKAGE_NAME}-x86_64"
     expire_in: 5 mins
+  variables:
+    PACKAGE_NAME: "ubuntu-${RELEASE}"
+    VERSION: $(cat VERSION)
   only:
   - master
 
@@ -56,14 +60,14 @@ build:ubuntu-18.04-x86_64:
   <<: *ubuntu_definition
   image: ubuntu:18.04
   variables:
-    UBUNTU_RELEASE: "18.04"
+    RELEASE: "18.04"
 
 
 build:ubuntu-16.04-x86_64:
   <<: *ubuntu_definition
   image: ubuntu:16.04
   variables:
-    UBUNTU_RELEASE: "16.04"
+    RELEASE: "16.04"
 
 
 build:win-x86_64:
