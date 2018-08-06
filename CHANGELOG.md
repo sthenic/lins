@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.1 - 2018-08-06
+
+* Update CI configuration. Now builds `.deb` package for Ubuntu 16.04.
+
 ## v0.2.0 - 2018-08-04
 
 * Add support for input file selection through glob patterns.
