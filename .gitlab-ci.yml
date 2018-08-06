@@ -24,7 +24,7 @@ build-linux-x86_64:
   image: ubuntu
   script:
   - apt update
-  - apt install -y curl build-essential
+  - apt install -y curl build-essential git
   - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
   - sh init.sh -y
   - export PATH=$HOME/.nimble/bin:$PATH
