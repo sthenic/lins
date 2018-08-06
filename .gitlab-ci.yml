@@ -21,8 +21,12 @@ pages:
 
 build-linux-x86_64:
   stage: build
-  image: nimlang/nim
+  image: ubuntu:xenial
   script:
+  - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
+  - sh init.sh -y
+  - export PATH=$HOME/.nimble/bin:$PATH
+  - nimble refresh -y
   - nimble install yaml -y
   - nim build
   - cd build
@@ -39,8 +43,9 @@ build-linux-x86_64:
     - "*.deb"
     - "*.md5"
     name: "lins-$(cat VERSION)-build-linux-x86_64"
+    expire_in: 5 mins
   only:
-  - tags
+  - master
 
 
 build-win-x86_64:
