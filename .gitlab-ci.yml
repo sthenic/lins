@@ -3,9 +3,10 @@ stages:
   - deploy
 
 
-.build_template: &ubuntu_definition
+.build_template: &ubuntu_template
   stage: build
   script:
+  - VERSION=$(cat VERSION)
   - apt update
   - apt install -y curl build-essential git
   - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
@@ -16,23 +17,20 @@ stages:
   - nim build
   - cd build
   - chmod -R 755 deb/DEBIAN
-  - sh build_deb.sh "${PACKAGE_NAME}-x86_64"
+  - sh build_deb.sh "ubuntu-${UBUNTU_RELEASE}-x86_64"
   - cp *.deb ../
   - cd ..
-  - tar -czf "lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
-  - md5sum "lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.tar.gz" > lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.tar.gz.md5
-  - md5sum "lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.deb" > lins-$(cat VERSION)-${PACKAGE_NAME}-x86_64.deb.md5
+  - tar -czf "lins-$VERSION-ubuntu-${UBUNTU_RELEASE}-x86_64.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
+  - md5sum "lins-$VERSION-ubuntu-${UBUNTU_RELEASE}-x86_64.tar.gz" > lins-$VERSION-ubuntu-${UBUNTU_RELEASE}-x86_64.tar.gz.md5
+  - md5sum "lins-$VERSION-ubuntu-${UBUNTU_RELEASE}-x86_64.deb" > lins-$VERSION-ubuntu-${UBUNTU_RELEASE}-x86_64.deb.md5
   - echo ${VERSION}
   artifacts:
     paths:
     - "*.tar.gz"
     - "*.deb"
     - "*.md5"
-    name: "lins-$(cat VERSION)-build-${PACKAGE_NAME}-x86_64"
-    expire_in: 5 mins
-  variables:
-    PACKAGE_NAME: "ubuntu-${RELEASE}"
-    VERSION: $(cat VERSION)
+    name: "lins-$VERSION-build-ubuntu-${UBUNTU_RELEASE}-x86_64"
+    expire_in: 10 mins
   only:
   - master
 
@@ -57,14 +55,14 @@ pages:
 
 
 build:ubuntu-18.04-x86_64:
-  <<: *ubuntu_definition
+  <<: *ubuntu_template
   image: ubuntu:18.04
   variables:
     RELEASE: "18.04"
 
 
 build:ubuntu-16.04-x86_64:
-  <<: *ubuntu_definition
+  <<: *ubuntu_template
   image: ubuntu:16.04
   variables:
     RELEASE: "16.04"
@@ -74,18 +72,19 @@ build:win-x86_64:
   stage: build
   image: nimlang/nim
   script:
+  - VERSION=$(cat VERSION)
   - apt update
   - apt install -y mingw-w64 zip
   - nimble refresh -y
   - nimble install yaml -y
   - nim buildxwin64
-  - zip "lins-$(cat VERSION)-win-x86_64.zip" lins.exe LICENSE THIRD_PARTY_LICENSES.md
-  - md5sum "lins-$(cat VERSION)-win-x86_64.zip" > lins-$(cat VERSION)-win-x86_64.zip.md5
+  - zip "lins-$VERSION-win-x86_64.zip" lins.exe LICENSE THIRD_PARTY_LICENSES.md
+  - md5sum "lins-$VERSION-win-x86_64.zip" > lins-$VERSION-win-x86_64.zip.md5
   artifacts:
     paths:
     - "*.zip"
     - "*.md5"
-    name: "lins-$(cat VERSION)-build-win-x86_64"
+    name: "lins-$VERSION-build-win-x86_64"
   only:
   - tags
 
@@ -101,6 +100,6 @@ deploy:
     - "*.deb"
     - "*.zip"
     - "*.md5"
-    expire_in: 5 mins
+    expire_in: 10 mins
   only:
   - master
