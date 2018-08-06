@@ -16,4 +16,4 @@ sed -i "s/Version:.*$/Version: $LINS_VERSION/g" "deb/DEBIAN/control"
 echo " done."
 
 # Create .deb
-dpkg-deb -b deb/ lins-$LINS_VERSION-$(uname -m).deb
+dpkg-deb -b deb/ lins-$LINS_VERSION-$1.deb
