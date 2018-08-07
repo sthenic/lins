@@ -42,6 +42,7 @@ type
       message*: string
       source_file*: string
       display_name*: string
+      ignore_case: bool
 
    RuleExistence* = ref object of Rule
       regex: Regex
@@ -63,7 +64,6 @@ type
       regex: Regex
       scope: Scope
       par_prev: int
-      ignore_case: bool
       matches: Table[string, int]
 
    RuleConsistency* = ref object of Rule
@@ -143,6 +143,7 @@ proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
                         message: message,
                         source_file: source_file,
                         display_name: display_name,
+                        ignore_case: ignore_case,
                         regex: re(regex_flags & regex))
 
 method enforce*(r: RuleExistence, sentence: Sentence): seq[Violation] =
@@ -176,6 +177,7 @@ proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
                            message: message,
                            source_file: source_file,
                            display_name: display_name,
+                           ignore_case: ignore_case,
                            regex: re(regex_flags & regex),
                            subst_table: lsubst_table)
 
@@ -202,10 +204,17 @@ method enforce*(r: RuleSubstitution, sentence: Sentence): seq[Violation] =
       # keys then maybe an array of tuples can be used. Also, if there is any
       # ambiguity in the keys, i.e. two keys would match at the current
       # position, it is undefined which substitution will be recommended.
-      var subst = ""
+      var
+         subst = ""
+         m_str = $m
+      if r.ignore_case:
+         m_str = to_lower_ascii(m_str)
       for key, value in pairs(r.subst_table):
+         var value_str = value
+         if r.ignore_case:
+            value_str = to_lower_ascii(value)
          if is_some(nre.match($sentence.str, re(key), mpos)) and
-               ($m != value):
+               (m_str != value_str):
             subst = value
             break
 
@@ -227,6 +236,7 @@ proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
                          message: message,
                          source_file: source_file,
                          display_name: display_name,
+                         ignore_case: ignore_case,
                          regex: re(regex_flags & regex),
                          limit_val: limit_val,
                          limit_kind: limit_kind,
@@ -289,11 +299,11 @@ proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
                          message: message,
                          source_file: source_file,
                          display_name: display_name,
+                         ignore_case: ignore_case,
                          regex: re(regex_flags & regex),
                          scope: scope,
                          par_prev: 0,
-                         matches: init_table[string, int](),
-                         ignore_case: ignore_case)
+                         matches: init_table[string, int]())
 
 
 method enforce*(r: RuleRepetition, sentence: Sentence): seq[Violation] =
@@ -345,6 +355,7 @@ proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
                          message: message,
                          source_file: source_file,
                          display_name: display_name,
+                         ignore_case: ignore_case,
                          regex_first: re(regex_flags & regex_first),
                          regex_second: re(regex_flags & regex_second),
                          scope: scope,
@@ -416,6 +427,7 @@ proc new*(t: typedesc[RuleDefinition], severity: Severity, message: string,
                          message: message,
                          source_file: source_file,
                          display_name: display_name,
+                         ignore_case: ignore_case,
                          regex_def: re(regex_flags & regex_def),
                          regex_decl: re(regex_flags & regex_decl),
                          exceptions: exceptions,
@@ -518,6 +530,7 @@ proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
                           message: message,
                           source_file: source_file,
                           display_name: display_name,
+                          ignore_case: ignore_case,
                           regex_first: re(regex_flags & regex_first),
                           regex_second: re(regex_flags & regex_second),
                           scope: scope,
