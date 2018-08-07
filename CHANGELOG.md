@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.2.2 - 2018-08-07
+
+* Fixed an issue with the substitution rule's violation guard introduced in v0.2.0. Strings are now converted to lower-case and compared if the `ignore_case` property is set to `true`.
+
 ## v0.2.1 - 2018-08-06
 
 * Update CI configuration. Now builds `.deb` package for Ubuntu 16.04.
