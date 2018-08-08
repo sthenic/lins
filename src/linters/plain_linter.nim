@@ -75,14 +75,14 @@ proc print_violation(v: Violation) =
       log.abort(PlainTextLinterValueError, "Unsupported severity level '$#'.",
                 $v.severity)
 
-   styled_write_line(stdout, &" {v.position.row:>4}:{v.position.col:<5} ",
-                     styleBright, severity_color, &"{severity_str:<12}",
-                     resetStyle, &"{message[0]:<48}    ",
-                     styleBright, &"{v.display_name:<20}", resetStyle)
+   call_styled_write_line(&" {v.position.row:>4}:{v.position.col:<5} ",
+                          styleBright, severity_color, &"{severity_str:<12}",
+                          resetStyle, &"{message[0]:<48}    ",
+                          styleBright, &"{v.display_name:<20}", resetStyle)
 
    for m in 1..<message.len:
       let tmp = ""
-      styled_write_line(stdout, &"{tmp:24}{message[m]:<48}")
+      call_styled_write_line(&"{tmp:24}{message[m]:<48}")
 
 
 proc print_header(str: string) =
@@ -90,7 +90,7 @@ proc print_header(str: string) =
    if minimal_mode:
       return
 
-   styled_write_line(stdout, styleBright, styleUnderscore, &"\n{str}", resetStyle)
+   call_styled_write_line(styleBright, styleUnderscore, &"\n{str}", resetStyle)
 
 
 proc print_footer(time_ms: float, violation_count: ViolationCount,
@@ -99,9 +99,9 @@ proc print_footer(time_ms: float, violation_count: ViolationCount,
    if minimal_mode:
       return
 
-   styled_write_line(stdout, styleBright, "\n\nAnalysis completed in ", fgGreen,
-                     format_float(time_ms, ffDecimal, 1), " ms", resetStyle,
-                     styleBright, " with ", resetStyle)
+   call_styled_write_line(styleBright, "\n\nAnalysis completed in ", fgGreen,
+                          format_float(time_ms, ffDecimal, 1), " ms",
+                          resetStyle, styleBright, " with ", resetStyle)
 
    var file_str = ""
    if nof_files == 1:
@@ -109,14 +109,15 @@ proc print_footer(time_ms: float, violation_count: ViolationCount,
    elif nof_files > 1:
       file_str = &"in {nof_files} files."
 
-   styled_write_line(stdout,
-                     styleBright, fgRed,
-                     &"  {violation_count.error} errors", resetStyle, ", ",
-                     styleBright, fgYellow,
-                     &"{violation_count.warning} warnings",  resetStyle, " and ",
-                     styleBright, fgBlue,
-                     &"{violation_count.suggestion} suggestions", resetStyle,
-                     &" {file_str}")
+   call_styled_write_line(
+      styleBright, fgRed,
+      &"  {violation_count.error} errors", resetStyle, ", ",
+      styleBright, fgYellow,
+      &"{violation_count.warning} warnings",  resetStyle, " and ",
+      styleBright, fgBlue,
+      &"{violation_count.suggestion} suggestions", resetStyle,
+      &" {file_str}"
+   )
 
 proc parse_debug_options(debug_options: PlainDebugOptions) =
    if not (debug_options.lexer_output_filename == ""):

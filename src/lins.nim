@@ -78,6 +78,8 @@ for kind, key, val in p.getopt():
       of "minimal":
          log.set_quiet_mode(true)
          plain_linter.set_minimal_mode(true)
+      of "no-color":
+         log.set_color_mode(false)
       of "severity":
          case val.to_lower_ascii()
          of "error":
@@ -227,22 +229,22 @@ elif not cli_no_default and not (default_style == ""):
 
 if cli_list:
    # List styles.
-   styled_write_line(stdout, "\n", styleBright, styleUnderscore,
-                     "Styles", resetStyle)
+   call_styled_write_line("\n", styleBright, styleUnderscore,
+                          "Styles", resetStyle)
 
    for style_name, rules in style_db:
-      styled_write_line(stdout, styleBright, &"  {style_name:<15}", resetStyle)
-      styled_write_line(stdout, "    ", $len(rules), " rules")
+      call_styled_write_line(styleBright, &"  {style_name:<15}", resetStyle)
+      call_styled_write_line("    ", $len(rules), " rules")
 
    # List current rule set.
-   styled_write_line(stdout, "\n", styleBright, styleUnderscore,
-                     "Current rule set", resetStyle)
+   call_styled_write_line("\n", styleBright, styleUnderscore,
+                          "Current rule set", resetStyle)
    var seen: seq[string] = @[]
    for rule in lint_rules:
       if rule.source_file in seen:
          continue
-      styled_write_line(stdout, styleBright, &"  {rule.display_name:<30}",
-                        resetStyle, rule.source_file)
+      call_styled_write_line(styleBright, &"  {rule.display_name:<30}",
+                             resetStyle, rule.source_file)
 
       seen.add(rule.source_file)
 

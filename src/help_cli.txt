@@ -20,6 +20,9 @@ options:
 
   --no-cfg                 Don't look for a configuration file.
 
+  --no-color               Don't color the output. Suppresses the ANSI escape
+                           sequences on UNIX.
+
   --no-default             Don't use a default style (if defined in the
                            configuration file).
 
