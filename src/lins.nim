@@ -42,6 +42,12 @@ var cli_ok = false # cli_ok signals an input combination that's allowed to
                    # continue past the parsing stage.
 var argc = 0
 
+# If the terminal does not have the 'stdout' attribute, i.e. stdout does not
+# lead back to the calling terminal, the output is piped to another application
+# or written to a file. In any case, disable the colored output.
+if not terminal.isatty(stdout):
+   log.set_color_mode(false)
+
 # Parse command line options and arguments.
 for kind, key, val in p.getopt():
    argc += 1
