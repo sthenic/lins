@@ -2,9 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.3.1 - 2018-08-09
+
+* Fixed ANSI escape sequences not being suppressed when piping the output to another application or a file.
+* Fixed an issue where the violation counters were not being reset going from one input file to the next.
+
 ## v0.3.0 - 2018-08-08
 
-* Add `--no-color` option to suppress colored output.
+* Added the `--no-color` option to suppress colored output.
 
 ## v0.2.2 - 2018-08-07
 
@@ -12,20 +17,20 @@ All notable changes to this project will be documented in this file.
 
 ## v0.2.1 - 2018-08-06
 
-* Update CI configuration. Now builds `.deb` package for Ubuntu 16.04.
+* Updated CI configuration. Now builds `.deb` package for Ubuntu 16.04.
 
 ## v0.2.0 - 2018-08-04
 
-* Add support for input file selection through glob patterns.
-* Update the configuration file search algorithm.
-* Ensure that log level suppression yields the correct exit code.
-* Add environment variables `LINS_CFG` and `LINS_DEFAULT_STYLE`.
-* Add `--list` option to display available styles and the current rule set.
+* Added support for input file selection through glob patterns.
+* Updated the configuration file search algorithm.
+* Ensured that log level suppression yields the correct exit code.
+* Added environment variables `LINS_CFG` and `LINS_DEFAULT_STYLE`.
+* Added the `--list` option to display available styles and the current rule set.
 * The substitution rule no longer reports a violation if the key regex happens to also match text equal to the substitution value.
 
 ## v0.1.1 - 2018-08-02
 
-* Fix an issue with the .deb package build script.
+* Fixed an issue with the .deb package build script.
 
 ## v0.1.0 - 2018-07-29
 
