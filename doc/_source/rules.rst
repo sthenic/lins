@@ -152,9 +152,9 @@ sometimes cover the 'correct' case in addition to all error cases. For example,
     swap:
       analog[ -]to[ -]digital: analog-to-digital
 
-covers all the error combinations with one single regex, but also covers the
-correct case. This feature prevents the latter from being reported as a
-violation.
+covers all the error combinations with one single regular expression, but also
+covers the correct case. This feature prevents the latter from being reported as
+a violation.
 
 .. TODO: Revise last sentence, add an example.
 
