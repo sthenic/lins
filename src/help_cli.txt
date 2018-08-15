@@ -7,6 +7,11 @@ arguments:
                            separate them by whitespace. If no files are
                            specified, piped input from stdin is assumed.
 
+                           Pattern matching is supported but the extent of this
+                           support is OS-dependent. The "*.ext" notation is
+                           always supported. The glob call is used on POSIX
+                           systems.
+
 
 options:
   -h, --help               Print this help message and exit.
