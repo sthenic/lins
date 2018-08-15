@@ -22,9 +22,9 @@ configuration file to use through a search that follows these parameters:
   Additionally, the search algorithm descends into any directory named ``.lins``
   on its way to the root.
 
-* If the directory traversal yields no results, the tool looks in current user's
-  home directory (e.g. ``/home/<user>`` on Unix systems and ``C:\Users\<user>``
-  on Windows systems).
+* If the directory traversal yields no results, the tool looks in the current
+  user's home directory under ``/home/<user>/.config/lins`` on Unix systems and
+  ``C:\Users\<user>\.config\lins`` on Windows systems.
 
 Upon finding a configuration file, the search is aborted and its contents are
 parsed.

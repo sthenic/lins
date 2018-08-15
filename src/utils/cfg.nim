@@ -334,6 +334,8 @@ proc get_cfg_file(): string =
    ## Returns the full path to a configuration file, if one exists.
    const CFG_FILENAME = @[".lins.cfg", "lins.cfg",
                           ".lins/.lins.cfg", ".lins/lins.cfg"]
+   const CFG_FILENAME_HOMEDIR = @[".config/lins/.lins.cfg",
+                                  ".config/lins/lins.cfg"]
    result = ""
 
    # Check for the environment variable 'LINS_CFG'. A valid configuration file
@@ -342,6 +344,9 @@ proc get_cfg_file(): string =
       let path = expand_tilde(get_env("LINS_CFG"))
       if file_exists(path):
          return path
+      else:
+         log.warning("Environment variable 'LINS_CFG' ('$1') does not " &
+                     "specify an existing file.", path)
 
    # Walk from the current directory up to the root directory searching for
    # a configuraiton file. Lastly, look in the user's home directory.
@@ -351,7 +356,7 @@ proc get_cfg_file(): string =
          if file_exists(tmp):
             return tmp
 
-   for filename in CFG_FILENAME:
+   for filename in CFG_FILENAME_HOMEDIR:
       let tmp = get_home_dir() / filename
       if file_exists(tmp):
          return tmp
