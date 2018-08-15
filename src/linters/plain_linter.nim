@@ -14,6 +14,7 @@ import ../utils/log
 type PlainTextLinterFileIOError* = object of Exception
 type PlainTextLinterValueError* = object of Exception
 
+
 type
    ViolationCount = tuple
       error: int
@@ -22,6 +23,7 @@ type
 
    PlainDebugOptions* = tuple
       lexer_output_filename: string
+
 
 var
    nof_violations_total: ViolationCount

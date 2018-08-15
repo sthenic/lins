@@ -2,9 +2,9 @@ import strutils
 import terminal
 import macros
 
-var
-   quiet_mode = false
-   color_mode = true
+
+type ColorMode* = enum
+   Color, NoColor
 
 
 const
@@ -14,12 +14,17 @@ const
    DEBUG_COLOR = fgMagenta
 
 
+var
+   quiet_mode = false
+   color_mode = Color
+
+
 proc set_quiet_mode*(state: bool) =
    quiet_mode = state
 
 
-proc set_color_mode*(state: bool) =
-   color_mode = state
+proc set_color_mode*(mode: ColorMode) =
+   color_mode = mode
 
 
 macro call_styled_write_line_internal_nocolor(args: varargs[typed]): untyped =
@@ -53,9 +58,10 @@ macro call_styled_write_line_internal(args: varargs[typed]): untyped =
 
 
 template call_styled_write_line*(args: varargs[typed]) =
-   if color_mode:
+   case color_mode
+   of Color:
       call_styled_write_line_internal(args)
-   else:
+   of NoColor:
       call_styled_write_line_internal_nocolor(args)
 
 

@@ -12,6 +12,7 @@ import rules/rules
 import rules/parser
 import utils/log
 import utils/cfg
+import utils/cli
 
 # Version information
 const VERSION_STR = static_read("../VERSION").strip()
@@ -26,120 +27,47 @@ const EFILE = -3
 const STATIC_HELP_TEXT = static_read("help_cli.txt")
 let HELP_TEXT = "Lins v" & VERSION_STR & "\n\n" & STATIC_HELP_TEXT
 
-var p = init_opt_parser()
-var cli_has_arguments = false
-var cli_files: seq[string] = @[]
-var cli_rules: seq[string] = @[]
-var cli_rule_dirs: seq[string] = @[]
-var cli_styles: seq[string] = @[]
-var cli_no_cfg = false
-var cli_no_default = false
-var cli_list = false
-var cli_row_init = 1
-var cli_col_init = 1
-var cli_lexer_output_filename = ""
-var cli_ok = false # cli_ok signals an input combination that's allowed to
-                   # continue past the parsing stage.
-var argc = 0
-
 # If the terminal does not have the 'stdout' attribute, i.e. stdout does not
-# lead back to the calling terminal, the output is piped to another application
-# or written to a file. In any case, disable the colored output.
+# lead back to the calling terminal, the output is piped to another
+# application or written to a file. In any case, disable the colored output and
+# do this before parsing the input arguments and options.
 if not terminal.isatty(stdout):
-   log.set_color_mode(false)
+   log.set_color_mode(NoColor)
 
-# Parse command line options and arguments.
-for kind, key, val in p.getopt():
-   argc += 1
-   case kind:
-   of cmdArgument:
-      var added_file = false
-      cli_has_arguments = true
-      cli_ok = true
+# Parse the arguments and options and return a CLI state object.
+var cli_state: CLIState
+try:
+   cli_state = parse_cli()
+except CLIValueError:
+   quit(EINVAL)
 
-      for file in walk_files(key):
-         log.debug("Adding file '$1'.", file)
-         cli_files.add(file)
-         added_file = true
-
-      if not added_file:
-         log.warning("Failed to find any files matching the pattern '$1'.", key)
-
-   of cmdLongOption, cmdShortOption:
-      case key:
-      of "help", "h":
-         echo HELP_TEXT
-         quit(ESUCCESS)
-      of "version", "v":
-         echo VERSION_STR
-         quit(ESUCCESS)
-      of "no-default":
-         cli_no_default = true
-      of "no-cfg":
-         cli_no_cfg = true
-      of "rule":
-         cli_rules.add(val)
-      of "rule-dir":
-         cli_rule_dirs.add(val)
-      of "minimal":
-         log.set_quiet_mode(true)
-         plain_linter.set_minimal_mode(true)
-      of "no-color":
-         log.set_color_mode(false)
-      of "severity":
-         case val.to_lower_ascii()
-         of "error":
-            plain_linter.set_severity_threshold(ERROR)
-         of "warning":
-            plain_linter.set_severity_threshold(WARNING)
-         of "suggestion":
-            plain_linter.set_severity_threshold(SUGGESTION)
-         else:
-            log.error("Option --severity expects the values 'suggestion', " &
-                      "'warning' or 'error'.")
-            quit(EINVAL)
-      of "style":
-         cli_styles.add(val)
-      of "list":
-         cli_list = true
-         cli_ok = true
-      of "lexer-output":
-         if val == "":
-            log.error("Option --lexer-output expects a filename.")
-            quit(EINVAL)
-
-         cli_lexer_output_filename = val
-      of "row":
-         try:
-            cli_row_init = parse_int(val)
-         except ValueError:
-            log.error("Failed to convert '$#' to an integer.", val)
-            quit(EINVAL)
-      of "col":
-         try:
-            cli_col_init = parse_int(val)
-         except ValueError:
-            log.error("Failed to convert '$#' to an integer.", val)
-            quit(EINVAL)
-      else:
-         log.error("Unknown option '$#'.", key)
-         quit(EINVAL)
-   of cmdEnd:
-      assert(false)
-
-# If the CLI parsing resulted in a state that is not allowed to continue any
-# further, check if the user has piped input to the application (isatty call
-# returns false). If not, we show the help text and exit.
-if (not cli_ok) and terminal.isatty(stdin):
+# Parse CLI object state.
+if not cli_state.is_ok:
+   # Invalid input combination (but otherwise correctly formatted arguments
+   # and options).
    echo HELP_TEXT
    quit(EINVAL)
+elif cli_state.print_help:
+   # Show help text and exit.
+   echo HELP_TEXT
+   quit(ESUCCESS)
+elif cli_state.print_version:
+   # Show version information and exit.
+   echo VERSION_STR
+   quit(ESUCCESS)
+
+# Propagate CLI state to other modules.
+log.set_quiet_mode(cli_state.minimal)
+log.set_color_mode(cli_state.color_mode)
+plain_linter.set_minimal_mode(cli_state.minimal)
+plain_linter.set_severity_threshold(cli_state.severity)
 
 # Build rule database.
 var rule_db = init_table[string, seq[Rule]]()
 var style_db = init_table[string, seq[Rule]]()
 var default_style = ""
 let t_start = cpu_time()
-if not cli_no_cfg: # TODO: Refactor into a function.
+if not cli_state.no_cfg: # TODO: Refactor into a function.
    try:
       let config = parse_cfg_file()
 
@@ -197,16 +125,16 @@ if not cli_no_cfg: # TODO: Refactor into a function.
 
 # Parse rule directories specified on the command line.
 rule_db["cli"] = @[]
-if not (cli_rule_dirs == @[]):
-   for dir in cli_rule_dirs:
+if not (cli_state.rule_dirs == @[]):
+   for dir in cli_state.rule_dirs:
       try:
          rule_db["cli"].add(parse_rule_dir(dir, NonRecursive))
       except RulePathError:
          discard
 
 # Parse named rule sets speficied on the command line.
-if not (cli_rules == @[]):
-   for rule_name in cli_rules:
+if not (cli_state.rules == @[]):
+   for rule_name in cli_state.rules:
       try:
          rule_db["cli"].add(rule_db[rule_name])
       except KeyError:
@@ -221,19 +149,19 @@ log.info("Parsing rule files took ", fgGreen, styleBright,
 # Construct list of rule objects to use for linting. The rules specified on the
 # command line are always included.
 var lint_rules = rule_db["cli"]
-if not (cli_styles == @[]):
-   for style in cli_styles:
+if not (cli_state.styles == @[]):
+   for style in cli_state.styles:
       try:
          lint_rules.add(style_db[style])
       except KeyError:
          log.warning("Undefined style '$#'.", style)
-elif not cli_no_default and not (default_style == ""):
+elif not cli_state.no_default and not (default_style == ""):
    # Default style specified.
    log.info("Using default style '$#'.", default_style)
    lint_rules.add(style_db[default_style])
 
 
-if cli_list:
+if cli_state.print_list:
    # List styles.
    call_styled_write_line("\n", styleBright, styleUnderscore,
                           "Styles", resetStyle)
@@ -266,20 +194,21 @@ if lint_rules == @[]:
 
 # Construct debug options
 let debug_options: PlainDebugOptions = (
-   lexer_output_filename: cli_lexer_output_filename
+   lexer_output_filename: cli_state.lexer_output_filename
 )
 
 # Lint files
 var found_violations: bool
-if not (cli_files == @[]):
+if not (cli_state.files == @[]):
    # If there are any files in the list of input files, run the linter.
    try:
-      found_violations = lint_files(cli_files, lint_rules, cli_row_init,
-                                    cli_col_init, debug_options)
+      found_violations = lint_files(cli_state.files, lint_rules,
+                                    cli_state.row_init, cli_state.col_init,
+                                    debug_options)
    except PlainTextLinterFileIOError:
       quit(EFILE)
 
-elif cli_has_arguments:
+elif cli_state.has_arguments:
    # If the input file list is empty but the user has provided at least one
    # file matching pattern we report an error.
    log.error("No input files, aborting.")
@@ -294,8 +223,8 @@ else:
    var tmp = ""
    while stdin.read_line(tmp):
       text.add(tmp & "\n")
-   found_violations = lint_string(text, lint_rules, cli_row_init, cli_col_init,
-                                  debug_options)
+   found_violations = lint_string(text, lint_rules, cli_state.row_init,
+                                  cli_state.col_init, debug_options)
 
 if found_violations:
    quit(EVIOL)
