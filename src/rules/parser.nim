@@ -3,13 +3,17 @@ import streams
 import tables
 import typetraits
 import strutils
+import strformat
 import sequtils
 import os
 import ospaths
 import nre
+import terminal
 
 import ./rules
 import ../utils/log
+import ../utils/cli
+import ../utils/cfg
 
 type
    RuleValueError = object of Exception
@@ -566,7 +570,7 @@ type Mode* = enum NonRecursive, Recursive
 
 proc parse_rule_dir*(rule_root_dir: string, strategy: Mode): seq[Rule] =
    if not os.dir_exists(rule_root_dir):
-      log.abort(RulePathError, "Invalid path '$#'.", rule_root_dir)
+      log.abort(RulePathError, "Invalid path '$1'.", rule_root_dir)
 
    result = @[]
 
@@ -606,3 +610,133 @@ proc parse_rule_dir*(rule_root_dir: string, strategy: Mode): seq[Rule] =
             discard
          except RulePathError:
             discard
+
+type
+   Database = tuple[
+      rules: Table[string, seq[Rule]],
+      styles: Table[string, seq[Rule]]
+   ]
+
+proc build_databases(cfg_state: Configuration): Database =
+   result = (
+      init_table[string, seq[Rule]](),
+      init_table[string, seq[Rule]]()
+   )
+
+   # Walk through the rule directories specified in the configuration file
+   # and build rule objects.
+   try:
+      for dir in cfg_state.rule_dirs:
+         result.rules[dir.name] = parse_rule_dir(dir.path, NonRecursive)
+   except RulePathError:
+      discard
+
+   # Build styles
+   for style in cfg_state.styles:
+      log.debug("Building rule objects for style '$1'.", style.name)
+
+      result.styles[style.name] = @[]
+
+      for rule in style.rules:
+         var nof_robj = 0
+         # Protect against access violations with undefined keys.
+         if not result.rules.has_key(rule.name):
+            log.warning("Undefined rule name '$1' in configuration file " &
+                        "'$2', skipping.", rule.name, cfg_state.filename)
+            continue
+
+         if not (rule.exceptions == @[]):
+            # Add every rule object except the ones whose source file matches
+            # an exception.
+            log.debug("Adding rule objects from exceptions.")
+            for robj in result.rules[rule.name]:
+               let (_, filename, _) = split_file(robj.source_file)
+               if not (filename in rule.exceptions):
+                  result.styles[style.name].add(robj)
+                  nof_robj += 1
+
+         elif not (rule.only == @[]):
+            # Only add rule object whose source file matches an 'only' item.
+            for robj in result.rules[rule.name]:
+               let (_, filename, _) = split_file(robj.source_file)
+               if (filename in rule.only):
+                  result.styles[style.name].add(robj)
+                  nof_robj += 1
+
+         else:
+            # Add every rule object.
+            result.styles[style.name].add(result.rules[rule.name])
+            nof_robj = result.rules[rule.name].len
+
+         log.debug("  Adding $1 rule objects from '$2'.", $nof_robj, rule.name)
+
+
+proc get_rules*(cfg_state: Configuration, cli_state: CLIState): seq[Rule] =
+   ## Return a sequence of rules given the current configuration and CLI state.
+   result = @[]
+
+   if cli_state.no_cfg:
+      return result
+
+   # Build rule database and retrieve the name of the default style.
+   var (rule_db, style_db) = build_databases(cfg_state)
+   let default_style = get_default_style(cfg_state.styles)
+
+   # Add rules from rule directories specified on the command line.
+   if not (cli_state.rule_dirs == @[]):
+      for dir in cli_state.rule_dirs:
+         try:
+            result.add(parse_rule_dir(dir, NonRecursive))
+         except RulePathError:
+            discard
+
+   # Add named rule sets speficied on the command line.
+   if not (cli_state.rules == @[]):
+      for rule_name in cli_state.rules:
+         try:
+            result.add(rule_db[rule_name])
+         except KeyError:
+            log.warning("No definition for rule '$1' found in configuration " &
+                        "file, skipping.", rule_name)
+
+   # Add named styles specified on the command line. If no style is specified,
+   # attempt to use the default style.
+   if not (cli_state.styles == @[]):
+      for style in cli_state.styles:
+         try:
+            result.add(style_db[style])
+         except KeyError:
+            log.warning("Undefined style '$1'.", style)
+   elif not cli_state.no_default and not (default_style == ""):
+      # Default style specified.
+      log.info("Using default style '$1'.", default_style)
+      result.add(style_db[default_style])
+
+
+proc list*(cfg_state: Configuration, cli_state: CLIState) =
+   # Temporarily suppress log messages.
+   log.push_quiet_mode(true)
+
+   # List styles.
+   let (_, style_db) = build_databases(cfg_state)
+
+   call_styled_write_line(styleBright, styleUnderscore, "Styles", resetStyle)
+
+   for style_name, rules in style_db:
+      call_styled_write_line(styleBright, &"  {style_name:<15}", resetStyle)
+      call_styled_write_line("    ", $len(rules), " rules")
+
+   # List current rule set.
+   call_styled_write_line("\n", styleBright, styleUnderscore,
+                          "Current rule set", resetStyle)
+   var seen: seq[string] = @[]
+   for rule in get_rules(cfg_state, cli_state):
+      if rule.source_file in seen:
+         continue
+      call_styled_write_line(styleBright, &"  {rule.display_name:<30}",
+                             resetStyle, rule.source_file)
+
+      seen.add(rule.source_file)
+
+   # Restore the log state.
+   log.pop_quiet_mode()

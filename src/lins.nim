@@ -62,131 +62,25 @@ log.set_color_mode(cli_state.color_mode)
 plain_linter.set_minimal_mode(cli_state.minimal)
 plain_linter.set_severity_threshold(cli_state.severity)
 
-# Build rule database.
-var rule_db = init_table[string, seq[Rule]]()
-var style_db = init_table[string, seq[Rule]]()
-var default_style = ""
+# Parse configuration file.
+var cfg_state: Configuration
+try:
+   cfg_state = parse_cfg_file()
+except ConfigurationFileNotFoundError, ConfigurationParseError,
+       ConfigurationPathError:
+   discard
+
+# Print available styles and the set of active rule files, then exit.
+if cli_state.print_list:
+   list(cfg_state, cli_state)
+   quit(ESUCCESS)
+
+# Build the set of active rule files.
 let t_start = cpu_time()
-if not cli_state.no_cfg: # TODO: Refactor into a function.
-   try:
-      let config = parse_cfg_file()
-
-      # Walk through the rule directories specified in the configuration file
-      # and build rule objects.
-      for dir in config.rule_dirs:
-         rule_db[dir.name] = parse_rule_dir(dir.path, NonRecursive)
-
-      default_style = get_default_style(config.styles)
-
-      # Build styles
-      for style in config.styles:
-         log.debug("Building rule objects for style '$#'.", style.name)
-
-         style_db[style.name] = @[]
-
-         for rule in style.rules:
-            var nof_robj = 0
-            # Protect against access violations with undefined keys.
-            if not rule_db.has_key(rule.name):
-               log.warning("Undefined rule name '$#' in configuration file " &
-                           "'$#', skipping.", rule.name, config.filename)
-               continue
-
-            if not (rule.exceptions == @[]):
-               # Add every rule object except the ones whose source file matches
-               # an exception.
-               log.debug("Adding rule objects from exceptions.")
-               for robj in rule_db[rule.name]:
-                  let (_, filename, _) = split_file(robj.source_file)
-                  if not (filename in rule.exceptions):
-                     style_db[style.name].add(robj)
-                     nof_robj += 1
-
-            elif not (rule.only == @[]):
-               # Only add rule object whose source file matches an 'only' item.
-               for robj in rule_db[rule.name]:
-                  let (_, filename, _) = split_file(robj.source_file)
-                  if (filename in rule.only):
-                     style_db[style.name].add(robj)
-                     nof_robj += 1
-
-            else:
-               # Add every rule object.
-               style_db[style.name].add(rule_db[rule.name])
-               nof_robj = rule_db[rule.name].len
-
-            log.debug("  Adding $# rule objects from '$#'.", $nof_robj,
-                      rule.name)
-
-
-   except ConfigurationFileNotFoundError, ConfigurationParseError,
-          ConfigurationPathError, RulePathError:
-      discard
-
-# Parse rule directories specified on the command line.
-rule_db["cli"] = @[]
-if not (cli_state.rule_dirs == @[]):
-   for dir in cli_state.rule_dirs:
-      try:
-         rule_db["cli"].add(parse_rule_dir(dir, NonRecursive))
-      except RulePathError:
-         discard
-
-# Parse named rule sets speficied on the command line.
-if not (cli_state.rules == @[]):
-   for rule_name in cli_state.rules:
-      try:
-         rule_db["cli"].add(rule_db[rule_name])
-      except KeyError:
-         log.warning("No definition for rule '$#' found in configuration " &
-                     "file, skipping.", rule_name)
-
+let lint_rules = get_rules(cfg_state, cli_state)
 let t_diff_ms = (cpu_time() - t_start) * 1000
 log.info("Parsing rule files took ", fgGreen, styleBright,
          format_float(t_diff_ms, ffDecimal, 1), " ms", resetStyle, ".")
-
-
-# Construct list of rule objects to use for linting. The rules specified on the
-# command line are always included.
-var lint_rules = rule_db["cli"]
-if not (cli_state.styles == @[]):
-   for style in cli_state.styles:
-      try:
-         lint_rules.add(style_db[style])
-      except KeyError:
-         log.warning("Undefined style '$#'.", style)
-elif not cli_state.no_default and not (default_style == ""):
-   # Default style specified.
-   log.info("Using default style '$#'.", default_style)
-   lint_rules.add(style_db[default_style])
-
-
-if cli_state.print_list:
-   # List styles.
-   call_styled_write_line("\n", styleBright, styleUnderscore,
-                          "Styles", resetStyle)
-
-   for style_name, rules in style_db:
-      call_styled_write_line(styleBright, &"  {style_name:<15}", resetStyle)
-      call_styled_write_line("    ", $len(rules), " rules")
-
-   # List current rule set.
-   call_styled_write_line("\n", styleBright, styleUnderscore,
-                          "Current rule set", resetStyle)
-   var seen: seq[string] = @[]
-   for rule in lint_rules:
-      if rule.source_file in seen:
-         continue
-      call_styled_write_line(styleBright, &"  {rule.display_name:<30}",
-                             resetStyle, rule.source_file)
-
-      seen.add(rule.source_file)
-
-   if seen == @[]:
-      echo "No rule files."
-      quit(ENORULES)
-   quit(ESUCCESS)
-
 
 if lint_rules == @[]:
    log.error("No rules specified.")
