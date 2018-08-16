@@ -738,5 +738,8 @@ proc list*(cfg_state: Configuration, cli_state: CLIState) =
 
       seen.add(rule.source_file)
 
+   if seen == @[]:
+      echo "  No rule files."
+
    # Restore the log state.
    log.pop_quiet_mode()
