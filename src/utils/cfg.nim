@@ -233,7 +233,7 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
    if stimuli.value == "":
       # The path is given without an explicit name.
       if stimuli.key == "":
-         log.warning("Empty path given as rule directory in file '$#'.",
+         log.warning("Empty path given as rule directory in file '$1'.",
                      meta.filename)
          return
 
@@ -245,7 +245,7 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
       if not is_absolute(path):
          path = meta.dir / path
 
-      log.debug("Inferred name '$#' for rule dir '$#'.", tail, path)
+      log.debug("Inferred name '$1' for rule dir '$2'.", tail, path)
 
       meta.rule_dirs.add(RuleDir.new(tail, path))
    else:
@@ -254,14 +254,14 @@ proc add_rule_dir(meta: var Configuration, stimuli: CfgEvent) =
       if not is_absolute(path):
          path = meta.dir / path
 
-      log.debug("Adding rule directory '$#' with name '$#'.",
+      log.debug("Adding rule directory '$1' with name '$2'.",
                 stimuli.value, stimuli.key)
 
       meta.rule_dirs.add(RuleDir.new(stimuli.key, path))
 
 
 proc add_style(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("Adding new style '$#'.", stimuli.value)
+   log.debug("Adding new style '$1'.", stimuli.value)
    meta.styles.add(Style.new(stimuli.value))
 
 
@@ -273,22 +273,22 @@ proc set_style_default(meta: var Configuration, stimuli: CfgEvent) =
       meta.styles[^1].is_default = false
    else:
       log.warning("Unsupported value given to the style keyword 'default', " &
-                  "got '$#'.", stimuli.value)
+                  "got '$1'.", stimuli.value)
 
 
 proc add_style_rule(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("  Adding new style rule '$#'.", stimuli.value)
+   log.debug("  Adding new style rule '$1'.", stimuli.value)
    meta.styles[^1].rules.add(StyleRule.new(stimuli.value))
 
 
 proc add_exception(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("    Adding new exception '$#' to rule '$#'.",
+   log.debug("    Adding new exception '$1' to rule '$2'.",
              stimuli.key, meta.styles[^1].rules[^1].name)
    meta.styles[^1].rules[^1].exceptions.add(stimuli.key)
 
 
 proc add_only(meta: var Configuration, stimuli: CfgEvent) =
-   log.debug("    Adding new only '$#' to rule '$#'.",
+   log.debug("    Adding new only '$1' to rule '$2'.",
              stimuli.key, meta.styles[^1].rules[^1].name)
    meta.styles[^1].rules[^1].only.add(stimuli.key)
 
@@ -297,14 +297,14 @@ proc parse_error(meta: var Configuration, stimuli: CfgEvent) =
    var tmp = ""
    case stimuli.kind
    of cfgSectionStart:
-      tmp = "Unexpected section '$#'." % stimuli.section
+      tmp = "Unexpected section '$1'." % stimuli.section
    of cfgKeyValuePair:
-      tmp = format("Unexpected key-value pair '$#' = '$#'.",
+      tmp = format("Unexpected key-value pair '$1' = '$2'.",
                    stimuli.key, stimuli.value)
    else:
       discard
 
-   log.error("Failed to parse configuration file '$#'. $#", meta.filename, tmp)
+   log.error("Failed to parse configuration file '$1'. $2", meta.filename, tmp)
 
 
 proc get_default_style*(styles: seq[Style]): string =
@@ -326,7 +326,7 @@ proc get_default_style*(styles: seq[Style]): string =
             result = style.name
          else:
             log.warning("Only one style may be set as the default. " &
-                        "Ignoring default specifier for style '$#'.",
+                        "Ignoring default specifier for style '$1'.",
                         style.name)
 
 
@@ -369,12 +369,12 @@ proc parse_cfg_file*(): Configuration =
       raise new_exception(ConfigurationFileNotFoundError,
                           "Unable to find configuration file.")
    else:
-      log.info("Using configuration file '$#'.", cfg_file)
+      log.info("Using configuration file '$1'.", cfg_file)
 
    var fs = new_file_stream(cfg_file, fmRead)
    if fs == nil:
       log.abort(ConfigurationPathError,
-                format("Failed to open configuration file '$#' for reading.",
+                format("Failed to open configuration file '$1' for reading.",
                        cfg_file))
 
    let (dir, _, _) = split_file(cfg_file)
