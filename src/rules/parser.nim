@@ -686,7 +686,7 @@ proc get_rules*(cfg_state: Configuration, cli_state: CLIState): seq[Rule] =
    if not (cli_state.rule_dirs == @[]):
       for dir in cli_state.rule_dirs:
          try:
-            result.add(parse_rule_dir(dir, NonRecursive))
+            result.add(parse_rule_dir(expand_tilde(dir), NonRecursive))
          except RulePathError:
             discard
 
