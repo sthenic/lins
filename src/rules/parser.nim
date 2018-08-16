@@ -724,7 +724,7 @@ proc list*(cfg_state: Configuration, cli_state: CLIState) =
 
    for style_name, rules in style_db:
       call_styled_write_line(styleBright, &"  {style_name:<15}", resetStyle)
-      call_styled_write_line("    ", $len(rules), " rules")
+      call_styled_write_line("  └─ ", $len(rules), " rules")
 
    # List current rule set.
    call_styled_write_line("\n", styleBright, styleUnderscore,
