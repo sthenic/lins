@@ -16,11 +16,21 @@ const
 
 var
    quiet_mode = false
+   quiet_mode_mem = false # TODO: Create a proper stack implementation.
    color_mode = Color
 
 
 proc set_quiet_mode*(state: bool) =
    quiet_mode = state
+
+
+proc push_quiet_mode*(state: bool) =
+   quiet_mode_mem = quiet_mode
+   quiet_mode = state
+
+
+proc pop_quiet_mode*() =
+   quiet_mode = quiet_mode_mem
 
 
 proc set_color_mode*(mode: ColorMode) =
