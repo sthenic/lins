@@ -27,6 +27,7 @@ configuration file to use through a search that follows these parameters:
     - ``$XDG_CONFIG_HOME``---if defined, otherwise ``/home/<user>/.config`` on
       Unix systems and
     - ``C:\Users\<user>\.config`` on Windows systems.
+
   The ``lins/`` subdirectory is appended to the path and searched for a
   configuration file.
 
