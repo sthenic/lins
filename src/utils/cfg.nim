@@ -332,10 +332,9 @@ proc get_default_style*(styles: seq[Style]): string =
 
 proc get_cfg_file(): string =
    ## Returns the full path to a configuration file, if one exists.
-   const CFG_FILENAME = @[".lins.cfg", "lins.cfg",
-                          ".lins/.lins.cfg", ".lins/lins.cfg"]
-   const CFG_FILENAME_HOMEDIR = @[".config/lins/.lins.cfg",
-                                  ".config/lins/lins.cfg"]
+   const FILENAMES = @[".lins.cfg", "lins.cfg",
+                       ".lins/.lins.cfg", ".lins/lins.cfg"]
+   const FILENAMES_CFGDIR = @["lins/.lins.cfg", "lins/lins.cfg"]
    result = ""
 
    # Check for the environment variable 'LINS_CFG'. A valid configuration file
@@ -349,15 +348,22 @@ proc get_cfg_file(): string =
                      "specify an existing file.", path)
 
    # Walk from the current directory up to the root directory searching for
-   # a configuraiton file. Lastly, look in the user's home directory.
+   # a configuraiton file.
    for path in parent_dirs(expand_filename("./"), false, true):
-      for filename in CFG_FILENAME:
+      for filename in FILENAMES:
          let tmp = path / filename
          if file_exists(tmp):
             return tmp
 
-   for filename in CFG_FILENAME_HOMEDIR:
-      let tmp = get_home_dir() / filename
+   # Default path to the user's configuration dir: ~/.config
+   var path_to_cfgdir = get_home_dir() / ".config"
+   when not defined(windows):
+      # If 'XDG_CONFIG_HOME' is defined, we replace the default value.
+      if exists_env("XDG_CONFIG_HOME"):
+         path_to_cfgdir = expand_tilde(get_env("XDG_CONFIG_HOME"))
+
+   for filename in FILENAMES_CFGDIR:
+      let tmp = path_to_cfgdir / filename
       if file_exists(tmp):
          return tmp
 

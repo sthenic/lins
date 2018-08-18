@@ -19,20 +19,24 @@ configuration file to use through a search that follows these parameters:
 
 * The path to the current working directory is traversed in ascending order
   until a configuration file is found or the root directory is reached.
-  Additionally, the search algorithm descends into any directory named ``.lins``
-  on its way to the root.
+  Additionally, the search algorithm descends into any directory named
+  ``.lins/`` on its way to the root.
 
-* If the directory traversal yields no results, the tool looks in the current
-  user's home directory under ``/home/<user>/.config/lins`` on Unix systems and
-  ``C:\Users\<user>\.config\lins`` on Windows systems.
+* If the directory traversal yields no results, the tool determines the path to
+  the user's configuration directory which defaults to
+    - ``$XDG_CONFIG_HOME``---if defined, otherwise ``/home/<user>/.config`` on
+      Unix systems and
+    - ``C:\Users\<user>\.config`` on Windows systems.
+  The ``lins/`` subdirectory is appended to the path and searched for a
+  configuration file.
 
 Upon finding a configuration file, the search is aborted and its contents are
 parsed.
 
-You are also able to specify a configuration file by setting the ``LINS_CFG``
-:ref:`environment variable <cfg_env>` to the full path of the configuration
-file. This method takes precedence over any file found through the search
-outlined above.
+You are also able to explicitly specify a configuration file by setting the
+``LINS_CFG`` :ref:`environment variable <cfg_env>` to the full path of the
+configuration file. This method takes precedence over any file found through the
+search outlined above.
 
 .. note::
 
