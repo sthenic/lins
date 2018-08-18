@@ -21,6 +21,15 @@ type
    RulePathError* = object of Exception
 
 type
+   Mode = enum
+      NonRecursive
+      Recursive
+
+   Database = tuple
+      rules: Table[string, seq[Rule]]
+      styles: Table[string, seq[Rule]]
+
+type
    ExistenceYAML = object
       extends: string
       message: string
@@ -566,15 +575,13 @@ proc parse_rule_file*(filename: string): seq[Rule] =
                 "extension point. Skipping for now.", filename)
 
 
-type Mode* = enum NonRecursive, Recursive
-
-proc parse_rule_dir*(rule_root_dir: string, strategy: Mode): seq[Rule] =
+proc parse_rule_dir(rule_root_dir: string, mode: Mode): seq[Rule] =
    if not os.dir_exists(rule_root_dir):
       log.abort(RulePathError, "Invalid path '$1'.", rule_root_dir)
 
    result = @[]
 
-   case strategy
+   case mode
    of NonRecursive:
       for kind, path in walk_dir(rule_root_dir):
          # Skip directories.
@@ -611,13 +618,8 @@ proc parse_rule_dir*(rule_root_dir: string, strategy: Mode): seq[Rule] =
          except RulePathError:
             discard
 
-type
-   Database = tuple[
-      rules: Table[string, seq[Rule]],
-      styles: Table[string, seq[Rule]]
-   ]
 
-proc build_databases(cfg_state: Configuration): Database =
+proc build_databases(cfg_state: CfgState): Database =
    result = (
       init_table[string, seq[Rule]](),
       init_table[string, seq[Rule]]()
@@ -671,7 +673,7 @@ proc build_databases(cfg_state: Configuration): Database =
          log.debug("  Adding $1 rule objects from '$2'.", $nof_robj, rule.name)
 
 
-proc get_rules*(cfg_state: Configuration, cli_state: CLIState): seq[Rule] =
+proc get_rules*(cfg_state: CfgState, cli_state: CLIState): seq[Rule] =
    ## Return a sequence of rules given the current configuration and CLI state.
    result = @[]
 
@@ -713,7 +715,7 @@ proc get_rules*(cfg_state: Configuration, cli_state: CLIState): seq[Rule] =
       result.add(style_db[default_style])
 
 
-proc list*(cfg_state: Configuration, cli_state: CLIState) =
+proc list*(cfg_state: CfgState, cli_state: CLIState) =
    # Temporarily suppress log messages.
    log.push_quiet_mode(true)
 

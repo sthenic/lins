@@ -11,9 +11,9 @@ import ../lexers/plain_lexer
 import ../rules/rules
 import ../utils/log
 
-type PlainTextLinterFileIOError* = object of Exception
-type PlainTextLinterValueError* = object of Exception
-
+type
+   PlainTextLinterFileIOError* = object of Exception
+   PlainTextLinterValueError* = object of Exception
 
 type
    ViolationCount = tuple

@@ -42,7 +42,7 @@ type
       message*: string
       source_file*: string
       display_name*: string
-      ignore_case: bool
+      ignore_case*: bool
 
    RuleExistence* = ref object of Rule
       regex: Regex

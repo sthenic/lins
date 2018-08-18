@@ -63,11 +63,11 @@ plain_linter.set_minimal_mode(cli_state.minimal)
 plain_linter.set_severity_threshold(cli_state.severity)
 
 # Parse configuration file.
-var cfg_state: Configuration
+var cfg_state: CfgState
 try:
    cfg_state = parse_cfg_file()
-except ConfigurationFileNotFoundError, ConfigurationParseError,
-       ConfigurationPathError:
+except CfgFileNotFoundError, CfgParseError,
+       CfgPathError:
    discard
 
 # Print available styles and the set of active rule files, then exit.
