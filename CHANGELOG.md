@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.4.0 - 2018-08-19
+
+* Searching for a configuration file directly in the user's home has been replaced by instead looking in the user's configuration directory, e.g. ``~/.config``. This new method respects ``XDG_CONFIG_HOME`` on Unix systems.
+* Expand '~' when parsing ``--rule-dir`` values.
+* Improved documentation and CLI help text.
+* A lot of internal refactoring and cleanup (not affecting functionality).
+
 ## v0.3.1 - 2018-08-09
 
 * Fixed ANSI escape sequences not being suppressed when piping the output to another application or a file.
