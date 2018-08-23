@@ -38,7 +38,9 @@ const
       toRunes("Mr."),
       toRunes("Mrs."),
       toRunes("Ms."),
-      toRunes("Mt.")
+      toRunes("Mt."),
+      toRunes("St."),
+      toRunes("st.")
    ]
 
 # Forward declarations of conditions and transisiton callback functions.
