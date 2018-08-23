@@ -1,5 +1,6 @@
 import unicode
 import streams
+import strutils
 
 import ./state_machine
 import ../utils/log
@@ -33,6 +34,12 @@ const
    NEWLINE = toRunes("\n\r")
    HYPHEN = toRunes("-")
    WHITESPACE = toRunes(" \t\n\r")
+   ABBREVIATIONS = @[
+      toRunes("Mr."),
+      toRunes("Mrs."),
+      toRunes("Ms."),
+      toRunes("Mt.")
+   ]
 
 # Forward declarations of conditions and transisiton callback functions.
 proc is_letter(meta: PlainTextMeta, stimuli: Rune): bool
@@ -42,86 +49,122 @@ proc is_space(meta: PlainTextMeta, stimuli: Rune): bool
 proc is_newline(meta: PlainTextMeta, stimuli: Rune): bool
 proc is_hyphen(meta: PlainTextMeta, stimuli: Rune): bool
 proc is_ws(meta: PlainTextMeta, stimuli: Rune): bool
+proc is_abbreviation(meta: PlainTextMeta, stimuli: Rune): bool
+
 proc append(meta: var PlainTextMeta, stimuli: Rune)
 proc append_first(meta: var PlainTextMeta, stimuli: Rune)
-proc append_incr_nl(meta: var PlainTextMeta, stimuli: Rune)
 proc insert_space(meta: var PlainTextMeta, stimuli: Rune)
 proc prepend_space(meta: var PlainTextMeta, stimuli: Rune)
 proc paragraph_complete(meta: var PlainTextMeta, stimuli: Rune)
+proc prepend_space_incr_nl(meta: var PlainTextMeta, stimuli: Rune)
 
 # States
 let
-   STATE1 = PlainTextState(id: 1, name: "Init", is_final: false)
-   STATE2 = PlainTextState(id: 2, name: "Append", is_final: true)
-   STATE3 = PlainTextState(id: 3, name: "Punctuation", is_final: true)
-   STATE4 = PlainTextState(id: 4, name: "SentenceComplete", is_final: false)
-   STATE5 = PlainTextState(id: 5, name: "Space", is_final: false)
-   STATE6 = PlainTextState(id: 6, name: "Newline", is_final: false)
+   S_INIT =
+      PlainTextState(id: 1, name: "Init", is_final: false)
+   S_APPEND =
+      PlainTextState(id: 2, name: "Append", is_final: true)
+   S_PUNC =
+      PlainTextState(id: 3, name: "Punctuation", is_final: true)
+   S_SEN_DONE =
+      PlainTextState(id: 4, name: "SentenceDone", is_final: false)
+   S_SPACE =
+      PlainTextState(id: 5, name: "Space", is_final: false)
+   S_NEWLINE =
+      PlainTextState(id: 6, name: "Newline", is_final: false)
+   S_APPEND_FIRST =
+      PlainTextState(id: 7, name: "AppendFirstLetter", is_final: true)
+   S_NOBREAK_PUNC =
+      PlainTextState(id: 8, name: "NoBreakPunctuation", is_final: true)
 
 # Transitions
 let
-   STATE1_TRANSITIONS = @[
+   S_INIT_TRANSITIONS = @[
       PlainTextTransition(condition_cb: is_letter, transition_cb: append_first,
-                          next_state: STATE2),
+                          next_state: S_APPEND_FIRST),
       PlainTextTransition(condition_cb: is_ws, transition_cb: nil,
-                          next_state: STATE1),
+                          next_state: S_INIT),
       PlainTextTransition(condition_cb: nil, transition_cb: nil,
-                          next_state: STATE1)
+                          next_state: S_INIT)
    ]
-   STATE2_TRANSITIONS = @[
+   S_APPEND_FIRST_TRANSITIONS = @[
       PlainTextTransition(condition_cb: is_letter, transition_cb: append,
-                          next_state: STATE2),
+                          next_state: S_APPEND),
       PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
-                          next_state: STATE3),
+                          next_state: S_NOBREAK_PUNC),
       PlainTextTransition(condition_cb: is_space, transition_cb: append,
-                          next_state: STATE5),
-      PlainTextTransition(condition_cb: is_newline, transition_cb: insert_space,
-                          next_state: STATE6)
+                          next_state: S_SPACE),
+      PlainTextTransition(condition_cb: is_newline, transition_cb: nil,
+                          next_state: S_NEWLINE)
    ]
-   STATE3_TRANSITIONS = @[
+   S_NOBREAK_PUNC_TRANSITIONS = @[
       PlainTextTransition(condition_cb: is_letter, transition_cb: append,
-                          next_state: STATE2),
+                          next_state: S_APPEND_FIRST),
       PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
-                          next_state: STATE3),
-      PlainTextTransition(condition_cb: is_ws, transition_cb: nil,
-                          next_state: STATE4)
+                          next_state: S_NOBREAK_PUNC),
+      PlainTextTransition(condition_cb: is_space, transition_cb: append,
+                          next_state: S_SPACE),
+      PlainTextTransition(condition_cb: is_newline, transition_cb: nil,
+                          next_state: S_NEWLINE)
    ]
-   STATE4_TRANSITIONS = @[
+   S_APPEND_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_letter, transition_cb: append,
+                          next_state: S_APPEND),
+      PlainTextTransition(condition_cb: is_abbreviation, transition_cb: append,
+                          next_state: S_NOBREAK_PUNC),
+      PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
+                          next_state: S_PUNC),
+      PlainTextTransition(condition_cb: is_space, transition_cb: append,
+                          next_state: S_SPACE),
+      PlainTextTransition(condition_cb: is_newline, transition_cb: nil,
+                          next_state: S_NEWLINE)
+   ]
+   S_PUNC_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_letter, transition_cb: append,
+                          next_state: S_APPEND),
+      PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
+                          next_state: S_PUNC),
+      PlainTextTransition(condition_cb: is_ws, transition_cb: nil,
+                          next_state: S_SEN_DONE)
+   ]
+   S_SEN_DONE_TRANSITIONS = @[
       PlainTextTransition(condition_cb: is_not_capital_letter,
                           transition_cb: prepend_space,
-                          next_state: STATE2),
-      PlainTextTransition(condition_cb: is_ws, transition_cb: insert_space,
-                          next_state: STATE4),
+                          next_state: S_APPEND_FIRST),
       PlainTextTransition(condition_cb: is_newline,
                           transition_cb: paragraph_complete,
-                          next_state: nil)
+                          next_state: nil),
+      PlainTextTransition(condition_cb: is_ws, transition_cb: insert_space,
+                          next_state: S_SEN_DONE)
    ]
-   STATE5_TRANSITIONS = @[
+   S_SPACE_TRANSITIONS = @[
       PlainTextTransition(condition_cb: is_letter, transition_cb: append,
-                          next_state: STATE2),
+                          next_state: S_APPEND_FIRST),
       PlainTextTransition(condition_cb: is_space, transition_cb: nil,
-                          next_state: STATE5),
+                          next_state: S_SPACE),
       PlainTextTransition(condition_cb: is_newline, transition_cb: nil,
-                          next_state: STATE6)
+                          next_state: S_NEWLINE)
    ]
-   STATE6_TRANSITIONS = @[
+   S_NEWLINE_TRANSITIONS = @[
       PlainTextTransition(condition_cb: is_letter,
-                          transition_cb: append_incr_nl,
-                          next_state: STATE2),
+                          transition_cb: prepend_space_incr_nl,
+                          next_state: S_APPEND_FIRST),
       PlainTextTransition(condition_cb: is_space, transition_cb: nil,
-                          next_state: STATE6),
+                          next_state: S_NEWLINE),
       PlainTextTransition(condition_cb: is_newline,
                           transition_cb: paragraph_complete,
                           next_state: nil)
    ]
 
 # Add transition sequences to the states.
-STATE1.transitions = STATE1_TRANSITIONS
-STATE2.transitions = STATE2_TRANSITIONS
-STATE3.transitions = STATE3_TRANSITIONS
-STATE4.transitions = STATE4_TRANSITIONS
-STATE5.transitions = STATE5_TRANSITIONS
-STATE6.transitions = STATE6_TRANSITIONS
+S_INIT.transitions = S_INIT_TRANSITIONS
+S_APPEND.transitions = S_APPEND_TRANSITIONS
+S_PUNC.transitions = S_PUNC_TRANSITIONS
+S_SEN_DONE.transitions = S_SEN_DONE_TRANSITIONS
+S_SPACE.transitions = S_SPACE_TRANSITIONS
+S_NEWLINE.transitions = S_NEWLINE_TRANSITIONS
+S_APPEND_FIRST.transitions = S_APPEND_FIRST_TRANSITIONS
+S_NOBREAK_PUNC.transitions = S_NOBREAK_PUNC_TRANSITIONS
 
 # Condition callbacks
 proc is_letter(meta: PlainTextMeta, stimuli: Rune): bool =
@@ -144,6 +187,14 @@ proc is_hyphen(meta: PlainTextMeta, stimuli: Rune): bool =
 
 proc is_ws(meta: PlainTextMeta, stimuli: Rune): bool =
    return stimuli in WHITESPACE
+
+proc is_abbreviation(meta: PlainTextMeta, stimuli: Rune): bool =
+   if not (stimuli in PUNCTUATION):
+      return false
+
+   for abr in ABBREVIATIONS:
+      if ($meta.sentence.str & $stimuli).ends_with($abr):
+         return true
 
 proc dead_state_callback(meta: var PlainTextMeta, stimul: Rune) =
    # Invoke the callback function for a completed sentence.
@@ -168,9 +219,9 @@ proc append_first(meta: var PlainTextMeta, stimuli: Rune) =
 
    meta.sentence.str.add(stimuli)
 
-proc append_incr_nl(meta: var PlainTextMeta, stimuli: Rune) =
+proc prepend_space_incr_nl(meta: var PlainTextMeta, stimuli: Rune) =
    meta.sentence.newlines.add(meta.sentence.str.len)
-   meta.sentence.str.add(stimuli)
+   prepend_space(meta, stimuli)
 
 proc insert_space(meta: var PlainTextMeta, stimuli: Rune) =
    meta.sentence.str.add(Rune(' '))
@@ -191,7 +242,7 @@ proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
       line: string = ""
       # Initialize a state machine for the plain-text syntax.
       sm: PlainTextStateMachine =
-         PlainTextStateMachine(init_state: STATE1,
+         PlainTextStateMachine(init_state: S_INIT,
                                dead_state_cb: dead_state_callback)
       # Initialize a meta variable to represent the lexer's current state. This
       # variable is used pass around a mutable container between the state
