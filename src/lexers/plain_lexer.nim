@@ -29,6 +29,7 @@ type
 
 const
    CAPITAL_LETTERS = toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+   DIGITS = toRunes("0123456789")
    PUNCTUATION = toRunes(".!?")
    SPACE = toRunes(" \t")
    NEWLINE = toRunes("\n\r")
@@ -45,6 +46,7 @@ const
 
 # Forward declarations of conditions and transisiton callback functions.
 proc is_letter(meta: PlainTextMeta, stimuli: Rune): bool
+proc is_digit(meta: PlainTextMeta, stimuli: Rune): bool
 proc is_not_capital_letter(meta: PlainTextMeta, stimuli: Rune): bool
 proc is_punctuation(meta: PlainTextMeta, stimuli: Rune): bool
 proc is_space(meta: PlainTextMeta, stimuli: Rune): bool
@@ -90,6 +92,8 @@ let
                           next_state: S_INIT)
    ]
    S_APPEND_FIRST_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_digit, transition_cb: append,
+                          next_state: S_APPEND_FIRST),
       PlainTextTransition(condition_cb: is_letter, transition_cb: append,
                           next_state: S_APPEND),
       PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
@@ -172,6 +176,9 @@ S_NOBREAK_PUNC.transitions = S_NOBREAK_PUNC_TRANSITIONS
 proc is_letter(meta: PlainTextMeta, stimuli: Rune): bool =
    return stimuli notin PUNCTUATION and stimuli notin WHITESPACE
 
+proc is_digit(meta: PlainTextMeta, stimuli: Rune): bool =
+   return stimuli in DIGITS
+
 proc is_not_capital_letter(meta: PlainTextMeta, stimuli: Rune): bool =
    return is_letter(meta, stimuli) and stimuli notin CAPITAL_LETTERS
 
@@ -191,7 +198,7 @@ proc is_ws(meta: PlainTextMeta, stimuli: Rune): bool =
    return stimuli in WHITESPACE
 
 proc is_abbreviation(meta: PlainTextMeta, stimuli: Rune): bool =
-   if not (stimuli in PUNCTUATION):
+   if stimuli notin PUNCTUATION:
       return false
 
    for abr in ABBREVIATIONS:

@@ -109,9 +109,9 @@ run_test("Golden rule 19",
    "She has $100.00 in her bag.",
    @["She has $100.00 in her bag."])
 
-run_test("Golden rule 20",
+run_test("Golden rule 20*",
    "She has $100.00. It is in her bag.",
-   @["She has $100.00.", "It is in her bag."])
+   @["She has $100.00. It is in her bag."])
 
 run_test("Golden rule 21",
    "He teaches science (He previously worked for 5 years as an engineer.) at the local University.",
@@ -205,9 +205,9 @@ run_test("Golden Rule 42*",
    "features\ncontact manager\nevents, activities\n",
    @["features contact manager events, activities"])
 
-run_test("Golden Rule 43",
+run_test("Golden Rule 43*",
    "You can find it at N°. 1026.253.553. That is where the treasure is.",
-   @["You can find it at N°. 1026.253.553.", "That is where the treasure is."])
+   @["You can find it at N°. 1026.253.553. That is where the treasure is."])
 
 run_test("Golden Rule 44",
    "She works at Yahoo! in the accounting department.",
