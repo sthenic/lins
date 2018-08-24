@@ -140,12 +140,14 @@ let
       PlainTextTransition(condition_cb: is_newline,
                           transition_cb: paragraph_complete,
                           next_state: nil),
-      PlainTextTransition(condition_cb: is_ws, transition_cb: insert_space,
+      PlainTextTransition(condition_cb: is_ws, transition_cb: nil,
                           next_state: S_SEN_DONE)
    ]
    S_SPACE_TRANSITIONS = @[
       PlainTextTransition(condition_cb: is_letter, transition_cb: append,
                           next_state: S_APPEND_FIRST),
+      PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
+                          next_state: S_PUNC),
       PlainTextTransition(condition_cb: is_space, transition_cb: nil,
                           next_state: S_SPACE),
       PlainTextTransition(condition_cb: is_newline, transition_cb: nil,
