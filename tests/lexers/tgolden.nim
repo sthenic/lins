@@ -118,8 +118,8 @@ run_test("Golden rule 21",
    @["He teaches science (He previously worked for 5 years as an engineer.) at the local University."])
 
 run_test("Golden rule 22",
-   "Her email is Jane.Doe@example.com . I sent her an email.",
-   @["Her email is Jane.Doe@example.com .", "I sent her an email."])
+   "Her email is Jane.Doe@example.com. I sent her an email.",
+   @["Her email is Jane.Doe@example.com.", "I sent her an email."])
 
 run_test("Golden rule 23",
    "The site is: https://www.example.50.com/new-site/awesome_content.html. Please check it out.",
