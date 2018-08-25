@@ -39,13 +39,13 @@ pages:
   stage: build
   image: alpine
   script:
-  - cd doc
+  - cd doc/web
   - apk --no-cache add py3-pip python3-dev
   - pip3 install sphinx
   - apk --no-cache add make
   - make html
   - cd ..
-  - mv doc/_build/html/ public/
+  - mv doc/web/_build/html/ public/
   artifacts:
     paths:
     - public

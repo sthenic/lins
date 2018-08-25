@@ -39,5 +39,5 @@ grabs every file with the ``.txt`` extension.
 Command Line Interface
 ======================
 
-.. literalinclude:: /../src/help_cli.txt
+.. literalinclude:: /../../src/help_cli.txt
     :language: text
