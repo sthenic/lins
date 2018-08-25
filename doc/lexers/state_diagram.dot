@@ -1,45 +1,51 @@
 digraph G {
-    rankdir=LR;
-    INIT -> APPEND_FIRST [label="is_letter, append_first"];
+    graph [rankdir=LR, ranksep=0.5, fontname = "Latin Modern Roman"];
+    node [fontname = "Latin Modern Bold", shape=box, penwidth=2.0];
+    edge [fontname = "Latin Modern Mono"];
+
+    INIT -> "APPEND FIRST" [label="is_letter, append_first"];
     INIT -> INIT [label="is_ws, discard"];
     INIT -> INIT [label="nil, discard"];
 
-    APPEND_FIRST -> APPEND_FIRST [label="is_digit, append"];
-    APPEND_FIRST -> APPEND [label="is_letter, append"];
-    APPEND_FIRST -> NOBREAK_PUNC [label="is_punctuation, append"];
-    APPEND_FIRST -> SPACE [label="is_space, append"];
-    APPEND_FIRST -> NEWLINE [label="is_newline, discard"];
+    "APPEND FIRST" -> "APPEND FIRST" [label="is_digit, append"];
+    "APPEND FIRST" -> APPEND [label="is_letter, append"];
+    "APPEND FIRST" -> "NOBREAK PUNC" [label="is_punctuation, append"];
+    "APPEND FIRST" -> SPACE [label="is_space, append"];
+    "APPEND FIRST" -> NEWLINE [label="is_newline, discard"];
 
-    NOBREAK_PUNC -> APPEND_FIRST [label="is_letter, append"];
-    NOBREAK_PUNC -> NOBREAK_PUNC [label="is_punctuation, append"];
-    NOBREAK_PUNC -> SPACE [label="is_space, append"];
+    "NOBREAK PUNC" -> "APPEND FIRST" [label="is_letter, append"];
+    "NOBREAK PUNC" -> "NOBREAK PUNC" [label="is_punctuation, append"];
+    "NOBREAK PUNC" -> SPACE [label="is_space, append"];
 
     APPEND -> APPEND [label="is_letter, append"];
-    APPEND -> NOBREAK_PUNC [label="is_abbreviation, append"];
+    APPEND -> "NOBREAK PUNC" [label="is_abbreviation, append"];
     APPEND -> PUNC [label="is_punctuation, append"];
     APPEND -> SPACE [label="is_space, append"];
     APPEND -> NEWLINE [label="is_newline, discard"];
 
     PUNC -> APPEND [label="is_letter, append"];
     PUNC -> PUNC [label="is_punctuation, append"];
-    PUNC -> SEN_DONE [label="is_ws, accumulate_ws"];
+    PUNC -> "SEN DONE" [label="is_ws, accumulate_ws"];
 
-    SEN_DONE -> APPEND_FIRST [label="is_not_capital_letter, prepend_accumulated_ws"];
-    SEN_DONE -> ELLIPSIS [label="is_punctuation, prepend_accumulated_ws"];
-    SEN_DONE -> nil [label="is_newline, paragraph_complete"];
-    SEN_DONE -> SEN_DONE [label="is_ws, accumulate_ws"];
+    "SEN DONE" -> "APPEND FIRST" [label="is_not_capital_letter, prepend_accumulated_ws"];
+    "SEN DONE" -> ELLIPSIS [label="is_punctuation, prepend_accumulated_ws"];
+    "SEN DONE" -> nil [label="is_newline, paragraph_complete"];
+    "SEN DONE" -> "SEN DONE" [label="is_ws, accumulate_ws"];
 
-    SPACE -> APPEND_FIRST [label="is_letter, prepend_accumulated_ws"];
+    SPACE -> "APPEND FIRST" [label="is_letter, prepend_accumulated_ws"];
     SPACE -> PUNC [label="is_punctuation, prepend_accumulated_ws"];
     SPACE -> SPACE [label="is_ws, accumulate_ws"];
     SPACE -> NEWLINE [label="is_newline, discard"];
 
-    NEWLINE -> APPEND_FIRST [label="is_letter, prepend_space_incr_nl"];
+    NEWLINE -> "APPEND FIRST" [label="is_letter, prepend_space_incr_nl"];
     NEWLINE -> NEWLINE [label="is_space, discard"];
     NEWLINE -> nil [label="is_newline, paragraph_complete"];
 
-    ELLIPSIS -> APPEND_FIRST [label="is_letter, append"];
+    ELLIPSIS -> "APPEND FIRST" [label="is_letter, append"];
     ELLIPSIS -> NEWLINE [label="is_newline, discard"];
     ELLIPSIS -> ELLIPSIS [label="is_ws, append"];
     ELLIPSIS -> ELLIPSIS [label="is_punctuation, append"];
+
+    INIT [shape=circle];
+    nil [shape=circle];
 }
