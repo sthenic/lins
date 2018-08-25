@@ -23,9 +23,9 @@ template run_test(title, stimuli: string; reference: seq[string]) =
       styledWriteLine(stdout, styleBright, fgGreen, "[✓] ",
                       fgWhite, "Test '",  title, "'")
       nof_passed += 1
-   except AssertionError:
+   except AssertionError as e:
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
-                      fgWhite, "Test '",  title, "'")
+                      fgWhite, "Test '",  title, "'", e.msg)
       nof_failed += 1
    except IndexError:
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
@@ -118,8 +118,8 @@ run_test("Golden rule 21",
    @["He teaches science (He previously worked for 5 years as an engineer.) at the local University."])
 
 run_test("Golden rule 22",
-   "Her email is Jane.Doe@example.com. I sent her an email.",
-   @["Her email is Jane.Doe@example.com.", "I sent her an email."])
+   "Her email is Jane.Doe@example.com . I sent her an email.",
+   @["Her email is Jane.Doe@example.com .", "I sent her an email."])
 
 run_test("Golden rule 23",
    "The site is: https://www.example.50.com/new-site/awesome_content.html. Please check it out.",
@@ -217,7 +217,7 @@ run_test("Golden Rule 45*",
    "We make a good team, you and I. Did you see Albert I. Jones yesterday?",
    @["We make a good team, you and I. Did you see Albert I. Jones yesterday?"])
 
-run_test("Golden rule 46", # Fix this case, except a period to conitnue the sentence.
+run_test("Golden rule 46",
    "Thoreau argues that by simplifying one’s life, “the laws of the universe will appear less complex. . . .”",
    @["Thoreau argues that by simplifying one’s life, “the laws of the universe will appear less complex. . . .”"])
 
@@ -225,21 +225,25 @@ run_test("Golden rule 47",
    "\"Bohr [...] used the analogy of parallel stairways [...]\" (Smith 55).",
    @["\"Bohr [...] used the analogy of parallel stairways [...]\" (Smith 55)."])
 
-run_test("Golden rule 48", # Why is a period missing from the first sentence?
+run_test("Golden rule 48*",
    "If words are left off at the end of a sentence, and that is all that is omitted, indicate the omission with ellipsis marks (preceded and followed by a space) and then indicate the end of the sentence with a period . . . . Next sentence.",
-   @["If words are left off at the end of a sentence, and that is all that is omitted, indicate the omission with ellipsis marks (preceded and followed by a space) and then indicate the end of the sentence with a period . . . .", "Next sentence."])
+   @["If words are left off at the end of a sentence, and that is all that is omitted, indicate the omission with ellipsis marks (preceded and followed by a space) and then indicate the end of the sentence with a period . . . . Next sentence."])
 
 run_test("Golden rule 49",
    "I never meant that.... She left the store.",
    @["I never meant that....", "She left the store."])
 
-run_test("Golden rule 50", # Fix this too (should be similar to cases above.
-   "I wasn’t really ... well, what I mean...see . . . what I'm saying, the thing is . . . I didn’t mean it.",
-   @["I wasn’t really ... well, what I mean...see . . . what I'm saying, the thing is . . . I didn’t mean it."])
+run_test("Golden rule 50a",
+   "I wasn’t really ... well, what I mean...see  . . . what I'm saying, the thing is . . . I didn’t mean it.",
+   @["I wasn’t really ... well, what I mean...see  . . . what I'm saying, the thing is . . . I didn’t mean it."])
 
-run_test("Golden rule 51", # Same as above
+run_test("Golden rule 50b", # Irregular spacing in ellipses.
+   "I wasn’t really . .. well, what I mean...see  .  . . what I'm saying, the thing is .  .. . I didn’t mean it.",
+   @["I wasn’t really . .. well, what I mean...see  .  . . what I'm saying, the thing is .  .. . I didn’t mean it."])
+
+run_test("Golden rule 51",
    "One further habit which was somewhat weakened . . . was that of combining words into self-interpreting compounds. . . . The practice was not abandoned. . . .",
-   @["One further habit which was somewhat weakened . . . was that of combining words into self-interpreting compounds.", ". . . The practice was not abandoned. . . ."])
+   @["One further habit which was somewhat weakened . . . was that of combining words into self-interpreting compounds. . . . The practice was not abandoned. . . ."])
 
 
 # Print summary

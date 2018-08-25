@@ -20,6 +20,7 @@ type
    PlainTextMeta = tuple
       row, col: int
       new_par: bool
+      ws: seq[Rune]
       sentence_callback: proc (s: Sentence)
       sentence: Sentence
 
@@ -57,9 +58,10 @@ proc is_abbreviation(meta: PlainTextMeta, stimuli: Rune): bool
 
 proc append(meta: var PlainTextMeta, stimuli: Rune)
 proc append_first(meta: var PlainTextMeta, stimuli: Rune)
-proc insert_space(meta: var PlainTextMeta, stimuli: Rune)
 proc prepend_space(meta: var PlainTextMeta, stimuli: Rune)
 proc paragraph_complete(meta: var PlainTextMeta, stimuli: Rune)
+proc prepend_accumulated_ws(meta: var PlainTextMeta, stimuli: Rune)
+proc accumulate_ws(meta: var PlainTextMeta, stimuli: Rune)
 proc prepend_space_incr_nl(meta: var PlainTextMeta, stimuli: Rune)
 
 # States
@@ -80,6 +82,8 @@ let
       PlainTextState(id: 7, name: "AppendFirstLetter", is_final: true)
    S_NOBREAK_PUNC =
       PlainTextState(id: 8, name: "NoBreakPunctuation", is_final: true)
+   S_ELLIPSIS =
+      PlainTextState(id: 9, name: "Ellipsis", is_final: false)
 
 # Transitions
 let
@@ -130,25 +134,30 @@ let
                           next_state: S_APPEND),
       PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
                           next_state: S_PUNC),
-      PlainTextTransition(condition_cb: is_ws, transition_cb: nil,
+      PlainTextTransition(condition_cb: is_ws, transition_cb: accumulate_ws,
                           next_state: S_SEN_DONE)
    ]
    S_SEN_DONE_TRANSITIONS = @[
       PlainTextTransition(condition_cb: is_not_capital_letter,
-                          transition_cb: prepend_space,
+                          transition_cb: prepend_accumulated_ws,
                           next_state: S_APPEND_FIRST),
+      PlainTextTransition(condition_cb: is_punctuation,
+                          transition_cb: prepend_accumulated_ws,
+                          next_state: S_ELLIPSIS),
       PlainTextTransition(condition_cb: is_newline,
                           transition_cb: paragraph_complete,
                           next_state: nil),
-      PlainTextTransition(condition_cb: is_ws, transition_cb: nil,
+      PlainTextTransition(condition_cb: is_ws, transition_cb: accumulate_ws,
                           next_state: S_SEN_DONE)
    ]
    S_SPACE_TRANSITIONS = @[
-      PlainTextTransition(condition_cb: is_letter, transition_cb: append,
+      PlainTextTransition(condition_cb: is_letter,
+                          transition_cb: prepend_accumulated_ws,
                           next_state: S_APPEND_FIRST),
-      PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
+      PlainTextTransition(condition_cb: is_punctuation,
+                          transition_cb: prepend_accumulated_ws,
                           next_state: S_PUNC),
-      PlainTextTransition(condition_cb: is_space, transition_cb: nil,
+      PlainTextTransition(condition_cb: is_space, transition_cb: accumulate_ws,
                           next_state: S_SPACE),
       PlainTextTransition(condition_cb: is_newline, transition_cb: nil,
                           next_state: S_NEWLINE)
@@ -163,6 +172,16 @@ let
                           transition_cb: paragraph_complete,
                           next_state: nil)
    ]
+   S_ELLIPSIS_TRANSITIONS = @[
+      PlainTextTransition(condition_cb: is_letter, transition_cb: append,
+                          next_state: S_APPEND_FIRST),
+      PlainTextTransition(condition_cb: is_newline, transition_cb: nil,
+                          next_state: S_NEWLINE),
+      PlainTextTransition(condition_cb: is_ws, transition_cb: append,
+                          next_state: S_ELLIPSIS),
+      PlainTextTransition(condition_cb: is_punctuation, transition_cb: append,
+                          next_state: S_ELLIPSIS),
+   ]
 
 # Add transition sequences to the states.
 S_INIT.transitions = S_INIT_TRANSITIONS
@@ -173,6 +192,7 @@ S_SPACE.transitions = S_SPACE_TRANSITIONS
 S_NEWLINE.transitions = S_NEWLINE_TRANSITIONS
 S_APPEND_FIRST.transitions = S_APPEND_FIRST_TRANSITIONS
 S_NOBREAK_PUNC.transitions = S_NOBREAK_PUNC_TRANSITIONS
+S_ELLIPSIS.transitions = S_ELLIPSIS_TRANSITIONS
 
 # Condition callbacks
 proc is_letter(meta: PlainTextMeta, stimuli: Rune): bool =
@@ -219,6 +239,8 @@ proc dead_state_callback(meta: var PlainTextMeta, stimul: Rune) =
 # Transition callbacks
 proc append(meta: var PlainTextMeta, stimuli: Rune) =
    meta.sentence.str.add(stimuli)
+   # Reset the white space accumulator if a character is added normally.
+   meta.ws = @[]
 
 proc append_first(meta: var PlainTextMeta, stimuli: Rune) =
    meta.sentence.row_begin = meta.row
@@ -230,12 +252,19 @@ proc append_first(meta: var PlainTextMeta, stimuli: Rune) =
 
    meta.sentence.str.add(stimuli)
 
+proc accumulate_ws(meta: var PlainTextMeta, stimuli: Rune) =
+   meta.ws.add(stimuli)
+
+proc prepend_accumulated_ws(meta: var PlainTextMeta, stimuli: Rune) =
+   ## Prepend the accumulated whitespace to the stimuli and add the result to
+   ## the sentence.
+   meta.sentence.str.add(meta.ws)
+   meta.sentence.str.add(stimuli)
+   meta.ws = @[]
+
 proc prepend_space_incr_nl(meta: var PlainTextMeta, stimuli: Rune) =
    meta.sentence.newlines.add(meta.sentence.str.len)
    prepend_space(meta, stimuli)
-
-proc insert_space(meta: var PlainTextMeta, stimuli: Rune) =
-   meta.sentence.str.add(Rune(' '))
 
 proc prepend_space(meta: var PlainTextMeta, stimuli: Rune) =
    meta.sentence.str.add(Rune(' '))
@@ -259,7 +288,7 @@ proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
       # variable is used pass around a mutable container between the state
       # machine's callback functions.
       meta: PlainTextMeta =
-         (row: row_init, col: col_init, new_par: true,
+         (row: row_init, col: col_init, new_par: true, ws: @[],
           sentence_callback: callback,
           sentence: (str: @[], newlines: @[], par_idx: 0, row_begin: 0,
                      col_begin: 0, row_end: 1, col_end: 1))
