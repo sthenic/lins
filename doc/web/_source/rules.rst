@@ -70,8 +70,8 @@ Existence
 =========
 
 The *existence* rule checks for the presence of any of its ``tokens`` and
-reports a violation if there's a match in linted text. The ``message`` string
-will be supplied the matching text as a replacement field.
+reports a violation if there's a match in the linted text. The ``message``
+string will be supplied the matching text as a replacement field.
 
 .. code-block:: YAML
 
