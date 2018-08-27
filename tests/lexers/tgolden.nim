@@ -251,12 +251,16 @@ styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
 var test_str = "test"
 if nof_passed > 1:
    test_str.add('s')
+else:
+   test_str.add(' ')
 styledWriteLine(stdout, styleBright, &" {$nof_passed:<4} ", test_str,
                 fgGreen, " PASSED")
 
 test_str = "test"
 if nof_failed > 1:
    test_str.add('s')
+else:
+   test_str.add(' ')
 styledWriteLine(stdout, styleBright, &" {$nof_failed:<4} ", test_str,
                 fgRed, " FAILED")
 
