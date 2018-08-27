@@ -23,9 +23,9 @@ template run_test(title, stimuli: string; reference: seq[string]) =
       styledWriteLine(stdout, styleBright, fgGreen, "[✓] ",
                       fgWhite, "Test '",  title, "'")
       nof_passed += 1
-   except AssertionError as e:
+   except AssertionError:
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
-                      fgWhite, "Test '",  title, "'", e.msg)
+                      fgWhite, "Test '",  title, "'")
       nof_failed += 1
    except IndexError:
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
@@ -249,18 +249,18 @@ run_test("Golden rule 51",
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
 var test_str = "test"
-if nof_passed > 1:
-   test_str.add('s')
-else:
+if nof_passed == 1:
    test_str.add(' ')
+else:
+   test_str.add('s')
 styledWriteLine(stdout, styleBright, &" {$nof_passed:<4} ", test_str,
                 fgGreen, " PASSED")
 
 test_str = "test"
-if nof_failed > 1:
-   test_str.add('s')
-else:
+if nof_failed == 1:
    test_str.add(' ')
+else:
+   test_str.add('s')
 styledWriteLine(stdout, styleBright, &" {$nof_failed:<4} ", test_str,
                 fgRed, " FAILED")
 
