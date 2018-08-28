@@ -102,3 +102,14 @@ deploy:
     name: "lins-$(cat VERSION)-build-artifacts"
   only:
   - tags
+
+
+tests:
+  stage: build
+  image: nimlang/nim
+  script:
+  - nimble refresh -y
+  - nimble install yaml -y
+  - nim tests
+  only:
+  - master

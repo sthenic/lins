@@ -10,7 +10,6 @@ task build, "Compile the application into an executable.":
 task tests, "Run the test suite":
    withDir("tests"):
       exec("nim c -r lexers/tgolden")
-
    setCommand "nop"
 
 
