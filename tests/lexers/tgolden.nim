@@ -239,7 +239,7 @@ run_test("Golden rule 50a",
 
 run_test("Golden rule 50b", # Irregular spacing in ellipses.
    "I wasn’t really . .. well, what I mean...see  .  . . what I'm saying, the thing is .  .. . I didn’t mean it.",
-   @["I wasn’t really . .. we ll, what I mean...see  .  . . what I'm saying, the thing is .  .. . I didn’t mean it."])
+   @["I wasn’t really . .. well, what I mean...see  .  . . what I'm saying, the thing is .  .. . I didn’t mean it."])
 
 run_test("Golden rule 51",
    "One further habit which was somewhat weakened . . . was that of combining words into self-interpreting compounds. . . . The practice was not abandoned. . . .",
