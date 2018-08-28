@@ -44,7 +44,7 @@ pages:
   - pip3 install sphinx
   - apk --no-cache add make
   - make html
-  - cd ..
+  - cd ../..
   - mv doc/web/_build/html/ public/
   artifacts:
     paths:
