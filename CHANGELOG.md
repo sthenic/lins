@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.5.0 - 2018-08-28
+
+* Updated the plain text lexer.
+
 ## v0.4.0 - 2018-08-19
 
 * Searching for a configuration file directly in the user's home has been replaced by instead looking in the user's configuration directory, e.g. ``~/.config``. This new method respects ``XDG_CONFIG_HOME`` on Unix systems.
