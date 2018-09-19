@@ -243,13 +243,6 @@ We can generalize the example above as:
       (?:\w+)nize: (?:\w+)nise
       (?:\w+)log: (?:\w+)logue
 
-.. _`rule_definition`:
-
-Definition
-==========
-
-The *definition* rule checks for definitions.
-
 
 .. _`rule_conditional`:
 
@@ -269,3 +262,11 @@ provided as input to the ``message`` string.
     scope: text
     first: 'foo'
     second: '(bar|baz)'
+
+
+.. _`rule_definition`:
+
+Definition
+==========
+
+Documentation coming soon.

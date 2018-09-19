@@ -5,7 +5,7 @@ Usage
 *****
 
 Lins is a command-line tool---meaning that most of the time, the user will
-interface with the tool through a terminal session. Linting a text file involves
+interface with it through a terminal session. Linting a text file involves
 invoking Lins with the path to one or several target files as input arguments.
 
 .. code-block:: bash

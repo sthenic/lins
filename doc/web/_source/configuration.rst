@@ -31,8 +31,8 @@ configuration file to use through a search that follows these parameters:
   The ``lins/`` subdirectory is appended to the path and searched for a
   configuration file.
 
-Upon finding a configuration file, the search is aborted and its contents are
-parsed.
+Upon finding a configuration file, the search is aborted and the file contents
+are parsed.
 
 You are also able to explicitly specify a configuration file by setting the
 ``LINS_CFG`` :ref:`environment variable <cfg_env>` to the full path of the

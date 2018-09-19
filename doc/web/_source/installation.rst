@@ -4,12 +4,12 @@
 Installation
 ************
 
-Depending on your operating system you have different installation options open
+Depending on your operating system you have different installation methods open
 to you. Please refer to the relevant section below for further instructions.
 
 .. important::
 
-    This tool only supports 64-bit x86 operating systems.
+    This tool only supports 64-bit operating systems running on x86 platforms.
 
 .. _`install_linux`:
 
