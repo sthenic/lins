@@ -23,11 +23,12 @@ type
       row, col: int
       new_par: bool
       ws: seq[Rune]
+      in_group: bool
       cs_name: seq[Rune]
       cs_name_stack: seq[seq[Rune]]
-      sentence_callback: proc (s: Sentence)
       sentence: Sentence
       sentence_stack: seq[Sentence]
+      sentence_callback: proc (s: Sentence)
 
    LaTeXState = State[LaTeXMeta, Rune]
    LaTeXTransition = Transition[LaTeXMeta, Rune]
@@ -101,7 +102,10 @@ let
       LaTeXTransition(condition_cb: is_catcode_begin_group,
                       transition_cb: end_cs_begin_group,
                       next_state: S_INIT),
-      LaTeXTransition(condition_cb: nil, transition_cb: end_cs,
+      LaTeXTransition(condition_cb: is_catcode_escape,
+                      transition_cb: clear_cs_name,
+                      next_state: S_CS_ESCAPE),
+      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs_name,
                       next_state: S_INIT)
    ]
    S_CS_CHAR_TRANSITIONS = @[
@@ -110,7 +114,10 @@ let
       LaTeXTransition(condition_cb: is_catcode_begin_group,
                       transition_cb: end_cs_begin_group,
                       next_state: S_INIT),
-      LaTeXTransition(condition_cb: nil, transition_cb: end_cs,
+      LaTeXTransition(condition_cb: is_catcode_escape,
+                      transition_cb: clear_cs_name,
+                      next_state: S_CS_ESCAPE),
+      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs_name,
                       next_state: S_INIT)
    ]
    S_CS_SPACE_TRANSITIONS = @[
@@ -119,6 +126,9 @@ let
       LaTeXTransition(condition_cb: is_catcode_begin_group,
                       transition_cb: begin_group,
                       next_state: S_INIT),
+      LaTeXTransition(condition_cb: is_catcode_escape,
+                      transition_cb: clear_cs_name,
+                      next_state: S_CS_ESCAPE),
       LaTeXTransition(condition_cb: nil, transition_cb: clear_cs_name,
                       next_state: S_INIT)
    ]
@@ -157,7 +167,7 @@ proc is_catcode_begin_group(meta: LaTeXMeta, stimuli: Rune): bool =
 
 
 proc is_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_END_GROUP
+   return meta.in_group and stimuli in CATCODE_END_GROUP
 
 
 proc append(meta: var LaTeXMeta, stimuli: Rune) =
@@ -190,6 +200,7 @@ proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
    echo "Pushing control sequence '", $meta.cs_name, "' to the stack.\n"
    meta.cs_name_stack.add(meta.cs_name)
    meta.cs_name = @[]
+   meta.in_group = true
 
 
 proc end_group(meta: var LaTeXMeta, stimuli: Rune) =
@@ -201,6 +212,7 @@ proc end_group(meta: var LaTeXMeta, stimuli: Rune) =
    echo "Popped sentence ", meta.sentence
    meta.cs_name = meta.cs_name_stack.pop()
    echo "Popped control sequence '", $meta.cs_name, "'\n"
+   meta.in_group = false
 
 
 proc end_cs(meta: var LaTeXMeta, stimuli: Rune) =
@@ -234,12 +246,12 @@ proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
       # variable is used pass around a mutable container between the state
       # machine's callback functions.
       meta: LaTeXMeta =
-         (row: row_init, col: col_init, new_par: true, ws: @[], cs_name: @[],
-          cs_name_stack: @[], sentence_callback: callback,
+         (row: row_init, col: col_init, new_par: true, ws: @[], in_group: false,
+          cs_name: @[], cs_name_stack: @[],
           sentence: (str: @[], offset_pts: @[], par_idx: 0, row_begin: 0,
                      col_begin: 0, row_end: 1, col_end: 1, cs_stack: @[],
                      env_stack: @[]),
-          sentence_stack: @[])
+          sentence_stack: @[], sentence_callback: callback)
 
    # Reset the state machine.
    state_machine.reset(sm)
