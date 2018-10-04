@@ -57,7 +57,8 @@ proc end_cs(meta: var LaTeXMeta, stimuli: Rune)
 proc begin_group(meta: var LaTeXMeta, stimuli: Rune)
 proc end_group(meta: var LaTeXMeta, stimuli: Rune)
 proc end_cs_begin_group(meta: var LaTeXMeta, stimuli: Rune)
-proc clear_cs_name(meta: var LaTeXMeta, stimuli: Rune)
+proc clear_cs(meta: var LaTeXMeta, stimuli: Rune)
+proc clear_cs_append(meta: var LaTeXMeta, stimuli: Rune)
 
 # States
 let
@@ -71,8 +72,6 @@ let
       LaTeXState(id: 3, name: "ControlSequenceChar", is_final: true)
    S_CS_SPACE =
       LaTeXState(id: 4, name: "ControlSequenceSpace", is_final: false)
-   S_GROUP_ENDED =
-      LaTeXState(id: 5, name: "GroupEnded", is_final: true)
 
 
 # Transitions
@@ -103,9 +102,9 @@ let
                       transition_cb: end_cs_begin_group,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_escape,
-                      transition_cb: clear_cs_name,
+                      transition_cb: clear_cs,
                       next_state: S_CS_ESCAPE),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs_name,
+      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs,
                       next_state: S_INIT)
    ]
    S_CS_CHAR_TRANSITIONS = @[
@@ -115,9 +114,9 @@ let
                       transition_cb: end_cs_begin_group,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_escape,
-                      transition_cb: clear_cs_name,
+                      transition_cb: clear_cs,
                       next_state: S_CS_ESCAPE),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs_name,
+      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs,
                       next_state: S_INIT)
    ]
    S_CS_SPACE_TRANSITIONS = @[
@@ -127,16 +126,16 @@ let
                       transition_cb: begin_group,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_escape,
-                      transition_cb: clear_cs_name,
+                      transition_cb: clear_cs,
                       next_state: S_CS_ESCAPE),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs_name,
+      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs_append,
                       next_state: S_INIT)
    ]
    S_GROUP_ENDED_TRANSITIONS = @[
       LaTeXTransition(condition_cb: is_catcode_begin_group,
                       transition_cb: begin_group,
                       next_state: S_INIT),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs_name,
+      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs,
                       next_state: S_INIT)
    ]
 
@@ -147,7 +146,6 @@ S_CS_ESCAPE.transitions = S_CS_ESCAPE_TRANSITIONS
 S_CS_NAME.transitions = S_CS_NAME_TRANSITIONS
 S_CS_CHAR.transitions = S_CS_CHAR_TRANSITIONS
 S_CS_SPACE.transitions = S_CS_SPACE_TRANSITIONS
-S_GROUP_ENDED.transitions = S_GROUP_ENDED_TRANSITIONS
 
 
 proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool =
@@ -219,7 +217,12 @@ proc end_cs(meta: var LaTeXMeta, stimuli: Rune) =
    echo "Control sequence finished: '", $meta.cs_name, "'."
 
 
-proc clear_cs_name(meta: var LaTeXMeta, stimuli: Rune) =
+proc clear_cs_append(meta: var LaTeXMeta, stimuli: Rune) =
+   clear_cs(meta, stimuli)
+   append(meta, stimuli)
+
+
+proc clear_cs(meta: var LaTeXMeta, stimuli: Rune) =
    echo "Clearing control sequence '", $meta.cs_name, "'.\n"
    meta.cs_name = @[]
 
