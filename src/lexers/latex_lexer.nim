@@ -8,6 +8,21 @@ import ../utils/log
 type LaTeXLexerFileIOError* = object of Exception
 
 type
+   Enclosure {.pure.} = enum
+      Invalid
+      Option
+      Group
+
+   ScopeKind {.pure.} = enum
+      Invalid
+      ControlSequence
+      Environment
+
+   ScopeEntry = tuple
+      name: seq[Rune]
+      kind: ScopeKind
+      enclosure: Enclosure
+
    Sentence* = tuple
       str: seq[Rune]
       offset_pts: seq[tuple[pos, row, col: int]]
@@ -16,16 +31,14 @@ type
       col_begin: int
       row_end: int
       col_end: int
-      cs_stack: seq[seq[Rune]]
-      env_stack: seq[seq[Rune]]
+      scope: seq[ScopeEntry]
 
    LaTeXMeta = tuple
       row, col: int
       new_par: bool
       ws: seq[Rune]
-      in_group: bool
-      cs_name: seq[Rune]
-      cs_name_stack: seq[seq[Rune]]
+      scope_entry: ScopeEntry
+      scope: seq[ScopeEntry]
       sentence: Sentence
       sentence_stack: seq[Sentence]
       sentence_callback: proc (s: Sentence)
@@ -34,21 +47,27 @@ type
    LaTeXTransition = Transition[LaTeXMeta, Rune]
    LaTeXStateMachine = StateMachine[LaTeXMeta, Rune]
 
+# TODO: We need to add a common stack for both control sequences and
+# environments to determine the nesting order. Should be a stack of a custom
+# type.
 
 const
    CATCODE_ESCAPE = toRunes("\\")
    CATCODE_BEGIN_GROUP = toRunes("{")
    CATCODE_END_GROUP = toRunes("}")
+   CATCODE_BEGIN_OPTION = toRunes("[")
+   CATCODE_END_OPTION = toRunes("]")
    CATCODE_LETTER =
       toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
    WHITESPACE = toRunes(" \t\n\r")
-
 
 # Forward declarations of conditions and transition callback functions.
 proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool
 proc is_catcode_letter(meta: LaTeXMeta, stimuli: Rune): bool
 proc is_catcode_begin_group(meta: LaTeXMeta, stimuli: Rune): bool
 proc is_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool
+proc is_catcode_begin_option(meta: LaTeXMeta, stimuli: Rune): bool
+proc is_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool
 proc is_ws(meta: LaTeXMeta, stimuli: Rune): bool
 
 proc append(meta: var LaTeXMeta, stimuli: Rune)
@@ -73,7 +92,6 @@ let
    S_CS_SPACE =
       LaTeXState(id: 4, name: "ControlSequenceSpace", is_final: false)
 
-
 # Transitions
 let
    S_INIT_TRANSITIONS = @[
@@ -81,7 +99,10 @@ let
                       next_state: S_CS_ESCAPE),
       LaTeXTransition(condition_cb: is_catcode_end_group,
                       transition_cb: end_group,
-                      next_state: S_CS_SPACE), #S_GROUP_ENDED
+                      next_state: S_CS_SPACE),
+      LaTeXTransition(condition_cb: is_catcode_end_option,
+                      transition_cb: end_group,
+                      next_state: S_CS_SPACE),
       LaTeXTransition(condition_cb: nil, transition_cb: append,
                       next_state: S_INIT)
    ]
@@ -101,6 +122,9 @@ let
       LaTeXTransition(condition_cb: is_catcode_begin_group,
                       transition_cb: end_cs_begin_group,
                       next_state: S_INIT),
+      LaTeXTransition(condition_cb: is_catcode_begin_option,
+                      transition_cb: end_cs_begin_group,
+                      next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_escape,
                       transition_cb: clear_cs,
                       next_state: S_CS_ESCAPE),
@@ -111,6 +135,9 @@ let
       LaTeXTransition(condition_cb: is_ws, transition_cb: end_cs,
                       next_state: S_CS_SPACE),
       LaTeXTransition(condition_cb: is_catcode_begin_group,
+                      transition_cb: end_cs_begin_group,
+                      next_state: S_INIT),
+      LaTeXTransition(condition_cb: is_catcode_begin_option,
                       transition_cb: end_cs_begin_group,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_escape,
@@ -125,20 +152,21 @@ let
       LaTeXTransition(condition_cb: is_catcode_begin_group,
                       transition_cb: begin_group,
                       next_state: S_INIT),
+      LaTeXTransition(condition_cb: is_catcode_begin_option,
+                      transition_cb: begin_group,
+                      next_state: S_INIT),
+      LaTeXTransition(condition_cb: is_catcode_end_group,
+                      transition_cb: end_group,
+                      next_state: S_CS_SPACE),
+      LaTeXTransition(condition_cb: is_catcode_end_option,
+                      transition_cb: end_group,
+                      next_state: S_CS_SPACE),
       LaTeXTransition(condition_cb: is_catcode_escape,
                       transition_cb: clear_cs,
                       next_state: S_CS_ESCAPE),
       LaTeXTransition(condition_cb: nil, transition_cb: clear_cs_append,
                       next_state: S_INIT)
    ]
-   S_GROUP_ENDED_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_catcode_begin_group,
-                      transition_cb: begin_group,
-                      next_state: S_INIT),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_cs,
-                      next_state: S_INIT)
-   ]
-
 
 # Add transition sequences to the states.
 S_INIT.transitions = S_INIT_TRANSITIONS
@@ -147,59 +175,61 @@ S_CS_NAME.transitions = S_CS_NAME_TRANSITIONS
 S_CS_CHAR.transitions = S_CS_CHAR_TRANSITIONS
 S_CS_SPACE.transitions = S_CS_SPACE_TRANSITIONS
 
-
 proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool =
    return stimuli in CATCODE_ESCAPE
-
 
 proc is_catcode_letter(meta: LaTeXMeta, stimuli: Rune): bool =
    return stimuli in CATCODE_LETTER
 
-
 proc is_ws(meta: LaTeXMeta, stimuli: Rune): bool =
    return stimuli in WHITESPACE
-
 
 proc is_catcode_begin_group(meta: LaTeXMeta, stimuli: Rune): bool =
    return stimuli in CATCODE_BEGIN_GROUP
 
-
 proc is_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool =
-   return meta.in_group and stimuli in CATCODE_END_GROUP
+   return meta.scope != @[] and
+          meta.scope[^1].enclosure == Enclosure.Group and
+          stimuli in CATCODE_END_GROUP
 
+proc is_catcode_begin_option(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in CATCODE_BEGIN_OPTION
+
+proc is_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool =
+   return meta.scope != @[] and
+          meta.scope[^1].enclosure == Enclosure.Group and
+          stimuli in CATCODE_END_OPTION
 
 proc append(meta: var LaTeXMeta, stimuli: Rune) =
    meta.sentence.str.add(stimuli)
    meta.ws = @[]
 
-
 proc append_cs(meta: var LaTeXMeta, stimuli: Rune) =
-   meta.cs_name.add(stimuli)
-
+   meta.scope_entry.name.add(stimuli)
 
 proc end_cs_begin_group(meta: var LaTeXMeta, stimuli: Rune) =
    end_cs(meta, stimuli)
    begin_group(meta, stimuli)
 
-
 proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
    echo "Beginning group on character '", $stimuli, "'", " w/ cseq '",
-        $meta.cs_name, "'"
+        $meta.scope_entry.name, "'"
+   meta.scope_entry.enclosure = Enclosure.Group
    # Push the current sentence object to the stack
    meta.sentence_stack.add(meta.sentence)
-   echo "Pushing ", meta.sentence
+   echo "Pushing sentence", meta.sentence
+
+   echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
+   meta.scope.add(meta.scope_entry)
+
    # Initialize new empty sentence
-   var tmp = meta.sentence.cs_stack
-   tmp.add(meta.cs_name)
    meta.sentence = (
       str: @[], offset_pts: @[], par_idx: 0, row_begin: 0, col_begin: 0,
-      row_end: 1, col_end: 1, cs_stack: tmp, env_stack: @[])
-   echo "Adding new sentence: ", meta.sentence
-   echo "Pushing control sequence '", $meta.cs_name, "' to the stack.\n"
-   meta.cs_name_stack.add(meta.cs_name)
-   meta.cs_name = @[]
-   meta.in_group = true
+      row_end: 1, col_end: 1, scope: meta.scope)
+   echo "Initializing new sentence: ", meta.sentence, "\n"
 
+   meta.scope_entry = (
+      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
 
 proc end_group(meta: var LaTeXMeta, stimuli: Rune) =
    echo "Ending group on character '", $stimuli, "'"
@@ -208,31 +238,28 @@ proc end_group(meta: var LaTeXMeta, stimuli: Rune) =
    # Popping the stack
    meta.sentence = meta.sentence_stack.pop()
    echo "Popped sentence ", meta.sentence
-   meta.cs_name = meta.cs_name_stack.pop()
-   echo "Popped control sequence '", $meta.cs_name, "'\n"
-   meta.in_group = false
-
+   meta.scope_entry = meta.scope.pop()
+   echo "Popped scope entry '", meta.scope_entry, "'\n"
 
 proc end_cs(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Control sequence finished: '", $meta.cs_name, "'."
-
+   echo "Control sequence scope entry finished: '", $meta.scope_entry.name, "'."
+   meta.scope_entry.kind = ScopeKind.ControlSequence
 
 proc clear_cs_append(meta: var LaTeXMeta, stimuli: Rune) =
    clear_cs(meta, stimuli)
    append(meta, stimuli)
 
-
 proc clear_cs(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Clearing control sequence '", $meta.cs_name, "'.\n"
-   meta.cs_name = @[]
-
+   echo "Clearing scope entry '", meta.scope_entry, "'.\n"
+   meta.scope_entry = (
+      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
 
 proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
    echo "Reached the dead state on input '", $stimuli, "'"
 
    # Reset
-   meta.cs_name = @[]
-
+   meta.scope_entry = (
+      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
 
 proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
    var
@@ -249,11 +276,13 @@ proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
       # variable is used pass around a mutable container between the state
       # machine's callback functions.
       meta: LaTeXMeta =
-         (row: row_init, col: col_init, new_par: true, ws: @[], in_group: false,
-          cs_name: @[], cs_name_stack: @[],
+         (row: row_init, col: col_init, new_par: true, ws: @[],
+          scope_entry: (name: @[],
+                        kind: ScopeKind.Invalid,
+                        enclosure: Enclosure.Invalid),
+          scope: @[],
           sentence: (str: @[], offset_pts: @[], par_idx: 0, row_begin: 0,
-                     col_begin: 0, row_end: 1, col_end: 1, cs_stack: @[],
-                     env_stack: @[]),
+                     col_begin: 0, row_end: 1, col_end: 1, scope: @[]),
           sentence_stack: @[], sentence_callback: callback)
 
    # Reset the state machine.
