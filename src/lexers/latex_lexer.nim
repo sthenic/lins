@@ -76,8 +76,12 @@ proc end_cs(meta: var LaTeXMeta, stimuli: Rune)
 proc begin_group(meta: var LaTeXMeta, stimuli: Rune)
 proc end_group(meta: var LaTeXMeta, stimuli: Rune)
 proc end_cs_begin_group(meta: var LaTeXMeta, stimuli: Rune)
+proc begin_option(meta: var LaTeXMeta, stimuli: Rune)
+proc end_option(meta: var LaTeXMeta, stimuli: Rune)
+proc end_cs_begin_option(meta: var LaTeXMeta, stimuli: Rune)
 proc clear_cs(meta: var LaTeXMeta, stimuli: Rune)
 proc clear_cs_append(meta: var LaTeXMeta, stimuli: Rune)
+
 
 # States
 let
@@ -101,7 +105,7 @@ let
                       transition_cb: end_group,
                       next_state: S_CS_SPACE),
       LaTeXTransition(condition_cb: is_catcode_end_option,
-                      transition_cb: end_group,
+                      transition_cb: end_option,
                       next_state: S_CS_SPACE),
       LaTeXTransition(condition_cb: nil, transition_cb: append,
                       next_state: S_INIT)
@@ -123,7 +127,7 @@ let
                       transition_cb: end_cs_begin_group,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_begin_option,
-                      transition_cb: end_cs_begin_group,
+                      transition_cb: end_cs_begin_option,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_escape,
                       transition_cb: clear_cs,
@@ -138,7 +142,7 @@ let
                       transition_cb: end_cs_begin_group,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_begin_option,
-                      transition_cb: end_cs_begin_group,
+                      transition_cb: end_cs_begin_option,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_escape,
                       transition_cb: clear_cs,
@@ -153,13 +157,13 @@ let
                       transition_cb: begin_group,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_begin_option,
-                      transition_cb: begin_group,
+                      transition_cb: begin_option,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: is_catcode_end_group,
                       transition_cb: end_group,
                       next_state: S_CS_SPACE),
       LaTeXTransition(condition_cb: is_catcode_end_option,
-                      transition_cb: end_group,
+                      transition_cb: end_option,
                       next_state: S_CS_SPACE),
       LaTeXTransition(condition_cb: is_catcode_escape,
                       transition_cb: clear_cs,
@@ -197,7 +201,7 @@ proc is_catcode_begin_option(meta: LaTeXMeta, stimuli: Rune): bool =
 
 proc is_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool =
    return meta.scope != @[] and
-          meta.scope[^1].enclosure == Enclosure.Group and
+          meta.scope[^1].enclosure == Enclosure.Option and
           stimuli in CATCODE_END_OPTION
 
 proc append(meta: var LaTeXMeta, stimuli: Rune) =
@@ -211,10 +215,12 @@ proc end_cs_begin_group(meta: var LaTeXMeta, stimuli: Rune) =
    end_cs(meta, stimuli)
    begin_group(meta, stimuli)
 
-proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Beginning group on character '", $stimuli, "'", " w/ cseq '",
-        $meta.scope_entry.name, "'"
-   meta.scope_entry.enclosure = Enclosure.Group
+proc end_cs_begin_option(meta: var LaTeXMeta, stimuli: Rune) =
+   echo "hello"
+   end_cs(meta, stimuli)
+   begin_option(meta, stimuli)
+
+proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    # Push the current sentence object to the stack
    meta.sentence_stack.add(meta.sentence)
    echo "Pushing sentence", meta.sentence
@@ -231,15 +237,31 @@ proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
    meta.scope_entry = (
       name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
 
-proc end_group(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Ending group on character '", $stimuli, "'"
+proc end_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
+   # echo "Ending group on character '", $stimuli, "'"
    # Emit current contents
    echo "Emitting sentence ", meta.sentence
    # Popping the stack
    meta.sentence = meta.sentence_stack.pop()
-   echo "Popped sentence ", meta.sentence
+   # echo "Popped sentence ", meta.sentence
    meta.scope_entry = meta.scope.pop()
-   echo "Popped scope entry '", meta.scope_entry, "'\n"
+   # echo "Popped scope entry '", meta.scope_entry, "'\n"
+
+proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
+   # echo "Beginning group on character '", $stimuli, "'", " w/ cseq '",
+   #      $meta.scope_entry.name, "'"
+   meta.scope_entry.enclosure = Enclosure.Group
+   begin_enclosure(meta, stimuli)
+
+proc end_group(meta: var LaTeXMeta, stimuli: Rune) =
+   end_enclosure(meta, stimuli)
+
+proc begin_option(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.scope_entry.enclosure = Enclosure.Option
+   begin_enclosure(meta, stimuli)
+
+proc end_option(meta: var LaTeXMeta, stimuli: Rune) =
+   end_enclosure(meta, stimuli)
 
 proc end_cs(meta: var LaTeXMeta, stimuli: Rune) =
    echo "Control sequence scope entry finished: '", $meta.scope_entry.name, "'."
@@ -250,7 +272,7 @@ proc clear_cs_append(meta: var LaTeXMeta, stimuli: Rune) =
    append(meta, stimuli)
 
 proc clear_cs(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Clearing scope entry '", meta.scope_entry, "'.\n"
+   # echo "Clearing scope entry '", meta.scope_entry, "'.\n"
    meta.scope_entry = (
       name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
 
