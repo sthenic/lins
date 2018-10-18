@@ -12,6 +12,7 @@ type
       Invalid
       Option
       Group
+      Environment
 
    ScopeKind {.pure.} = enum
       Invalid
@@ -64,8 +65,8 @@ const
 # Forward declarations of conditions and transition callback functions.
 proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool
 proc is_catcode_letter(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_ws_cs_begin(meta: LaTeXMeta, stimuli: Rune): bool
 proc is_catcode_begin_group_cs_begin(meta: LaTeXMeta, stimuli: Rune): bool
+proc is_catcode_begin_group_cs_end(meta: LaTeXMeta, stimuli: Rune): bool
 proc is_catcode_begin_group(meta: LaTeXMeta, stimuli: Rune): bool
 proc is_matched_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool
 proc is_catcode_begin_option(meta: LaTeXMeta, stimuli: Rune): bool
@@ -84,6 +85,7 @@ proc begin_option(meta: var LaTeXMeta, stimuli: Rune)
 proc end_option(meta: var LaTeXMeta, stimuli: Rune)
 proc end_cs_begin_option(meta: var LaTeXMeta, stimuli: Rune)
 proc begin_environment(meta: var LaTeXMeta, stimuli: Rune)
+proc end_environment(meta: var LaTeXMeta, stimuli: Rune)
 proc clear_scope(meta: var LaTeXMeta, stimuli: Rune)
 proc clear_scope_append(meta: var LaTeXMeta, stimuli: Rune)
 
@@ -100,10 +102,12 @@ let
       LaTeXState(id: 3, name: "ControlSequenceChar", is_final: true)
    S_CS_SPACE =
       LaTeXState(id: 4, name: "ControlSequenceSpace", is_final: false)
-   S_ENV_NAME =
-      LaTeXState(id: 5, name: "EnvironmentName", is_final: false)
-   S_ENV_SPACE =
-      LaTeXState(id: 5, name: "EnvironmentSpace", is_final: false)
+   S_ENV_BEGIN =
+      LaTeXState(id: 5, name: "EnvironmentBegin", is_final: false)
+   S_ENV_END =
+      LaTeXState(id: 6, name: "EnvironmentEnd", is_final: false)
+
+# TODO: Rename ENV_NAME and reintroduce state for env on \end
 
 # Transitions
 let
@@ -120,21 +124,22 @@ let
                       next_state: S_INIT)
    ]
    S_CS_ESCAPE_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_catcode_letter, transition_cb: append_scope,
-                      next_state: S_CS_NAME),
+      LaTeXTransition(condition_cb: is_catcode_letter,
+                      transition_cb: append_scope, next_state: S_CS_NAME),
       LaTeXTransition(condition_cb: is_ws, transition_cb: nil,
                       next_state: S_INIT),
       LaTeXTransition(condition_cb: nil, transition_cb: append_scope,
                       next_state: S_CS_CHAR)
    ]
    S_CS_NAME_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_catcode_letter, transition_cb: append_scope,
-                      next_state: S_CS_NAME),
+      LaTeXTransition(condition_cb: is_catcode_letter,
+                      transition_cb: append_scope, next_state: S_CS_NAME),
       LaTeXTransition(condition_cb: is_catcode_begin_group_cs_begin,
                       transition_cb: clear_scope,
-                      next_state: S_ENV_NAME),
-      LaTeXTransition(condition_cb: is_ws_cs_begin, transition_cb: clear_scope,
-                      next_state: S_ENV_SPACE),
+                      next_state: S_ENV_BEGIN),
+      LaTeXTransition(condition_cb: is_catcode_begin_group_cs_end,
+                      transition_cb: clear_scope,
+                      next_state: S_ENV_END),
       LaTeXTransition(condition_cb: is_ws, transition_cb: end_cs,
                       next_state: S_CS_SPACE),
       LaTeXTransition(condition_cb: is_catcode_begin_group,
@@ -167,6 +172,12 @@ let
    S_CS_SPACE_TRANSITIONS = @[
       LaTeXTransition(condition_cb: is_ws, transition_cb: nil,
                       next_state: S_CS_SPACE),
+      LaTeXTransition(condition_cb: is_catcode_begin_group_cs_begin,
+                      transition_cb: clear_scope,
+                      next_state: S_ENV_BEGIN),
+      LaTeXTransition(condition_cb: is_catcode_begin_group_cs_end,
+                      transition_cb: clear_scope,
+                      next_state: S_ENV_END),
       LaTeXTransition(condition_cb: is_catcode_begin_group,
                       transition_cb: begin_group,
                       next_state: S_INIT),
@@ -185,21 +196,23 @@ let
       LaTeXTransition(condition_cb: nil, transition_cb: clear_scope_append,
                       next_state: S_INIT)
    ]
-   S_ENV_NAME_TRANSITIONS = @[
+   S_ENV_BEGIN_TRANSITIONS = @[
       LaTeXTransition(condition_cb: is_catcode_letter,
-                      transition_cb: append_scope, next_state: S_ENV_NAME),
+                      transition_cb: append_scope, next_state: S_ENV_BEGIN),
       LaTeXTransition(condition_cb: is_catcode_end_group,
                       transition_cb: begin_environment,
                       next_state: S_CS_SPACE),
       LaTeXTransition(condition_cb: nil, transition_cb: clear_scope_append,
                       next_state: S_INIT)
    ]
-   S_ENV_SPACE_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_ws, transition_cb: nil,
-                      next_state: S_ENV_SPACE),
-      LaTeXTransition(condition_cb: is_catcode_begin_group,
-                      transition_cb: nil,
-                      next_state: S_ENV_NAME)
+   S_ENV_END_TRANSITIONS = @[
+      LaTeXTransition(condition_cb: is_catcode_letter,
+                      transition_cb: append_scope, next_state: S_ENV_END),
+      LaTeXTransition(condition_cb: is_catcode_end_group,
+                      transition_cb: end_environment,
+                      next_state: S_CS_SPACE),
+      LaTeXTransition(condition_cb: nil, transition_cb: clear_scope_append,
+                      next_state: S_INIT)
    ]
 
 # Add transition sequences to the states.
@@ -208,8 +221,8 @@ S_CS_ESCAPE.transitions = S_CS_ESCAPE_TRANSITIONS
 S_CS_NAME.transitions = S_CS_NAME_TRANSITIONS
 S_CS_CHAR.transitions = S_CS_CHAR_TRANSITIONS
 S_CS_SPACE.transitions = S_CS_SPACE_TRANSITIONS
-S_ENV_NAME.transitions = S_ENV_NAME_TRANSITIONS
-S_ENV_SPACE.transitions = S_ENV_SPACE_TRANSITIONS
+S_ENV_BEGIN.transitions = S_ENV_BEGIN_TRANSITIONS
+S_ENV_END.transitions = S_ENV_END_TRANSITIONS
 
 proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool =
    return stimuli in CATCODE_ESCAPE
@@ -220,12 +233,13 @@ proc is_catcode_letter(meta: LaTeXMeta, stimuli: Rune): bool =
 proc is_ws(meta: LaTeXMeta, stimuli: Rune): bool =
    return stimuli in WHITESPACE
 
-proc is_ws_cs_begin(meta: LaTeXMeta, stimuli: Rune): bool =
-   return is_ws(meta, stimuli) and $meta.scope_entry.name == "begin"
-
 proc is_catcode_begin_group_cs_begin(meta: LaTeXMeta, stimuli: Rune): bool =
    return is_catcode_begin_group(meta, stimuli) and
           $meta.scope_entry.name == "begin"
+
+proc is_catcode_begin_group_cs_end(meta: LaTeXMeta, stimuli: Rune): bool =
+   return is_catcode_begin_group(meta, stimuli) and
+          $meta.scope_entry.name == "end"
 
 proc is_catcode_begin_group(meta: LaTeXMeta, stimuli: Rune): bool =
    return stimuli in CATCODE_BEGIN_GROUP
@@ -264,23 +278,19 @@ proc end_cs_begin_option(meta: var LaTeXMeta, stimuli: Rune) =
    end_cs(meta, stimuli)
    begin_option(meta, stimuli)
 
-proc begin_environment(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
-   meta.scope_entry.kind = Environment
-
 proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    # Push the current sentence object to the stack
    meta.sentence_stack.add(meta.sentence)
-   echo "Pushing sentence", meta.sentence
+   # echo "Pushing sentence", meta.sentence
 
-   echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
+   # echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
    meta.scope.add(meta.scope_entry)
 
    # Initialize new empty sentence
    meta.sentence = (
       str: @[], offset_pts: @[], par_idx: 0, row_begin: 0, col_begin: 0,
       row_end: 1, col_end: 1, scope: meta.scope)
-   echo "Initializing new sentence: ", meta.sentence, "\n"
+   # echo "Initializing new sentence: ", meta.sentence, "\n"
 
    meta.scope_entry = (
       name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
@@ -294,6 +304,18 @@ proc end_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    # echo "Popped sentence ", meta.sentence
    meta.scope_entry = meta.scope.pop()
    # echo "Popped scope entry '", meta.scope_entry, "'\n"
+
+proc begin_environment(meta: var LaTeXMeta, stimuli: Rune) =
+   # echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
+   meta.scope_entry.kind = ScopeKind.Environment
+   meta.scope_entry.enclosure = Enclosure.Environment
+   # echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
+   # meta.scope.add(meta.scope_entry)
+   begin_enclosure(meta, stimuli)
+
+proc end_environment(meta: var LaTeXMeta, stimuli: Rune) =
+   # echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
+   end_enclosure(meta, stimuli)
 
 proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
    # echo "Beginning group on character '", $stimuli, "'", " w/ cseq '",
@@ -312,11 +334,11 @@ proc end_option(meta: var LaTeXMeta, stimuli: Rune) =
    end_enclosure(meta, stimuli)
 
 proc end_cs(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Control sequence scope entry finished: '", $meta.scope_entry.name, "'."
+   # echo "Control sequence scope entry finished: '", $meta.scope_entry.name, "'."
    meta.scope_entry.kind = ScopeKind.ControlSequence
 
 proc clear_scope_append(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Clearappend"
+   # echo "Clear append"
    clear_scope(meta, stimuli)
    append(meta, stimuli)
 
@@ -324,9 +346,10 @@ proc clear_scope(meta: var LaTeXMeta, stimuli: Rune) =
    # echo "Clearing scope entry '", meta.scope_entry, "'.\n"
    meta.scope_entry = (
       name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
+   # echo "Clearing scope entry, current scope: ", meta.scope
 
 proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Reached the dead state on input '", $stimuli, "'"
+   # echo "Reached the dead state on input '", $stimuli, "'"
 
    # Reset
    meta.scope_entry = (
