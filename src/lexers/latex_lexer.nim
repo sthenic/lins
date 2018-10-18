@@ -48,10 +48,6 @@ type
    LaTeXTransition = Transition[LaTeXMeta, Rune]
    LaTeXStateMachine = StateMachine[LaTeXMeta, Rune]
 
-# TODO: We need to add a common stack for both control sequences and
-# environments to determine the nesting order. Should be a stack of a custom
-# type.
-
 const
    CATCODE_ESCAPE = toRunes("\\")
    CATCODE_BEGIN_GROUP = toRunes("{")
@@ -107,7 +103,6 @@ let
    S_ENV_END =
       LaTeXState(id: 6, name: "EnvironmentEnd", is_final: false)
 
-# TODO: Rename ENV_NAME and reintroduce state for env on \end
 
 # Transitions
 let
@@ -281,45 +276,49 @@ proc end_cs_begin_option(meta: var LaTeXMeta, stimuli: Rune) =
 proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    # Push the current sentence object to the stack
    meta.sentence_stack.add(meta.sentence)
-   # echo "Pushing sentence", meta.sentence
+   when defined(lexertrace):
+      echo "Pushing sentence", meta.sentence
 
-   # echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
+   when defined(lexertrace):
+      echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
    meta.scope.add(meta.scope_entry)
 
    # Initialize new empty sentence
    meta.sentence = (
       str: @[], offset_pts: @[], par_idx: 0, row_begin: 0, col_begin: 0,
       row_end: 1, col_end: 1, scope: meta.scope)
-   # echo "Initializing new sentence: ", meta.sentence, "\n"
+
+   when defined(lexertrace):
+      echo "Initializing new sentence: ", meta.sentence, "\n"
 
    meta.scope_entry = (
       name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
 
 proc end_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
-   # echo "Ending group on character '", $stimuli, "'"
-   # Emit current contents
-   echo "Emitting sentence ", meta.sentence
+   # TODO: Emit current contents
+   when defined(lexertrace):
+      echo "Emitting sentence ", meta.sentence
    # Popping the stack
    meta.sentence = meta.sentence_stack.pop()
-   # echo "Popped sentence ", meta.sentence
+   when defined(lexertrace):
+      echo "Popped sentence ", meta.sentence
    meta.scope_entry = meta.scope.pop()
-   # echo "Popped scope entry '", meta.scope_entry, "'\n"
+   when defined(lexertrace):
+      echo "Popped scope entry '", meta.scope_entry, "'\n"
 
 proc begin_environment(meta: var LaTeXMeta, stimuli: Rune) =
-   # echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
+   when defined(lexertrace):
+      echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
    meta.scope_entry.kind = ScopeKind.Environment
    meta.scope_entry.enclosure = Enclosure.Environment
-   # echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
-   # meta.scope.add(meta.scope_entry)
    begin_enclosure(meta, stimuli)
 
 proc end_environment(meta: var LaTeXMeta, stimuli: Rune) =
-   # echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
+   when defined(lexertrace):
+      echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
    end_enclosure(meta, stimuli)
 
 proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
-   # echo "Beginning group on character '", $stimuli, "'", " w/ cseq '",
-   #      $meta.scope_entry.name, "'"
    meta.scope_entry.enclosure = Enclosure.Group
    begin_enclosure(meta, stimuli)
 
@@ -334,23 +333,24 @@ proc end_option(meta: var LaTeXMeta, stimuli: Rune) =
    end_enclosure(meta, stimuli)
 
 proc end_cs(meta: var LaTeXMeta, stimuli: Rune) =
-   # echo "Control sequence scope entry finished: '", $meta.scope_entry.name, "'."
+   when defined(lexertrace):
+      echo "Control sequence scope entry finished: '",
+           $meta.scope_entry.name, "'."
    meta.scope_entry.kind = ScopeKind.ControlSequence
 
 proc clear_scope_append(meta: var LaTeXMeta, stimuli: Rune) =
-   # echo "Clear append"
+   when defined(lexertrace):
+      echo "Clear append"
    clear_scope(meta, stimuli)
    append(meta, stimuli)
 
 proc clear_scope(meta: var LaTeXMeta, stimuli: Rune) =
-   # echo "Clearing scope entry '", meta.scope_entry, "'.\n"
+   when defined(lexertrace):
+      echo "Clearing scope entry '", meta.scope_entry, "'.\n"
    meta.scope_entry = (
       name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
-   # echo "Clearing scope entry, current scope: ", meta.scope
 
 proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
-   # echo "Reached the dead state on input '", $stimuli, "'"
-
    # Reset
    meta.scope_entry = (
       name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
