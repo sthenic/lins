@@ -48,6 +48,19 @@ type
    LaTeXTransition = Transition[LaTeXMeta, Rune]
    LaTeXStateMachine = StateMachine[LaTeXMeta, Rune]
 
+proc new(t: typedesc[LaTeXState], id: int, name: string,
+         is_final: bool): LaTeXState =
+   result = LaTeXState(id: id, name: name, is_final: is_final)
+
+proc new(t: typedesc[LaTeXTransition],
+         condition_cb: proc (m: LaTeXMeta, s: Rune): bool,
+         transition_cb: proc (m: var LaTeXMeta, s: Rune),
+         next_state: LaTeXState): LaTeXTransition =
+   result = LaTeXTransition(
+      condition_cb: condition_cb, transition_cb: transition_cb,
+      next_state: next_state
+   )
+
 const
    CATCODE_ESCAPE = toRunes("\\")
    CATCODE_BEGIN_GROUP = toRunes("{")
@@ -88,126 +101,65 @@ proc clear_scope_append(meta: var LaTeXMeta, stimuli: Rune)
 
 # States
 let
-   S_INIT =
-      LaTeXState(id: 1, name: "Init", is_final: false)
-   S_CS_ESCAPE =
-      LaTeXState(id: 2, name: "ControlSequenceEscape", is_final: false)
-   S_CS_NAME =
-      LaTeXState(id: 3, name: "ControlSequenceName", is_final: true)
-   S_CS_CHAR =
-      LaTeXState(id: 3, name: "ControlSequenceChar", is_final: true)
-   S_CS_SPACE =
-      LaTeXState(id: 4, name: "ControlSequenceSpace", is_final: false)
-   S_ENV_BEGIN =
-      LaTeXState(id: 5, name: "EnvironmentBegin", is_final: false)
-   S_ENV_END =
-      LaTeXState(id: 6, name: "EnvironmentEnd", is_final: false)
+   S_INIT = LaTeXState.new(1, "Init", false)
+   S_CS_ESCAPE = LaTeXState.new(2, "ControlSequenceEscape", false)
+   S_CS_NAME = LaTeXState.new(3, "ControlSequenceName", false)
+   S_CS_CHAR = LaTeXState.new(3, "ControlSequenceChar", false)
+   S_CS_SPACE = LaTeXState.new(4, "ControlSequenceSpace", false)
+   S_ENV_BEGIN = LaTeXState.new(5, "EnvironmentBegin", false)
+   S_ENV_END = LaTeXState.new(6, "EnvironmentEnd", false)
 
 
 # Transitions
 let
    S_INIT_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_catcode_escape, transition_cb: nil,
-                      next_state: S_CS_ESCAPE),
-      LaTeXTransition(condition_cb: is_matched_catcode_end_group,
-                      transition_cb: end_group,
-                      next_state: S_CS_SPACE),
-      LaTeXTransition(condition_cb: is_matched_catcode_end_option,
-                      transition_cb: end_option,
-                      next_state: S_CS_SPACE),
-      LaTeXTransition(condition_cb: nil, transition_cb: append,
-                      next_state: S_INIT)
+      LaTeXTransition.new(is_catcode_escape, nil, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_SPACE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_SPACE),
+      LaTeXTransition.new(nil, append, S_INIT)
    ]
    S_CS_ESCAPE_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_catcode_letter,
-                      transition_cb: append_scope, next_state: S_CS_NAME),
-      LaTeXTransition(condition_cb: is_ws, transition_cb: nil,
-                      next_state: S_INIT),
-      LaTeXTransition(condition_cb: nil, transition_cb: append_scope,
-                      next_state: S_CS_CHAR)
+      LaTeXTransition.new(is_catcode_letter, append_scope, S_CS_NAME),
+      LaTeXTransition.new(is_ws, nil, S_INIT),
+      LaTeXTransition.new(nil, append_scope, S_CS_CHAR)
    ]
    S_CS_NAME_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_catcode_letter,
-                      transition_cb: append_scope, next_state: S_CS_NAME),
-      LaTeXTransition(condition_cb: is_catcode_begin_group_cs_begin,
-                      transition_cb: clear_scope,
-                      next_state: S_ENV_BEGIN),
-      LaTeXTransition(condition_cb: is_catcode_begin_group_cs_end,
-                      transition_cb: clear_scope,
-                      next_state: S_ENV_END),
-      LaTeXTransition(condition_cb: is_ws, transition_cb: end_cs,
-                      next_state: S_CS_SPACE),
-      LaTeXTransition(condition_cb: is_catcode_begin_group,
-                      transition_cb: end_cs_begin_group,
-                      next_state: S_INIT),
-      LaTeXTransition(condition_cb: is_catcode_begin_option,
-                      transition_cb: end_cs_begin_option,
-                      next_state: S_INIT),
-      LaTeXTransition(condition_cb: is_catcode_escape,
-                      transition_cb: clear_scope,
-                      next_state: S_CS_ESCAPE),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_scope_append,
-                      next_state: S_INIT)
+      LaTeXTransition.new(is_catcode_letter, append_scope, S_CS_NAME),
+      LaTeXTransition.new(is_catcode_begin_group_cs_begin, clear_scope, S_ENV_BEGIN),
+      LaTeXTransition.new(is_catcode_begin_group_cs_end, clear_scope, S_ENV_END),
+      LaTeXTransition.new(is_ws, end_cs, S_CS_SPACE),
+      LaTeXTransition.new(is_catcode_begin_group, end_cs_begin_group, S_INIT),
+      LaTeXTransition.new(is_catcode_begin_option, end_cs_begin_option, S_INIT),
+      LaTeXTransition.new(is_catcode_escape, clear_scope, S_CS_ESCAPE),
+      LaTeXTransition.new(nil, clear_scope_append, S_INIT)
    ]
    S_CS_CHAR_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_ws, transition_cb: end_cs,
-                      next_state: S_CS_SPACE),
-      LaTeXTransition(condition_cb: is_catcode_begin_group,
-                      transition_cb: end_cs_begin_group,
-                      next_state: S_INIT),
-      LaTeXTransition(condition_cb: is_catcode_begin_option,
-                      transition_cb: end_cs_begin_option,
-                      next_state: S_INIT),
-      LaTeXTransition(condition_cb: is_catcode_escape,
-                      transition_cb: clear_scope,
-                      next_state: S_CS_ESCAPE),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_scope_append,
-                      next_state: S_INIT)
+      LaTeXTransition.new(is_ws, end_cs, S_CS_SPACE),
+      LaTeXTransition.new(is_catcode_begin_group, end_cs_begin_group, S_INIT),
+      LaTeXTransition.new(is_catcode_begin_option, end_cs_begin_option, S_INIT),
+      LaTeXTransition.new(is_catcode_escape, clear_scope, S_CS_ESCAPE),
+      LaTeXTransition.new(nil, clear_scope_append, S_INIT)
    ]
    S_CS_SPACE_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_ws, transition_cb: nil,
-                      next_state: S_CS_SPACE),
-      LaTeXTransition(condition_cb: is_catcode_begin_group_cs_begin,
-                      transition_cb: clear_scope,
-                      next_state: S_ENV_BEGIN),
-      LaTeXTransition(condition_cb: is_catcode_begin_group_cs_end,
-                      transition_cb: clear_scope,
-                      next_state: S_ENV_END),
-      LaTeXTransition(condition_cb: is_catcode_begin_group,
-                      transition_cb: begin_group,
-                      next_state: S_INIT),
-      LaTeXTransition(condition_cb: is_catcode_begin_option,
-                      transition_cb: begin_option,
-                      next_state: S_INIT),
-      LaTeXTransition(condition_cb: is_matched_catcode_end_group,
-                      transition_cb: end_group,
-                      next_state: S_CS_SPACE),
-      LaTeXTransition(condition_cb: is_matched_catcode_end_option,
-                      transition_cb: end_option,
-                      next_state: S_CS_SPACE),
-      LaTeXTransition(condition_cb: is_catcode_escape,
-                      transition_cb: clear_scope,
-                      next_state: S_CS_ESCAPE),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_scope_append,
-                      next_state: S_INIT)
+      LaTeXTransition.new(is_ws, nil, S_CS_SPACE),
+      LaTeXTransition.new(is_catcode_begin_group_cs_begin, clear_scope, S_ENV_BEGIN),
+      LaTeXTransition.new(is_catcode_begin_group_cs_end, clear_scope, S_ENV_END),
+      LaTeXTransition.new(is_catcode_begin_group, begin_group, S_INIT),
+      LaTeXTransition.new(is_catcode_begin_option, begin_option, S_INIT),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_SPACE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_SPACE),
+      LaTeXTransition.new(is_catcode_escape, clear_scope, S_CS_ESCAPE),
+      LaTeXTransition.new(nil, clear_scope_append, S_INIT)
    ]
    S_ENV_BEGIN_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_catcode_letter,
-                      transition_cb: append_scope, next_state: S_ENV_BEGIN),
-      LaTeXTransition(condition_cb: is_catcode_end_group,
-                      transition_cb: begin_environment,
-                      next_state: S_CS_SPACE),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_scope_append,
-                      next_state: S_INIT)
+      LaTeXTransition.new(is_catcode_letter, append_scope, S_ENV_BEGIN),
+      LaTeXTransition.new(is_catcode_end_group, begin_environment, S_CS_SPACE),
+      LaTeXTransition.new(nil, clear_scope_append, S_INIT)
    ]
    S_ENV_END_TRANSITIONS = @[
-      LaTeXTransition(condition_cb: is_catcode_letter,
-                      transition_cb: append_scope, next_state: S_ENV_END),
-      LaTeXTransition(condition_cb: is_catcode_end_group,
-                      transition_cb: end_environment,
-                      next_state: S_CS_SPACE),
-      LaTeXTransition(condition_cb: nil, transition_cb: clear_scope_append,
-                      next_state: S_INIT)
+      LaTeXTransition.new(is_catcode_letter, append_scope, S_ENV_END),
+      LaTeXTransition.new(is_catcode_end_group, end_environment, S_CS_SPACE),
+      LaTeXTransition.new(nil, clear_scope_append, S_INIT)
    ]
 
 # Add transition sequences to the states.
