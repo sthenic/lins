@@ -5,6 +5,8 @@ import strutils
 import ./state_machine
 import ../utils/log
 
+# TODO: Handle comments '%'
+
 type LaTeXLexerFileIOError* = object of Exception
 
 type
@@ -131,6 +133,8 @@ let
       LaTeXTransition.new(is_catcode_begin_group, end_cs_begin_group, S_INIT),
       LaTeXTransition.new(is_catcode_begin_option, end_cs_begin_option, S_INIT),
       LaTeXTransition.new(is_catcode_escape, clear_scope, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_SPACE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_SPACE),
       LaTeXTransition.new(nil, clear_scope_append, S_INIT)
    ]
    S_CS_CHAR_TRANSITIONS = @[
@@ -303,6 +307,8 @@ proc clear_scope(meta: var LaTeXMeta, stimuli: Rune) =
       name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
 
 proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
+   when defined(lexertrace):
+      echo "Emitting sentence ", meta.sentence
    # Reset
    meta.scope_entry = (
       name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
