@@ -10,6 +10,17 @@ import ../utils/log
 type LaTeXLexerFileIOError* = object of Exception
 
 
+const
+   CATCODE_ESCAPE = toRunes("\\")
+   CATCODE_BEGIN_GROUP = toRunes("{")
+   CATCODE_END_GROUP = toRunes("}")
+   CATCODE_BEGIN_OPTION = toRunes("[")
+   CATCODE_END_OPTION = toRunes("]")
+   CATCODE_LETTER =
+      toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+   WHITESPACE = toRunes(" \t\n\r")
+
+
 type
    Enclosure {.pure.} = enum
       Invalid
@@ -62,20 +73,40 @@ proc new(t: typedesc[LaTeXTransition],
          transition_cb: proc (m: var LaTeXMeta, s: Rune),
          next_state: LaTeXState): LaTeXTransition =
    result = LaTeXTransition(
-      condition_cb: condition_cb, transition_cb: transition_cb,
+      condition_cb: condition_cb,
+      transition_cb: transition_cb,
       next_state: next_state
    )
 
 
-const
-   CATCODE_ESCAPE = toRunes("\\")
-   CATCODE_BEGIN_GROUP = toRunes("{")
-   CATCODE_END_GROUP = toRunes("}")
-   CATCODE_BEGIN_OPTION = toRunes("[")
-   CATCODE_END_OPTION = toRunes("]")
-   CATCODE_LETTER =
-      toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-   WHITESPACE = toRunes(" \t\n\r")
+proc new(t: typedesc[Sentence]): Sentence =
+   (
+      str: @[],
+      offset_pts: @[],
+      par_idx: 0,
+      row_begin: 0,
+      col_begin: 0,
+      row_end: 1,
+      col_end: 1,
+      scope: @[]
+   )
+
+
+proc new(t: typedesc[ScopeEntry]): ScopeEntry =
+   (name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
+
+
+proc new(t: typedesc[LaTeXMeta]): LaTeXMeta =
+   (
+      row: 0, col: 0,
+      new_par: true,
+      ws: @[],
+      scope_entry: ScopeEntry.new(),
+      scope: @[],
+      sentence: Sentence.new(),
+      sentence_stack: @[],
+      sentence_callback: nil
+   )
 
 
 proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool =
@@ -122,12 +153,10 @@ proc is_matched_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool =
           stimuli in CATCODE_END_GROUP
 
 
-
 proc is_matched_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool =
    return meta.scope != @[] and
           meta.scope[^1].enclosure == Enclosure.Option and
           stimuli in CATCODE_END_OPTION
-
 
 
 proc append(meta: var LaTeXMeta, stimuli: Rune) =
@@ -142,8 +171,7 @@ proc append_scope(meta: var LaTeXMeta, stimuli: Rune) =
 proc clear_scope(meta: var LaTeXMeta, stimuli: Rune) =
    when defined(lexertrace):
       echo "Clearing scope entry '", meta.scope_entry, "'.\n"
-   meta.scope_entry = (
-      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
+   meta.scope_entry = ScopeEntry.new()
 
 
 proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
@@ -157,16 +185,12 @@ proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    meta.scope.add(meta.scope_entry)
 
    # Initialize new empty sentence
-   meta.sentence = (
-      str: @[], offset_pts: @[], par_idx: 0, row_begin: 0, col_begin: 0,
-      row_end: 1, col_end: 1, scope: meta.scope)
+   meta.sentence = Sentence.new()
 
    when defined(lexertrace):
       echo "Initializing new sentence: ", meta.sentence, "\n"
 
-   meta.scope_entry = (
-      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
-
+   meta.scope_entry = ScopeEntry.new()
 
 
 proc end_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
@@ -180,7 +204,6 @@ proc end_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    meta.scope_entry = meta.scope.pop()
    when defined(lexertrace):
       echo "Popped scope entry '", meta.scope_entry, "'\n"
-
 
 
 proc begin_environment(meta: var LaTeXMeta, stimuli: Rune) =
@@ -197,7 +220,6 @@ proc end_environment(meta: var LaTeXMeta, stimuli: Rune) =
    end_enclosure(meta, stimuli)
 
 
-
 proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
    meta.scope_entry.enclosure = Enclosure.Group
    begin_enclosure(meta, stimuli)
@@ -205,7 +227,6 @@ proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
 
 proc end_group(meta: var LaTeXMeta, stimuli: Rune) =
    end_enclosure(meta, stimuli)
-
 
 
 proc begin_option(meta: var LaTeXMeta, stimuli: Rune) =
@@ -245,8 +266,7 @@ proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
    when defined(lexertrace):
       echo "Emitting sentence ", meta.sentence
    # Reset
-   meta.scope_entry = (
-      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
+   meta.scope_entry = ScopeEntry.new()
 
 
 # States
@@ -258,6 +278,7 @@ let
    S_CS_SPACE = LaTeXState.new(4, "ControlSequenceSpace", false)
    S_ENV_BEGIN = LaTeXState.new(5, "EnvironmentBegin", false)
    S_ENV_END = LaTeXState.new(6, "EnvironmentEnd", false)
+
 
 # Transitions
 let
@@ -337,15 +358,12 @@ proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
       # Initialize a meta variable to represent the lexer's current state. This
       # variable is used pass around a mutable container between the state
       # machine's callback functions.
-      meta: LaTeXMeta =
-         (row: row_init, col: col_init, new_par: true, ws: @[],
-          scope_entry: (name: @[],
-                        kind: ScopeKind.Invalid,
-                        enclosure: Enclosure.Invalid),
-          scope: @[],
-          sentence: (str: @[], offset_pts: @[], par_idx: 0, row_begin: 0,
-                     col_begin: 0, row_end: 1, col_end: 1, scope: @[]),
-          sentence_stack: @[], sentence_callback: callback)
+      meta: LaTeXMeta = LaTeXMeta.new()
+
+   # Overwrite some of the initial values of the meta object.
+   meta.row = row_init
+   meta.col = col_init
+   meta.sentence_callback = callback
 
    # Reset the state machine.
    state_machine.reset(sm)
