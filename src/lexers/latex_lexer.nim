@@ -169,6 +169,13 @@ proc append_scope(meta: var LaTeXMeta, stimuli: Rune) =
 
 
 proc clear_scope(meta: var LaTeXMeta, stimuli: Rune) =
+   # We insert an offset point to the current sentence whenever we clear scopes.
+   var col = meta.col
+   if meta.row == meta.sentence.row_end:
+      col -= meta.sentence.col_end
+   meta.sentence.offset_pts.add((meta.sentence.str.len,
+                                 meta.row - meta.sentence.row_end,
+                                 col))
    when defined(lexertrace):
       echo "Clearing scope entry '", meta.scope_entry, "'.\n"
    meta.scope_entry = ScopeEntry.new()
@@ -180,12 +187,16 @@ proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    when defined(lexertrace):
       echo "Pushing sentence", meta.sentence
 
+
    when defined(lexertrace):
       echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
    meta.scope.add(meta.scope_entry)
 
    # Initialize new empty sentence
    meta.sentence = Sentence.new()
+   # TODO: This should be update from append first in INIT (do away w/ the + 1).
+   meta.sentence.row_begin = meta.row
+   meta.sentence.col_begin = meta.col + 1
 
    when defined(lexertrace):
       echo "Initializing new sentence: ", meta.sentence, "\n"
@@ -197,6 +208,7 @@ proc end_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    # TODO: Emit current contents
    when defined(lexertrace):
       echo "Emitting sentence ", meta.sentence
+      echo "row:  ", meta.row, " col: ", meta.col
    # Popping the stack
    meta.sentence = meta.sentence_stack.pop()
    when defined(lexertrace):
@@ -262,9 +274,15 @@ proc clear_scope_append(meta: var LaTeXMeta, stimuli: Rune) =
    append(meta, stimuli)
 
 
+proc begin_cs(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.sentence.row_end = meta.row
+   meta.sentence.col_end = meta.col
+
+
 proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
    when defined(lexertrace):
       echo "Emitting sentence ", meta.sentence
+      echo "row:  ", meta.row, " col: ", meta.col
    # Reset
    meta.scope_entry = ScopeEntry.new()
 
@@ -283,7 +301,7 @@ let
 # Transitions
 let
    S_INIT_TRANSITIONS = @[
-      LaTeXTransition.new(is_catcode_escape, nil, S_CS_ESCAPE),
+      LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
       LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_SPACE),
       LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_SPACE),
       LaTeXTransition.new(nil, append, S_INIT)
