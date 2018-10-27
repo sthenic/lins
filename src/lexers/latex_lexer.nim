@@ -9,6 +9,7 @@ import ../utils/log
 
 type LaTeXLexerFileIOError* = object of Exception
 
+
 type
    Enclosure {.pure.} = enum
       Invalid
@@ -50,9 +51,11 @@ type
    LaTeXTransition = Transition[LaTeXMeta, Rune]
    LaTeXStateMachine = StateMachine[LaTeXMeta, Rune]
 
+
 proc new(t: typedesc[LaTeXState], id: int, name: string,
          is_final: bool): LaTeXState =
    result = LaTeXState(id: id, name: name, is_final: is_final)
+
 
 proc new(t: typedesc[LaTeXTransition],
          condition_cb: proc (m: LaTeXMeta, s: Rune): bool,
@@ -62,6 +65,7 @@ proc new(t: typedesc[LaTeXTransition],
       condition_cb: condition_cb, transition_cb: transition_cb,
       next_state: next_state
    )
+
 
 const
    CATCODE_ESCAPE = toRunes("\\")
@@ -73,32 +77,176 @@ const
       toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
    WHITESPACE = toRunes(" \t\n\r")
 
-# Forward declarations of conditions and transition callback functions.
-proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_catcode_letter(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_catcode_begin_group_cs_begin(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_catcode_begin_group_cs_end(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_catcode_begin_group(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_matched_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_catcode_begin_option(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_matched_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_ws(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool
-proc is_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool
 
-proc append(meta: var LaTeXMeta, stimuli: Rune)
-proc append_scope(meta: var LaTeXMeta, stimuli: Rune)
-proc end_cs(meta: var LaTeXMeta, stimuli: Rune)
-proc begin_group(meta: var LaTeXMeta, stimuli: Rune)
-proc end_group(meta: var LaTeXMeta, stimuli: Rune)
-proc end_cs_begin_group(meta: var LaTeXMeta, stimuli: Rune)
-proc begin_option(meta: var LaTeXMeta, stimuli: Rune)
-proc end_option(meta: var LaTeXMeta, stimuli: Rune)
-proc end_cs_begin_option(meta: var LaTeXMeta, stimuli: Rune)
-proc begin_environment(meta: var LaTeXMeta, stimuli: Rune)
-proc end_environment(meta: var LaTeXMeta, stimuli: Rune)
-proc clear_scope(meta: var LaTeXMeta, stimuli: Rune)
-proc clear_scope_append(meta: var LaTeXMeta, stimuli: Rune)
+proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in CATCODE_ESCAPE
+
+
+proc is_catcode_letter(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in CATCODE_LETTER
+
+
+proc is_catcode_begin_group(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in CATCODE_BEGIN_GROUP
+
+
+proc is_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in CATCODE_END_GROUP
+
+
+proc is_catcode_begin_option(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in CATCODE_BEGIN_OPTION
+
+
+proc is_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in CATCODE_END_OPTION
+
+
+proc is_ws(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in WHITESPACE
+
+
+proc is_catcode_begin_group_cs_begin(meta: LaTeXMeta, stimuli: Rune): bool =
+   return is_catcode_begin_group(meta, stimuli) and
+          $meta.scope_entry.name == "begin"
+
+
+proc is_catcode_begin_group_cs_end(meta: LaTeXMeta, stimuli: Rune): bool =
+   return is_catcode_begin_group(meta, stimuli) and
+          $meta.scope_entry.name == "end"
+
+
+proc is_matched_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool =
+   return meta.scope != @[] and
+          meta.scope[^1].enclosure == Enclosure.Group and
+          stimuli in CATCODE_END_GROUP
+
+
+
+proc is_matched_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool =
+   return meta.scope != @[] and
+          meta.scope[^1].enclosure == Enclosure.Option and
+          stimuli in CATCODE_END_OPTION
+
+
+
+proc append(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.sentence.str.add(stimuli)
+   meta.ws = @[]
+
+
+proc append_scope(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.scope_entry.name.add(stimuli)
+
+
+proc clear_scope(meta: var LaTeXMeta, stimuli: Rune) =
+   when defined(lexertrace):
+      echo "Clearing scope entry '", meta.scope_entry, "'.\n"
+   meta.scope_entry = (
+      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
+
+
+proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
+   # Push the current sentence object to the stack
+   meta.sentence_stack.add(meta.sentence)
+   when defined(lexertrace):
+      echo "Pushing sentence", meta.sentence
+
+   when defined(lexertrace):
+      echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
+   meta.scope.add(meta.scope_entry)
+
+   # Initialize new empty sentence
+   meta.sentence = (
+      str: @[], offset_pts: @[], par_idx: 0, row_begin: 0, col_begin: 0,
+      row_end: 1, col_end: 1, scope: meta.scope)
+
+   when defined(lexertrace):
+      echo "Initializing new sentence: ", meta.sentence, "\n"
+
+   meta.scope_entry = (
+      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
+
+
+
+proc end_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
+   # TODO: Emit current contents
+   when defined(lexertrace):
+      echo "Emitting sentence ", meta.sentence
+   # Popping the stack
+   meta.sentence = meta.sentence_stack.pop()
+   when defined(lexertrace):
+      echo "Popped sentence ", meta.sentence
+   meta.scope_entry = meta.scope.pop()
+   when defined(lexertrace):
+      echo "Popped scope entry '", meta.scope_entry, "'\n"
+
+
+
+proc begin_environment(meta: var LaTeXMeta, stimuli: Rune) =
+   when defined(lexertrace):
+      echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
+   meta.scope_entry.kind = ScopeKind.Environment
+   meta.scope_entry.enclosure = Enclosure.Environment
+   begin_enclosure(meta, stimuli)
+
+
+proc end_environment(meta: var LaTeXMeta, stimuli: Rune) =
+   when defined(lexertrace):
+      echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
+   end_enclosure(meta, stimuli)
+
+
+
+proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.scope_entry.enclosure = Enclosure.Group
+   begin_enclosure(meta, stimuli)
+
+
+proc end_group(meta: var LaTeXMeta, stimuli: Rune) =
+   end_enclosure(meta, stimuli)
+
+
+
+proc begin_option(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.scope_entry.enclosure = Enclosure.Option
+   begin_enclosure(meta, stimuli)
+
+
+proc end_option(meta: var LaTeXMeta, stimuli: Rune) =
+   end_enclosure(meta, stimuli)
+
+
+proc end_cs(meta: var LaTeXMeta, stimuli: Rune) =
+   when defined(lexertrace):
+      echo "Control sequence scope entry finished: '",
+           $meta.scope_entry.name, "'."
+   meta.scope_entry.kind = ScopeKind.ControlSequence
+
+
+proc end_cs_begin_group(meta: var LaTeXMeta, stimuli: Rune) =
+   end_cs(meta, stimuli)
+   begin_group(meta, stimuli)
+
+
+proc end_cs_begin_option(meta: var LaTeXMeta, stimuli: Rune) =
+   end_cs(meta, stimuli)
+   begin_option(meta, stimuli)
+
+
+proc clear_scope_append(meta: var LaTeXMeta, stimuli: Rune) =
+   when defined(lexertrace):
+      echo "Clear append"
+   clear_scope(meta, stimuli)
+   append(meta, stimuli)
+
+
+proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
+   when defined(lexertrace):
+      echo "Emitting sentence ", meta.sentence
+   # Reset
+   meta.scope_entry = (
+      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
 
 
 # States
@@ -110,7 +258,6 @@ let
    S_CS_SPACE = LaTeXState.new(4, "ControlSequenceSpace", false)
    S_ENV_BEGIN = LaTeXState.new(5, "EnvironmentBegin", false)
    S_ENV_END = LaTeXState.new(6, "EnvironmentEnd", false)
-
 
 # Transitions
 let
@@ -175,143 +322,6 @@ S_CS_SPACE.transitions = S_CS_SPACE_TRANSITIONS
 S_ENV_BEGIN.transitions = S_ENV_BEGIN_TRANSITIONS
 S_ENV_END.transitions = S_ENV_END_TRANSITIONS
 
-proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_ESCAPE
-
-proc is_catcode_letter(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_LETTER
-
-proc is_ws(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in WHITESPACE
-
-proc is_catcode_begin_group_cs_begin(meta: LaTeXMeta, stimuli: Rune): bool =
-   return is_catcode_begin_group(meta, stimuli) and
-          $meta.scope_entry.name == "begin"
-
-proc is_catcode_begin_group_cs_end(meta: LaTeXMeta, stimuli: Rune): bool =
-   return is_catcode_begin_group(meta, stimuli) and
-          $meta.scope_entry.name == "end"
-
-proc is_catcode_begin_group(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_BEGIN_GROUP
-
-proc is_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_END_GROUP
-
-proc is_matched_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool =
-   return meta.scope != @[] and
-          meta.scope[^1].enclosure == Enclosure.Group and
-          stimuli in CATCODE_END_GROUP
-
-proc is_catcode_begin_option(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_BEGIN_OPTION
-
-proc is_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_END_OPTION
-
-proc is_matched_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool =
-   return meta.scope != @[] and
-          meta.scope[^1].enclosure == Enclosure.Option and
-          stimuli in CATCODE_END_OPTION
-
-proc append(meta: var LaTeXMeta, stimuli: Rune) =
-   meta.sentence.str.add(stimuli)
-   meta.ws = @[]
-
-proc append_scope(meta: var LaTeXMeta, stimuli: Rune) =
-   meta.scope_entry.name.add(stimuli)
-
-proc end_cs_begin_group(meta: var LaTeXMeta, stimuli: Rune) =
-   end_cs(meta, stimuli)
-   begin_group(meta, stimuli)
-
-proc end_cs_begin_option(meta: var LaTeXMeta, stimuli: Rune) =
-   end_cs(meta, stimuli)
-   begin_option(meta, stimuli)
-
-proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
-   # Push the current sentence object to the stack
-   meta.sentence_stack.add(meta.sentence)
-   when defined(lexertrace):
-      echo "Pushing sentence", meta.sentence
-
-   when defined(lexertrace):
-      echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
-   meta.scope.add(meta.scope_entry)
-
-   # Initialize new empty sentence
-   meta.sentence = (
-      str: @[], offset_pts: @[], par_idx: 0, row_begin: 0, col_begin: 0,
-      row_end: 1, col_end: 1, scope: meta.scope)
-
-   when defined(lexertrace):
-      echo "Initializing new sentence: ", meta.sentence, "\n"
-
-   meta.scope_entry = (
-      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
-
-proc end_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
-   # TODO: Emit current contents
-   when defined(lexertrace):
-      echo "Emitting sentence ", meta.sentence
-   # Popping the stack
-   meta.sentence = meta.sentence_stack.pop()
-   when defined(lexertrace):
-      echo "Popped sentence ", meta.sentence
-   meta.scope_entry = meta.scope.pop()
-   when defined(lexertrace):
-      echo "Popped scope entry '", meta.scope_entry, "'\n"
-
-proc begin_environment(meta: var LaTeXMeta, stimuli: Rune) =
-   when defined(lexertrace):
-      echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
-   meta.scope_entry.kind = ScopeKind.Environment
-   meta.scope_entry.enclosure = Enclosure.Environment
-   begin_enclosure(meta, stimuli)
-
-proc end_environment(meta: var LaTeXMeta, stimuli: Rune) =
-   when defined(lexertrace):
-      echo "Environment scope entry finished: '", $meta.scope_entry.name, "'."
-   end_enclosure(meta, stimuli)
-
-proc begin_group(meta: var LaTeXMeta, stimuli: Rune) =
-   meta.scope_entry.enclosure = Enclosure.Group
-   begin_enclosure(meta, stimuli)
-
-proc end_group(meta: var LaTeXMeta, stimuli: Rune) =
-   end_enclosure(meta, stimuli)
-
-proc begin_option(meta: var LaTeXMeta, stimuli: Rune) =
-   meta.scope_entry.enclosure = Enclosure.Option
-   begin_enclosure(meta, stimuli)
-
-proc end_option(meta: var LaTeXMeta, stimuli: Rune) =
-   end_enclosure(meta, stimuli)
-
-proc end_cs(meta: var LaTeXMeta, stimuli: Rune) =
-   when defined(lexertrace):
-      echo "Control sequence scope entry finished: '",
-           $meta.scope_entry.name, "'."
-   meta.scope_entry.kind = ScopeKind.ControlSequence
-
-proc clear_scope_append(meta: var LaTeXMeta, stimuli: Rune) =
-   when defined(lexertrace):
-      echo "Clear append"
-   clear_scope(meta, stimuli)
-   append(meta, stimuli)
-
-proc clear_scope(meta: var LaTeXMeta, stimuli: Rune) =
-   when defined(lexertrace):
-      echo "Clearing scope entry '", meta.scope_entry, "'.\n"
-   meta.scope_entry = (
-      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
-
-proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
-   when defined(lexertrace):
-      echo "Emitting sentence ", meta.sentence
-   # Reset
-   meta.scope_entry = (
-      name: @[], kind: ScopeKind.Invalid, enclosure: Enclosure.Invalid)
 
 proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
    var
