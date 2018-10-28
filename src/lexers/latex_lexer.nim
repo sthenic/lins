@@ -192,8 +192,10 @@ proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
       echo "Pushing scope entry sequence '", meta.scope_entry, "' to the stack."
    meta.scope.add(meta.scope_entry)
 
-   # Initialize new empty sentence
+   # Initialize new sentence object w/ the current scope.
    meta.sentence = Sentence.new()
+   meta.sentence.scope = meta.scope
+
    # TODO: This should be update from append first in INIT (do away w/ the + 1).
    meta.sentence.row_begin = meta.row
    meta.sentence.col_begin = meta.col + 1
