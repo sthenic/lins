@@ -20,6 +20,21 @@ const
       toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
    WHITESPACE = toRunes(" \t\n\r")
 
+   CAPITAL_LETTERS = toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+   DIGITS = toRunes("0123456789")
+   PUNCTUATION = toRunes(".!?")
+   SPACE = toRunes(" \t")
+   NEWLINE = toRunes("\n\r")
+   HYPHEN = toRunes("-")
+   ABBREVIATIONS = @[
+      toRunes("Mr."),
+      toRunes("Mrs."),
+      toRunes("Ms."),
+      toRunes("Mt."),
+      toRunes("St."),
+      toRunes("st.")
+   ]
+
 
 type
    Enclosure {.pure.} = enum
@@ -159,9 +174,84 @@ proc is_matched_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool =
           stimuli in CATCODE_END_OPTION
 
 
+proc is_letter(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli notin PUNCTUATION and stimuli notin WHITESPACE
+
+
+proc is_digit(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in DIGITS
+
+
+proc is_not_capital_letter(meta: LaTeXMeta, stimuli: Rune): bool =
+   return is_letter(meta, stimuli) and stimuli notin CAPITAL_LETTERS
+
+
+proc is_punctuation(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in PUNCTUATION
+
+
+proc is_space(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in SPACE
+
+
+proc is_newline(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in NEWLINE
+
+
+proc is_hyphen(meta: LaTeXMeta, stimuli: Rune): bool =
+   return stimuli in HYPHEN
+
+
+proc is_abbreviation(meta: LaTeXMeta, stimuli: Rune): bool =
+   if stimuli notin PUNCTUATION:
+      return false
+
+   for abr in ABBREVIATIONS:
+      if ($meta.sentence.str & $stimuli).ends_with($abr):
+         return true
+
+
 proc append(meta: var LaTeXMeta, stimuli: Rune) =
    meta.sentence.str.add(stimuli)
+   # Reset the white space accumulator if a character is added normally.
    meta.ws = @[]
+
+
+proc append_first(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.sentence.row_begin = meta.row
+   meta.sentence.col_begin = meta.col
+
+   if meta.new_par:
+      meta.sentence.par_idx += 1
+      meta.new_par = false
+
+   meta.sentence.str.add(stimuli)
+
+
+proc accumulate_ws(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.ws.add(stimuli)
+
+
+proc prepend_accumulated_ws(meta: var LaTeXMeta, stimuli: Rune) =
+   ## Prepend the accumulated whitespace to the stimuli and add the result to
+   ## the sentence.
+   meta.sentence.str.add(meta.ws)
+   meta.sentence.str.add(stimuli)
+   meta.ws = @[]
+
+
+proc prepend_space(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.sentence.str.add(Rune(' '))
+   meta.sentence.str.add(stimuli)
+
+
+proc paragraph_complete(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.new_par = true
+
+
+proc prepend_space_incr_nl(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.sentence.offset_pts.add((meta.sentence.str.len, 1, 0))
+   prepend_space(meta, stimuli)
 
 
 proc append_scope(meta: var LaTeXMeta, stimuli: Rune) =
@@ -181,6 +271,12 @@ proc clear_scope(meta: var LaTeXMeta, stimuli: Rune) =
    meta.scope_entry = ScopeEntry.new()
 
 
+proc prepend_space_clear_scope(meta: var LaTeXMeta, stimuli: Rune) =
+   meta.sentence.str.add(Rune(' '))
+   clear_scope(meta, stimuli)
+   meta.sentence.str.add(stimuli)
+
+
 proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    # Push the current sentence object to the stack
    meta.sentence_stack.add(meta.sentence)
@@ -196,10 +292,6 @@ proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    meta.sentence = Sentence.new()
    meta.sentence.scope = meta.scope
 
-   # TODO: This should be update from append first in INIT (do away w/ the + 1).
-   meta.sentence.row_begin = meta.row
-   meta.sentence.col_begin = meta.col + 1
-
    when defined(lexertrace):
       echo "Initializing new sentence: ", meta.sentence, "\n"
 
@@ -208,9 +300,8 @@ proc begin_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
 
 proc end_enclosure(meta: var LaTeXMeta, stimuli: Rune) =
    # TODO: Emit current contents
-   when defined(lexertrace):
-      echo "Emitting sentence ", meta.sentence
-      echo "row:  ", meta.row, " col: ", meta.col
+   # when defined(lexertrace):
+   echo "Emitting sentence ", meta.sentence
    # Popping the stack
    meta.sentence = meta.sentence_stack.pop()
    when defined(lexertrace):
@@ -274,6 +365,7 @@ proc clear_scope_append(meta: var LaTeXMeta, stimuli: Rune) =
       echo "Clear append"
    clear_scope(meta, stimuli)
    append(meta, stimuli)
+   # prepend_accumulated_ws(meta, stimuli)
 
 
 proc begin_cs(meta: var LaTeXMeta, stimuli: Rune) =
@@ -282,11 +374,14 @@ proc begin_cs(meta: var LaTeXMeta, stimuli: Rune) =
 
 
 proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
-   when defined(lexertrace):
-      echo "Emitting sentence ", meta.sentence
-      echo "row:  ", meta.row, " col: ", meta.col
+   # when defined(lexertrace):
+   echo "Emitting sentence ", meta.sentence
    # Reset
    meta.scope_entry = ScopeEntry.new()
+
+   # Reset
+   meta.sentence.str = @[]
+   meta.sentence.offset_pts = @[]
 
 
 # States
@@ -295,10 +390,20 @@ let
    S_CS_ESCAPE = LaTeXState.new(2, "ControlSequenceEscape", false)
    S_CS_NAME = LaTeXState.new(3, "ControlSequenceName", false)
    S_CS_CHAR = LaTeXState.new(3, "ControlSequenceChar", false)
+   S_CS_END_ENCLOSURE = LaTeXState.new(4, "ControlSequenceEndEnclosure", false)
    S_CS_SPACE = LaTeXState.new(4, "ControlSequenceSpace", false)
+   S_CS_NEWLINE = LaTeXState.new(4, "ControlSequenceNewline", true)
    S_ENV_BEGIN = LaTeXState.new(5, "EnvironmentBegin", false)
    S_ENV_END = LaTeXState.new(6, "EnvironmentEnd", false)
 
+   S_APPEND = LaTeXState.new(7, "Append", true)
+   S_APPEND_FIRST = LaTeXState.new(8, "AppendFirstLetter", true)
+   S_PUNC = LaTeXState.new(9, "Punctuation", true)
+   S_SEN_DONE = LaTeXState.new(10, "SentenceDone", false)
+   S_SPACE = LaTeXState.new(11, "Space", false)
+   S_NEWLINE = LaTeXState.new(12, "Newline", false)
+   S_NOBREAK_PUNC = LaTeXState.new(13, "NoBreakPunctuation", true)
+   S_ELLIPSIS = LaTeXState.new(14, "Ellipsis", false)
 
 # Transitions
 let
@@ -306,7 +411,9 @@ let
       LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
       LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_SPACE),
       LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_SPACE),
-      LaTeXTransition.new(nil, append, S_INIT)
+      LaTeXTransition.new(is_letter, append_first, S_APPEND_FIRST),
+      LaTeXTransition.new(is_ws, nil, S_INIT),
+      LaTeXTransition.new(nil, nil, S_INIT)
    ]
    S_CS_ESCAPE_TRANSITIONS = @[
       LaTeXTransition.new(is_catcode_letter, append_scope, S_CS_NAME),
@@ -321,37 +428,138 @@ let
       LaTeXTransition.new(is_catcode_begin_group, end_cs_begin_group, S_INIT),
       LaTeXTransition.new(is_catcode_begin_option, end_cs_begin_option, S_INIT),
       LaTeXTransition.new(is_catcode_escape, clear_scope, S_CS_ESCAPE),
-      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_SPACE),
-      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_SPACE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
       LaTeXTransition.new(nil, clear_scope_append, S_INIT)
+   ]
+   # When an enclosure (group, option or environment) ends we enter this state.
+   # Whitespace is ignored and transitions into a correponding state
+   S_CS_END_ENCLOSURE_TRANSITIONS = @[
+      LaTeXTransition.new(is_ws, nil, S_CS_SPACE),
+      LaTeXTransition.new(is_catcode_begin_group, end_cs_begin_group, S_INIT),
+      LaTeXTransition.new(is_catcode_begin_option, end_cs_begin_option, S_INIT),
+      LaTeXTransition.new(is_catcode_escape, clear_scope, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(nil, clear_scope_append, S_APPEND)
    ]
    S_CS_CHAR_TRANSITIONS = @[
       LaTeXTransition.new(is_ws, end_cs, S_CS_SPACE),
       LaTeXTransition.new(is_catcode_begin_group, end_cs_begin_group, S_INIT),
       LaTeXTransition.new(is_catcode_begin_option, end_cs_begin_option, S_INIT),
       LaTeXTransition.new(is_catcode_escape, clear_scope, S_CS_ESCAPE),
-      LaTeXTransition.new(nil, clear_scope_append, S_INIT)
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(nil, clear_scope_append, S_APPEND)
    ]
    S_CS_SPACE_TRANSITIONS = @[
+      LaTeXTransition.new(is_newline, nil, S_CS_NEWLINE),
       LaTeXTransition.new(is_ws, nil, S_CS_SPACE),
       LaTeXTransition.new(is_catcode_begin_group_cs_begin, clear_scope, S_ENV_BEGIN),
       LaTeXTransition.new(is_catcode_begin_group_cs_end, clear_scope, S_ENV_END),
       LaTeXTransition.new(is_catcode_begin_group, begin_group, S_INIT),
       LaTeXTransition.new(is_catcode_begin_option, begin_option, S_INIT),
-      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_SPACE),
-      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_SPACE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
       LaTeXTransition.new(is_catcode_escape, clear_scope, S_CS_ESCAPE),
-      LaTeXTransition.new(nil, clear_scope_append, S_INIT)
+      LaTeXTransition.new(nil, prepend_space_clear_scope, S_APPEND)
+   ]
+   # The newline state only accepts a group or option delimiter. Any other
+   # character
+   S_CS_NEWLINE_TRANSITIONS = @[
+      LaTeXTransition.new(is_newline, clear_scope, nil),
+      LaTeXTransition.new(is_ws, nil, S_CS_NEWLINE),
+      LaTeXTransition.new(is_catcode_begin_group_cs_begin, clear_scope, S_ENV_BEGIN),
+      LaTeXTransition.new(is_catcode_begin_group_cs_end, clear_scope, S_ENV_END),
+      LaTeXTransition.new(is_catcode_begin_group, begin_group, S_INIT),
+      LaTeXTransition.new(is_catcode_begin_option, begin_option, S_INIT),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_catcode_escape, clear_scope, S_CS_ESCAPE),
+      LaTeXTransition.new(nil, clear_scope, nil)
    ]
    S_ENV_BEGIN_TRANSITIONS = @[
       LaTeXTransition.new(is_catcode_letter, append_scope, S_ENV_BEGIN),
-      LaTeXTransition.new(is_catcode_end_group, begin_environment, S_CS_SPACE),
-      LaTeXTransition.new(nil, clear_scope_append, S_INIT)
+      LaTeXTransition.new(is_catcode_end_group, begin_environment, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(nil, clear_scope_append, S_APPEND)
    ]
    S_ENV_END_TRANSITIONS = @[
       LaTeXTransition.new(is_catcode_letter, append_scope, S_ENV_END),
-      LaTeXTransition.new(is_catcode_end_group, end_environment, S_CS_SPACE),
-      LaTeXTransition.new(nil, clear_scope_append, S_INIT)
+      LaTeXTransition.new(is_catcode_end_group, end_environment, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(nil, clear_scope_append, S_APPEND)
+   ]
+
+   S_APPEND_TRANSITIONS = @[
+      LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_letter, append, S_APPEND),
+      LaTeXTransition.new(is_abbreviation, append, S_NOBREAK_PUNC),
+      LaTeXTransition.new(is_punctuation, append, S_PUNC),
+      LaTeXTransition.new(is_space, append, S_SPACE),
+      LaTeXTransition.new(is_newline, nil, S_NEWLINE)
+   ]
+   S_APPEND_FIRST_TRANSITIONS = @[
+      LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_digit, append, S_APPEND_FIRST),
+      LaTeXTransition.new(is_letter, append, S_APPEND),
+      LaTeXTransition.new(is_punctuation, append, S_NOBREAK_PUNC),
+      LaTeXTransition.new(is_space, append, S_SPACE),
+      LaTeXTransition.new(is_newline, nil, S_NEWLINE),
+   ]
+   S_PUNC_TRANSITIONS = @[
+      LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_letter, append, S_APPEND),
+      LaTeXTransition.new(is_punctuation, append, S_PUNC),
+      LaTeXTransition.new(is_ws, accumulate_ws, S_SEN_DONE)
+   ]
+   S_SEN_DONE_TRANSITIONS = @[
+      LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_not_capital_letter, prepend_accumulated_ws, S_APPEND_FIRST),
+      LaTeXTransition.new(is_punctuation, prepend_accumulated_ws, S_ELLIPSIS),
+      LaTeXTransition.new(is_newline, paragraph_complete, nil),
+      LaTeXTransition.new(is_ws, accumulate_ws, S_SEN_DONE)
+   ]
+   S_SPACE_TRANSITIONS = @[
+      LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_letter, prepend_accumulated_ws, S_APPEND_FIRST),
+      LaTeXTransition.new(is_punctuation, prepend_accumulated_ws, S_PUNC),
+      LaTeXTransition.new(is_space, accumulate_ws, S_SPACE),
+      LaTeXTransition.new(is_newline, nil, S_NEWLINE)
+   ]
+   S_NEWLINE_TRANSITIONS = @[
+      LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_letter, prepend_space_incr_nl, S_APPEND_FIRST),
+      LaTeXTransition.new(is_space, nil, S_NEWLINE),
+      LaTeXTransition.new(is_newline, paragraph_complete, nil)
+   ]
+   S_NOBREAK_PUNC_TRANSITIONS = @[
+      LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_letter, append, S_APPEND_FIRST),
+      LaTeXTransition.new(is_punctuation, append, S_NOBREAK_PUNC),
+      LaTeXTransition.new(is_space, append, S_SPACE),
+      LaTeXTransition.new(is_newline, nil, S_NEWLINE)
+   ]
+   S_ELLIPSIS_TRANSITIONS = @[
+      LaTeXTransition.new(is_catcode_escape, begin_cs, S_CS_ESCAPE),
+      LaTeXTransition.new(is_matched_catcode_end_group, end_group, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_matched_catcode_end_option, end_option, S_CS_END_ENCLOSURE),
+      LaTeXTransition.new(is_letter, append, S_APPEND_FIRST),
+      LaTeXTransition.new(is_newline, nil, S_NEWLINE),
+      LaTeXTransition.new(is_ws, append, S_ELLIPSIS),
+      LaTeXTransition.new(is_punctuation, append, S_ELLIPSIS)
    ]
 
 # Add transition sequences to the states.
@@ -360,9 +568,19 @@ S_CS_ESCAPE.transitions = S_CS_ESCAPE_TRANSITIONS
 S_CS_NAME.transitions = S_CS_NAME_TRANSITIONS
 S_CS_CHAR.transitions = S_CS_CHAR_TRANSITIONS
 S_CS_SPACE.transitions = S_CS_SPACE_TRANSITIONS
+S_CS_NEWLINE.transitions = S_CS_NEWLINE_TRANSITIONS
+S_CS_END_ENCLOSURE.transitions = S_CS_END_ENCLOSURE_TRANSITIONS
 S_ENV_BEGIN.transitions = S_ENV_BEGIN_TRANSITIONS
 S_ENV_END.transitions = S_ENV_END_TRANSITIONS
 
+S_APPEND.transitions = S_APPEND_TRANSITIONS
+S_APPEND_FIRST.transitions = S_APPEND_FIRST_TRANSITIONS
+S_PUNC.transitions = S_PUNC_TRANSITIONS
+S_SEN_DONE.transitions = S_SEN_DONE_TRANSITIONS
+S_SPACE.transitions = S_SPACE_TRANSITIONS
+S_NEWLINE.transitions = S_NEWLINE_TRANSITIONS
+S_NOBREAK_PUNC.transitions = S_NOBREAK_PUNC_TRANSITIONS
+S_ELLIPSIS.transitions = S_ELLIPSIS_TRANSITIONS
 
 proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
    var
