@@ -26,7 +26,6 @@ type
       StateS
 
    Lexer* = object of BaseLexer
-      tok: Token
       filename: string
       state: State
 
@@ -286,14 +285,15 @@ proc get_token(l: var Lexer, tok: var Token) =
 
 proc lex*(s: Stream) =
    var lx: Lexer
+   var tok: Token
    lx.state = StateN
 
    lexbase.open(lx, s)
 
    while true:
-      get_token(lx, lx.tok)
-      echo "Got token ", lx.tok
-      if lx.tok.token_type == TokenType.EndOfFile:
+      get_token(lx, tok)
+      echo "Got token ", tok
+      if tok.token_type == TokenType.EndOfFile:
          break
 
    lexbase.close(lx)
