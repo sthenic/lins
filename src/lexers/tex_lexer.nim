@@ -58,7 +58,7 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken)
 proc init*(t: var TeXToken) =
    t.token_type = TeXTokenType.Invalid
    t.catcode = 0
-   t.token = ""
+   set_len(t.token, 0)
    t.line = 0
    t.col = 0
 
