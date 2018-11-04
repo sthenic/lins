@@ -52,7 +52,15 @@ const
 
 
 # Forward declaration
-proc get_token(l: var TeXLexer, tok: var TeXToken)
+proc get_token*(l: var TeXLexer, tok: var TeXToken)
+
+
+proc init*(t: var TeXToken) =
+   t.token_type = TeXTokenType.Invalid
+   t.catcode = 0
+   t.token = ""
+   t.line = 0
+   t.col = 0
 
 
 proc handle_crlf(l: var TeXLexer, pos: int): int =
@@ -203,7 +211,7 @@ proc handle_category_7(l: var TeXLexer, tok: var TeXToken) =
    l.bufpos = pos
 
 
-proc get_token(l: var TeXLexer, tok: var TeXToken) =
+proc get_token*(l: var TeXLexer, tok: var TeXToken) =
    # Initialize the token
    tok.token_type = TeXTokenType.Invalid
    tok.catcode = 0
@@ -282,17 +290,11 @@ proc get_token(l: var TeXLexer, tok: var TeXToken) =
       inc(l.bufpos)
 
 
-proc lex*(s: Stream) =
-   var lx: TeXLexer
-   var tok: TeXToken
-   lx.state = StateN
+proc open_lexer*(l: var TeXLexer, filename: string, s: Stream) =
+   lexbase.open(l, s)
+   l.filename = filename
+   l.state = StateN
 
-   lexbase.open(lx, s)
 
-   while true:
-      get_token(lx, tok)
-      echo "Got token ", tok
-      if tok.token_type == TeXTokenType.EndOfFile:
-         break
-
-   lexbase.close(lx)
+proc close_lexer*(l: var TeXLexer) =
+   lexbase.close(l)
