@@ -13,6 +13,12 @@ task tests, "Run the test suite":
    setCommand "nop"
 
 
+task textests, "Run the TeX lexer test suite":
+   withDir("tests"):
+      exec("nim c -r lexers/ttex")
+   setCommand "nop"
+
+
 task buildxwin64, "Compile the application into an executable.":
    withDir("src"):
       exec("nim c -d:release --os:windows -d:xwin --passC:-flto --passL:-s --gc:markAndSweep lins")
