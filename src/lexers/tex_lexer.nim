@@ -1,11 +1,10 @@
 import lexbase
 import streams
 import strutils
-import unicode
 
 
 type
-   TokenType* {.pure.} = enum
+   TeXTokenType* {.pure.} = enum
       Invalid
       EndOfFile
       ControlWord
@@ -14,8 +13,8 @@ type
 
    CategoryCode* = range[0 .. 15]
 
-   Token* = object
-      token_type*: TokenType
+   TeXToken* = object
+      token_type*: TeXTokenType
       catcode: CategoryCode
       token*: string
       line, col: int
@@ -25,7 +24,7 @@ type
       StateM
       StateS
 
-   Lexer* = object of BaseLexer
+   TeXLexer* = object of BaseLexer
       filename: string
       state: State
 
@@ -53,10 +52,10 @@ const
 
 
 # Forward declaration
-proc get_token(l: var Lexer, tok: var Token)
+proc get_token(l: var TeXLexer, tok: var TeXToken)
 
 
-proc handle_crlf(l: var Lexer, pos: int): int =
+proc handle_crlf(l: var TeXLexer, pos: int): int =
    # Refill buffer at end-of-line characters.
    case l.buf[l.bufpos]
    of '\c':
@@ -67,7 +66,7 @@ proc handle_crlf(l: var Lexer, pos: int): int =
       result = pos
 
 
-template update_token_position(l: Lexer, tok: var Token) =
+template update_token_position(l: TeXLexer, tok: var TeXToken) =
    tok.col = getColNumber(l, l.bufpos)
    tok.line = l.lineNumber
 
@@ -80,13 +79,13 @@ proc get_category_code(c: char): CategoryCode =
          break
 
 
-proc is_quartet(l: Lexer, pos: int): bool =
+proc is_quartet(l: TeXLexer, pos: int): bool =
    var buf = l.buf
    result = buf[pos] in CATEGORY[7] and buf[pos + 1] == buf[pos] and
-            buf[pos + 2] in HexDigits and  buf[pos + 3] in HexDigits
+            buf[pos + 2] in HexDigits and buf[pos + 3] in HexDigits
 
 
-proc replace_quartet(l: var Lexer, pos: int): int =
+proc replace_quartet(l: var TeXLexer, pos: int): int =
    # The current buffer position is expected to point to the first character of
    # the quartet, e.g. ^^3A.
    assert(is_quartet(l, pos))
@@ -100,13 +99,13 @@ proc replace_quartet(l: var Lexer, pos: int): int =
    result = pos + 3
 
 
-proc is_trio(l: Lexer, pos: int): bool =
+proc is_trio(l: TeXLexer, pos: int): bool =
    var buf = l.buf
    result = buf[pos] in CATEGORY[7] and buf[pos + 1] == buf[pos] and
             int(buf[pos + 2]) < 128
 
 
-proc replace_trio(l: var Lexer, pos: int): int =
+proc replace_trio(l: var TeXLexer, pos: int): int =
    # The current buffer position is expected to point to the first character of
    # the trio, e.g. ^^J.
    assert(is_trio(l, pos))
@@ -125,11 +124,11 @@ proc replace_trio(l: var Lexer, pos: int): int =
    result = pos + 2
 
 
-proc is_replaceable(l: Lexer, pos: int): bool =
+proc is_replaceable(l: TeXLexer, pos: int): bool =
    return is_quartet(l, pos) or is_trio(l, pos)
 
 
-proc handle_replacement(l: var Lexer, pos: int): int =
+proc handle_replacement(l: var TeXLexer, pos: int): int =
    if is_quartet(l, pos):
       result = replace_quartet(l, pos)
    elif is_trio(l, pos):
@@ -138,7 +137,7 @@ proc handle_replacement(l: var Lexer, pos: int): int =
       result = pos
 
 
-proc handle_category_0(l: var Lexer, tok: var Token) =
+proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
    var pos = l.bufpos + 1 # Skip '\'
    var buf = l.buf
    var state = l.state
@@ -149,11 +148,11 @@ proc handle_category_0(l: var Lexer, tok: var Token) =
       # long as we don't move past the CR/LF character. We also keep the current
       # state for this reason.
       set_len(tok.token, 0)
-      tok.token_type = TokenType.ControlWord
+      tok.token_type = TeXTokenType.ControlWord
    of CATEGORY[11]:
       # If the next character is of category 11, we construct a control
       # word and move to state S.
-      tok.token_type = TokenType.ControlWord
+      tok.token_type = TeXTokenType.ControlWord
       while buf[pos] in CATEGORY[11]:
          add(tok.token, buf[pos])
          inc(pos)
@@ -163,7 +162,7 @@ proc handle_category_0(l: var Lexer, tok: var Token) =
    of CATEGORY[10]:
       # If the next character is of category 10, we construct a control
       # space and move to state S.
-      tok.token_type = TokenType.ControlSymbol
+      tok.token_type = TeXTokenType.ControlSymbol
       add(tok.token, buf[pos])
       inc(pos)
       state = StateS
@@ -178,7 +177,7 @@ proc handle_category_0(l: var Lexer, tok: var Token) =
       else:
          # For any other character, we construct a control symbol and move to
          # state M.
-         tok.token_type = TokenType.ControlSymbol
+         tok.token_type = TeXTokenType.ControlSymbol
          add(tok.token, buf[pos])
          inc(pos)
          state = StateM
@@ -187,7 +186,7 @@ proc handle_category_0(l: var Lexer, tok: var Token) =
    l.state = state
 
 
-proc handle_category_7(l: var Lexer, tok: var Token) =
+proc handle_category_7(l: var TeXLexer, tok: var TeXToken) =
    var pos = l.bufpos
 
    if is_replaceable(l, pos):
@@ -196,7 +195,7 @@ proc handle_category_7(l: var Lexer, tok: var Token) =
       pos = l.bufpos
    else:
       # Regular superscript character
-      tok.token_type = TokenType.Character
+      tok.token_type = TeXTokenType.Character
       tok.token = $l.buf[pos]
       tok.catcode = 7
       inc(pos)
@@ -204,9 +203,9 @@ proc handle_category_7(l: var Lexer, tok: var Token) =
    l.bufpos = pos
 
 
-proc get_token(l: var Lexer, tok: var Token) =
+proc get_token(l: var TeXLexer, tok: var TeXToken) =
    # Initialize the token
-   tok.token_type = TokenType.Invalid
+   tok.token_type = TeXTokenType.Invalid
    tok.catcode = 0
    set_len(tok.token, 0)
    update_token_position(l, tok)
@@ -214,7 +213,7 @@ proc get_token(l: var Lexer, tok: var Token) =
    let c = l.buf[l.bufpos]
    case c:
    of lexbase.EndOfFile:
-      tok.token_type = TokenType.EndOfFile
+      tok.token_type = TeXTokenType.EndOfFile
    of CATEGORY[0]:
       handle_category_0(l, tok)
    of CATEGORY[5]:
@@ -224,10 +223,10 @@ proc get_token(l: var Lexer, tok: var Token) =
 
       case prev_state:
       of StateN:
-         tok.token_type = TokenType.ControlWord
+         tok.token_type = TeXTokenType.ControlWord
          tok.token = "par"
       of StateM:
-         tok.token_type = TokenType.Character
+         tok.token_type = TeXTokenType.Character
          tok.token = " "
          tok.catcode = 10
       of StateS:
@@ -248,7 +247,7 @@ proc get_token(l: var Lexer, tok: var Token) =
          inc(l.bufpos)
          get_token(l, tok)
       of StateM:
-         tok.token_type = TokenType.Character
+         tok.token_type = TeXTokenType.Character
          tok.token = " "
          tok.catcode = 10
          l.state = StateS
@@ -269,14 +268,14 @@ proc get_token(l: var Lexer, tok: var Token) =
       get_token(l, tok)
    of CATEGORY[1] + CATEGORY[2] + CATEGORY[3] + CATEGORY[4] + CATEGORY[6] +
       CATEGORY[8] + CATEGORY[11] + CATEGORY[13]:
-      tok.token_type = TokenType.Character
+      tok.token_type = TeXTokenType.Character
       tok.catcode = get_category_code(c)
       tok.token = $c
       l.state = StateM
       inc(l.bufpos)
    else:
       # A character of category 12, i.e. the class of 'other' characters.
-      tok.token_type = TokenType.Character
+      tok.token_type = TeXTokenType.Character
       tok.catcode = 12
       tok.token = $c
       l.state = StateM
@@ -284,8 +283,8 @@ proc get_token(l: var Lexer, tok: var Token) =
 
 
 proc lex*(s: Stream) =
-   var lx: Lexer
-   var tok: Token
+   var lx: TeXLexer
+   var tok: TeXToken
    lx.state = StateN
 
    lexbase.open(lx, s)
@@ -293,7 +292,7 @@ proc lex*(s: Stream) =
    while true:
       get_token(lx, tok)
       echo "Got token ", tok
-      if tok.token_type == TokenType.EndOfFile:
+      if tok.token_type == TeXTokenType.EndOfFile:
          break
 
    lexbase.close(lx)
