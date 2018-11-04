@@ -3,6 +3,7 @@ import streams
 import strutils
 import unicode
 
+
 type
    TokenType* {.pure.} = enum
       Invalid
@@ -51,12 +52,13 @@ const
       {'\x08'}
    ]
 
+
 # Forward declaration
 proc get_token(l: var Lexer, tok: var Token)
 
 
 proc handle_crlf(l: var Lexer, pos: int): int =
-   # Refill buffer at line
+   # Refill buffer at end-of-line characters.
    case l.buf[l.bufpos]
    of '\c':
       result = lexbase.handleCR(l, pos)
@@ -156,7 +158,7 @@ proc handle_category_0(l: var Lexer, tok: var Token) =
       while buf[pos] in CATEGORY[11]:
          add(tok.token, buf[pos])
          inc(pos)
-         # Handle quartet/trio replacement within the control word.
+         # Handle trio/quartet replacement within the control word.
          pos = handle_replacement(l, pos)
       state = StateS
    of CATEGORY[10]:
@@ -167,9 +169,8 @@ proc handle_category_0(l: var Lexer, tok: var Token) =
       inc(pos)
       state = StateS
    else:
-      # We have to support trio and quartet replacements within the control
-      # sequence.
       if is_replaceable(l, pos):
+         # Handle trio/quartet replacement at the start of a control sequence.
          l.bufpos = handle_replacement(l, pos)
          dec(l.bufpos) # Account for initial + 1 by handle_category_0
          handle_category_0(l, tok)
@@ -244,7 +245,7 @@ proc get_token(l: var Lexer, tok: var Token) =
    of CATEGORY[10]:
       case l.state:
       of StateN, StateS:
-         # Recursively call get_token.
+         # Ignore the current character and recusively call get_token().
          inc(l.bufpos)
          get_token(l, tok)
       of StateM:
@@ -254,15 +255,17 @@ proc get_token(l: var Lexer, tok: var Token) =
          l.state = StateS
          inc(l.bufpos)
    of CATEGORY[14]:
-      # Comment character. Ultimately write a function to handle special
-      # comments. Right now, throw away everything until the next newline.
+      # Comment character. Ultimately we should write a function to handle
+      # special comments which may pass information to the upper layers, e.g.
+      # the parser. Right now, throw away everything until the next newline.
       while l.buf[l.bufpos] notin {lexbase.EndOfFile, '\L', '\c'}:
          inc(l.bufpos)
       l.bufpos = handle_crlf(l, l.bufpos)
       l.state = StateN
       get_token(l, tok)
    of CATEGORY[15]:
-      # Invalid character (print error?)
+      # Invalid character (TeX would print an error, should we do the same?).
+      # Ignore the character for now.
       inc(l.bufpos)
       get_token(l, tok)
    of CATEGORY[1] + CATEGORY[2] + CATEGORY[3] + CATEGORY[4] + CATEGORY[6] +
