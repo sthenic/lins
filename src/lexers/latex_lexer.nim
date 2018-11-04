@@ -1,207 +1,296 @@
-import unicode
+import lexbase
 import streams
 import strutils
+import unicode
 
-import ./state_machine
-import ../utils/log
+type
+   TokenType* {.pure.} = enum
+      Invalid
+      EndOfFile
+      ControlWord
+      ControlSymbol
+      Character
 
+   CategoryCode* = range[0 .. 15]
 
-type LaTeXLexerFileIOError* = object of Exception
+   Token* = object
+      token_type*: TokenType
+      catcode: CategoryCode
+      token*: string
+      line, col: int
+
+   State = enum
+      StateN
+      StateM
+      StateS
+
+   Lexer* = object of BaseLexer
+      tok: Token
+      filename: string
+      state: State
 
 
 const
-   CATCODE_ESCAPE = toRunes("\\")
-   CATCODE_BEGIN_GROUP = toRunes("{")
-   CATCODE_END_GROUP = toRunes("}")
-   CATCODE_BEGIN_OPTION = toRunes("[")
-   CATCODE_END_OPTION = toRunes("]")
-   CATCODE_LETTER =
-      toRunes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-   WHITESPACE = toRunes(" \t\n\r")
-
-
-type
-   Sentence* = tuple
-      str: seq[Rune]
-      row_begin: int
-      col_begin: int
-      row_end: int
-      col_end: int
-
-   LaTeXMeta = tuple
-      row, col: int
-      sentence: Sentence
-      sentence_callback: proc (s: Sentence)
-
-   LaTeXState = State[LaTeXMeta, Rune]
-   LaTeXTransition = Transition[LaTeXMeta, Rune]
-   LaTeXStateMachine = StateMachine[LaTeXMeta, Rune]
-
-
-proc new(t: typedesc[LaTeXState], id: int, name: string,
-         is_final: bool): LaTeXState =
-   result = LaTeXState(id: id, name: name, is_final: is_final)
-
-
-proc new(t: typedesc[LaTeXTransition],
-         condition_cb: proc (m: LaTeXMeta, s: Rune): bool,
-         transition_cb: proc (m: var LaTeXMeta, s: Rune),
-         next_state: LaTeXState): LaTeXTransition =
-   result = LaTeXTransition(
-      condition_cb: condition_cb,
-      transition_cb: transition_cb,
-      next_state: next_state
-   )
-
-
-proc new(t: typedesc[Sentence]): Sentence =
-   (
-      str: @[],
-      row_begin: 0,
-      col_begin: 0,
-      row_end: 1,
-      col_end: 1,
-   )
-
-
-proc new(t: typedesc[LaTeXMeta]): LaTeXMeta =
-   (
-      row: 0, col: 0,
-      sentence: Sentence.new(),
-      sentence_callback: nil
-   )
-
-
-proc is_catcode_escape(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_ESCAPE
-
-
-proc is_catcode_letter(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_LETTER
-
-
-proc is_catcode_begin_group(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_BEGIN_GROUP
-
-
-proc is_catcode_end_group(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_END_GROUP
-
-
-proc is_catcode_begin_option(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_BEGIN_OPTION
-
-
-proc is_catcode_end_option(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in CATCODE_END_OPTION
-
-
-proc is_ws(meta: LaTeXMeta, stimuli: Rune): bool =
-   return stimuli in WHITESPACE
-
-
-proc dead_state_callback(meta: var LaTeXMeta, stimuli: Rune) =
-   echo "Emitting sentence ", meta.sentence
-
-   # Reset
-   meta.sentence.str = @[]
-
-
-# States according to p.46 of the TeXbook.
-let
-   S_N = LaTeXState.new(1, "BeginningOfLine", false)
-   S_M = LaTeXState.new(1, "BeginningOfLine", false)
-   S_S = LaTeXState.new(1, "BeginningOfLine", false)
-
-# Transitions
-let
-   S_N_TRANSITIONS = @[
-      LaTeXTransition.new(nil, nil, S_N)
-   ]
-   S_M_TRANSITIONS = @[
-      LaTeXTransition.new(nil, nil, S_M)
-   ]
-   S_S_TRANSITIONS = @[
-      LaTeXTransition.new(nil, nil, S_S)
+   CATEGORY: array[CategoryCode, set[char]] = [
+      {'\\'},
+      {'{'},
+      {'}'},
+      {'$'},
+      {'&'},
+      {'\c', '\L'},
+      {'#'},
+      {'^'},
+      {'_'},
+      {}, # Ignored characters
+      {' ', '\t'},
+      {'A' .. 'Z', 'a' .. 'z'},
+      {}, # Category 12 contains any character not in the other sets
+          # (handled as a special case).
+      {'~'},
+      {'%'},
+      {'\x08'}
    ]
 
-
-# Add transition sequences to the states.
-S_N.transitions = S_N_TRANSITIONS
-S_M.transitions = S_M_TRANSITIONS
-S_S.transitions = S_S_TRANSITIONS
+# Forward declaration
+proc get_token(l: var Lexer, tok: var Token)
 
 
-proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
-   var
-      r: Rune
-      pos_line: int = 0
-      pos_last_line: int = 0
-      pos_last_final: int = 0
-      line: string = ""
-      # Initialize a state machine for the plain-text syntax.
-      sm: LaTeXStateMachine =
-         LaTeXStateMachine(init_state: S_N,
-                           dead_state_cb: dead_state_callback)
-      # Initialize a meta variable to represent the lexer's current state. This
-      # variable is used pass around a mutable container between the state
-      # machine's callback functions.
-      meta: LaTeXMeta = LaTeXMeta.new()
+proc handle_crlf(l: var Lexer, pos: int): int =
+   # Refill buffer at line
+   case l.buf[l.bufpos]
+   of '\c':
+      result = lexbase.handleCR(l, pos)
+   of '\L':
+      result = lexbase.handleLF(l, pos)
+   else:
+      result = pos
 
-   # Overwrite some of the initial values of the meta object.
-   meta.row = row_init
-   meta.col = col_init
-   meta.sentence_callback = callback
 
-   # Reset the state machine.
-   state_machine.reset(sm)
+template update_token_position(l: Lexer, tok: var Token) =
+   tok.col = getColNumber(l, l.bufpos)
+   tok.line = l.lineNumber
 
-   while s.read_line(line):
-      pos_line = 0
-      line.add('\n') # Add the newline character removed by read_line().
-      while pos_line < line.len:
-         # Use the template provided by the unicode standard library to decode
-         # the codepoint at position 'pos_line'. The rune is returned in r and
-         # pos_line is automatically incremented with the number of bytes
-         # consumed.
-         fast_rune_at(line, pos_line, r, true)
-         # Process stimuli
-         state_machine.run(sm, meta, r)
-         # Check resulting state
-         if is_dead(sm):
-            # Dead state reached, seek to last final position.
-            try:
-               s.set_position(pos_last_final)
-            except IOError:
-               log.abort(LaTeXLexerFileIOError,
-                         "Failed to seek to position $1.", $pos_last_final)
 
-            # Reset the state machin
-            state_machine.reset(sm)
-            # Reset positional counters
-            meta.row = meta.sentence.row_end
-            meta.col = meta.sentence.col_end + 1
-            # Break to continue with the next input character (outer loop
-            # re-reads the line from the correct position).
-            break
-         elif is_final(sm):
-            pos_last_final = pos_last_line + pos_line
-            meta.sentence.row_end = meta.row
-            meta.sentence.col_end = meta.col
+proc get_category_code(c: char): CategoryCode =
+   result = 12
+   for ccode, cset in CATEGORY:
+      if c in cset:
+         result = ccode
+         break
 
-         if (r == Rune('\n')):
-            meta.row += 1
-            meta.col = 1
-         else:
-            meta.col += 1
 
-      try:
-         pos_last_line = s.get_position()
-      except IOError:
-         log.abort(LaTeXLexerFileIOError,
-                   "Failed to retrieve stream position, aborting.")
+proc is_quartet(l: Lexer, pos: int): bool =
+   var buf = l.buf
+   result = buf[pos] in CATEGORY[7] and buf[pos + 1] == buf[pos] and
+            buf[pos + 2] in HexDigits and  buf[pos + 3] in HexDigits
 
-   if not is_dead(sm):
-      dead_state_callback(meta, Rune(0))
 
-   s.close()
+proc replace_quartet(l: var Lexer, pos: int): int =
+   # The current buffer position is expected to point to the first character of
+   # the quartet, e.g. ^^3A.
+   assert(is_quartet(l, pos))
+   let
+      msnibble = l.buf[pos + 2]
+      lsnibble = l.buf[pos + 3]
+
+   # Insert replacement character at the position of the last character in
+   # the quartet.
+   l.buf[pos + 3] = char(parseHexInt(msnibble & lsnibble))
+   result = pos + 3
+
+
+proc is_trio(l: Lexer, pos: int): bool =
+   var buf = l.buf
+   result = buf[pos] in CATEGORY[7] and buf[pos + 1] == buf[pos] and
+            int(buf[pos + 2]) < 128
+
+
+proc replace_trio(l: var Lexer, pos: int): int =
+   # The current buffer position is expected to point to the first character of
+   # the trio, e.g. ^^J.
+   assert(is_trio(l, pos))
+   let c = l.buf[pos + 2]
+
+   # Compute code adjustment according to p.45 of the TeXbook.
+   var adjustment = 0
+   if int(c) < 64:
+      adjustment = 64
+   else:
+      adjustment = -64
+
+   # Insert replacement character at the position of the last character
+   # in the trio.
+   l.buf[pos + 2] = char(int(c) + adjustment)
+   result = pos + 2
+
+
+proc is_replaceable(l: Lexer, pos: int): bool =
+   return is_quartet(l, pos) or is_trio(l, pos)
+
+
+proc handle_replacement(l: var Lexer, pos: int): int =
+   if is_quartet(l, pos):
+      result = replace_quartet(l, pos)
+   elif is_trio(l, pos):
+      result = replace_trio(l, pos)
+   else:
+      result = pos
+
+
+proc handle_category_0(l: var Lexer, tok: var Token) =
+   var pos = l.bufpos + 1 # Skip '\'
+   var buf = l.buf
+   var state = l.state
+
+   case buf[pos]
+   of {'\c', '\L', lexbase.EndOfFile}:
+      # Empty control sequence, buffer is refilled outside of this function as
+      # long as we don't move past the CR/LF character. We also keep the current
+      # state for this reason.
+      set_len(tok.token, 0)
+      tok.token_type = TokenType.ControlWord
+   of CATEGORY[11]:
+      # If the next character is of category 11, we construct a control
+      # word and move to state S.
+      tok.token_type = TokenType.ControlWord
+      while buf[pos] in CATEGORY[11]:
+         add(tok.token, buf[pos])
+         inc(pos)
+         # Handle quartet/trio replacement within the control word.
+         pos = handle_replacement(l, pos)
+      state = StateS
+   of CATEGORY[10]:
+      # If the next character is of category 10, we construct a control
+      # space and move to state S.
+      tok.token_type = TokenType.ControlSymbol
+      add(tok.token, buf[pos])
+      inc(pos)
+      state = StateS
+   else:
+      # We have to support trio and quartet replacements within the control
+      # sequence.
+      if is_replaceable(l, pos):
+         l.bufpos = handle_replacement(l, pos)
+         dec(l.bufpos) # Account for initial + 1 by handle_category_0
+         handle_category_0(l, tok)
+         pos = l.bufpos
+         state = l.state
+      else:
+         # For any other character, we construct a control symbol and move to
+         # state M.
+         tok.token_type = TokenType.ControlSymbol
+         add(tok.token, buf[pos])
+         inc(pos)
+         state = StateM
+
+   l.bufpos = pos
+   l.state = state
+
+
+proc handle_category_7(l: var Lexer, tok: var Token) =
+   var pos = l.bufpos
+
+   if is_replaceable(l, pos):
+      l.bufpos = handle_replacement(l, pos)
+      get_token(l, tok)
+      pos = l.bufpos
+   else:
+      # Regular superscript character
+      tok.token_type = TokenType.Character
+      tok.token = $l.buf[pos]
+      tok.catcode = 7
+      inc(pos)
+
+   l.bufpos = pos
+
+
+proc get_token(l: var Lexer, tok: var Token) =
+   # Initialize the token
+   tok.token_type = TokenType.Invalid
+   tok.catcode = 0
+   set_len(tok.token, 0)
+   update_token_position(l, tok)
+
+   let c = l.buf[l.bufpos]
+   case c:
+   of lexbase.EndOfFile:
+      tok.token_type = TokenType.EndOfFile
+   of CATEGORY[0]:
+      handle_category_0(l, tok)
+   of CATEGORY[5]:
+      let prev_state = l.state
+      l.bufpos = handle_crlf(l, l.bufpos)
+      l.state = StateN
+
+      case prev_state:
+      of StateN:
+         tok.token_type = TokenType.ControlWord
+         tok.token = "par"
+      of StateM:
+         tok.token_type = TokenType.Character
+         tok.token = " "
+         tok.catcode = 10
+      of StateS:
+         # The end of line character is simply dropped and does not generate a
+         # token. The buffer is refilled since before so we recursively call
+         # get_token() to continue the search.
+         get_token(l, tok)
+   of CATEGORY[7]:
+      handle_category_7(l, tok)
+   of CATEGORY[9]:
+      # Ignored characters, silently bypass.
+      inc(l.bufpos)
+      get_token(l, tok)
+   of CATEGORY[10]:
+      case l.state:
+      of StateN, StateS:
+         # Recursively call get_token.
+         inc(l.bufpos)
+         get_token(l, tok)
+      of StateM:
+         tok.token_type = TokenType.Character
+         tok.token = " "
+         tok.catcode = 10
+         l.state = StateS
+         inc(l.bufpos)
+   of CATEGORY[14]:
+      # Comment character. Ultimately write a function to handle special
+      # comments. Right now, throw away everything until the next newline.
+      while l.buf[l.bufpos] notin {lexbase.EndOfFile, '\L', '\c'}:
+         inc(l.bufpos)
+      l.bufpos = handle_crlf(l, l.bufpos)
+      l.state = StateN
+      get_token(l, tok)
+   of CATEGORY[15]:
+      # Invalid character (print error?)
+      inc(l.bufpos)
+      get_token(l, tok)
+   of CATEGORY[1] + CATEGORY[2] + CATEGORY[3] + CATEGORY[4] + CATEGORY[6] +
+      CATEGORY[8] + CATEGORY[11] + CATEGORY[13]:
+      tok.token_type = TokenType.Character
+      tok.catcode = get_category_code(c)
+      tok.token = $c
+      l.state = StateM
+      inc(l.bufpos)
+   else:
+      # A character of category 12, i.e. the class of 'other' characters.
+      tok.token_type = TokenType.Character
+      tok.catcode = 12
+      tok.token = $c
+      l.state = StateM
+      inc(l.bufpos)
+
+
+proc lex*(s: Stream) =
+   var lx: Lexer
+   lx.state = StateN
+
+   lexbase.open(lx, s)
+
+   while true:
+      get_token(lx, lx.tok)
+      echo "Got token ", lx.tok
+      if lx.tok.token_type == TokenType.EndOfFile:
+         break
+
+   lexbase.close(lx)
