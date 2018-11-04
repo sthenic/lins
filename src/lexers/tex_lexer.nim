@@ -63,6 +63,12 @@ proc init*(t: var TeXToken) =
    t.col = 0
 
 
+proc new*(t: typedesc[TeXToken], token_type: TeXTokenType,
+         catcode: CategoryCode, token: string, line, col: int): TeXToken =
+   result = TeXToken(token_type: token_type, catcode: catcode, token: token,
+                     line: line, col: col)
+
+
 proc handle_crlf(l: var TeXLexer, pos: int): int =
    # Refill buffer at end-of-line characters.
    case l.buf[l.bufpos]
