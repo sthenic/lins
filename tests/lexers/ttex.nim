@@ -42,6 +42,65 @@ template run_test(title, stimuli: string; reference: seq[TeXToken]) =
       nof_failed += 1
 
 
+# Control sequences
+run_test("Control word",
+"""\foo""", @[
+   TeXToken.new(ControlWord, 0, "foo", 1, 0),
+])
+
+run_test("Control space",
+"""\ a""", @[
+   TeXToken.new(ControlSymbol, 0, " ", 1, 0),
+   TeXToken.new(Character, 11, "a", 1, 2),
+])
+
+run_test("Control symbol",
+"""\%""", @[
+   TeXToken.new(ControlSymbol, 0, "%", 1, 0),
+])
+
+run_test("Empty control sequence, ending on EOF",
+"""\""", @[
+   TeXToken.new(ControlWord, 0, "", 1, 0),
+])
+
+run_test("Empty control sequence, ending on end-of-line",
+"""\
+""", @[
+   TeXToken.new(ControlWord, 0, "", 1, 0),
+   TeXToken.new(ControlWord, 0, "par", 1, 1),
+])
+
+run_test("Ignore space after control word",
+"""\foo  bar""", @[
+   TeXToken.new(ControlWord, 0, "foo", 1, 0),
+   TeXToken.new(Character, 11, "b", 1, 6),
+   TeXToken.new(Character, 11, "a", 1, 7),
+   TeXToken.new(Character, 11, "r", 1, 8),
+])
+
+run_test("Ignore space after control space",
+"""\   bar""", @[
+   TeXToken.new(ControlSymbol, 0, " ", 1, 0),
+   TeXToken.new(Character, 11, "b", 1, 4),
+   TeXToken.new(Character, 11, "a", 1, 5),
+   TeXToken.new(Character, 11, "r", 1, 6),
+])
+
+run_test("Don't ignore space after control symbol",
+"""\&   bar""", @[
+   TeXToken.new(ControlSymbol, 0, "&", 1, 0),
+   TeXToken.new(Character, 10, " ", 1, 2),
+   TeXToken.new(Character, 11, "b", 1, 5),
+   TeXToken.new(Character, 11, "a", 1, 6),
+   TeXToken.new(Character, 11, "r", 1, 7),
+])
+
+
+# Category 7 replacement
+
+
+# Regular characters
 run_test("Simple sentence",
 """A lazy dog.""", @[
    TeXToken.new(Character, 11, "A", 1, 0),
@@ -57,17 +116,28 @@ run_test("Simple sentence",
    TeXToken.new(Character, 12, ".", 1, 10),
 ])
 
-run_test("Control word",
-"""\foo""", @[
+
+# End-of-line characters
+run_test("End-of-line in state N",
+"""
+""", @[
+   TeXToken.new(ControlWord, 0, "par", 1, 1),
+])
+
+run_test("End-of-line in state S",
+"""\foo
+""", @[
    TeXToken.new(ControlWord, 0, "foo", 1, 0),
 ])
 
-run_test("Ignore space after control word",
-"""\foo  bar""", @[
-   TeXToken.new(ControlWord, 0, "foo", 1, 0),
-   TeXToken.new(Character, 11, "b", 1, 6),
-   TeXToken.new(Character, 11, "a", 1, 7),
-   TeXToken.new(Character, 11, "r", 1, 8),
+run_test("End-of-line in state M",
+"""Word
+""", @[
+   TeXToken.new(Character, 11, "W", 1, 0),
+   TeXToken.new(Character, 11, "o", 1, 1),
+   TeXToken.new(Character, 11, "r", 1, 2),
+   TeXToken.new(Character, 11, "d", 1, 3),
+   TeXToken.new(Character, 10, " ", 1, 4),
 ])
 
 
