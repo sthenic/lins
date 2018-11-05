@@ -44,30 +44,30 @@ template run_test(title, stimuli: string; reference: seq[TeXToken]) =
 
 run_test("Simple sentence",
 """A lazy dog.""", @[
-   TeXToken.new(TeXTokenType.Character, 11, "A", 1, 0),
-   TeXToken.new(TeXTokenType.Character, 10, " ", 1, 1),
-   TeXToken.new(TeXTokenType.Character, 11, "l", 1, 2),
-   TeXToken.new(TeXTokenType.Character, 11, "a", 1, 3),
-   TeXToken.new(TeXTokenType.Character, 11, "z", 1, 4),
-   TeXToken.new(TeXTokenType.Character, 11, "y", 1, 5),
-   TeXToken.new(TeXTokenType.Character, 10, " ", 1, 6),
-   TeXToken.new(TeXTokenType.Character, 11, "d", 1, 7),
-   TeXToken.new(TeXTokenType.Character, 11, "o", 1, 8),
-   TeXToken.new(TeXTokenType.Character, 11, "g", 1, 9),
-   TeXToken.new(TeXTokenType.Character, 12, ".", 1, 10),
+   TeXToken.new(Character, 11, "A", 1, 0),
+   TeXToken.new(Character, 10, " ", 1, 1),
+   TeXToken.new(Character, 11, "l", 1, 2),
+   TeXToken.new(Character, 11, "a", 1, 3),
+   TeXToken.new(Character, 11, "z", 1, 4),
+   TeXToken.new(Character, 11, "y", 1, 5),
+   TeXToken.new(Character, 10, " ", 1, 6),
+   TeXToken.new(Character, 11, "d", 1, 7),
+   TeXToken.new(Character, 11, "o", 1, 8),
+   TeXToken.new(Character, 11, "g", 1, 9),
+   TeXToken.new(Character, 12, ".", 1, 10),
 ])
 
 run_test("Control word",
 """\foo""", @[
-   TeXToken.new(TeXTokenType.ControlWord, 0, "foo", 1, 0),
+   TeXToken.new(ControlWord, 0, "foo", 1, 0),
 ])
 
 run_test("Ignore space after control word",
 """\foo  bar""", @[
-   TeXToken.new(TeXTokenType.ControlWord, 0, "foo", 1, 0),
-   TeXToken.new(TeXTokenType.Character, 11, "b", 1, 6),
-   TeXToken.new(TeXTokenType.Character, 11, "a", 1, 7),
-   TeXToken.new(TeXTokenType.Character, 11, "r", 1, 8),
+   TeXToken.new(ControlWord, 0, "foo", 1, 0),
+   TeXToken.new(Character, 11, "b", 1, 6),
+   TeXToken.new(Character, 11, "a", 1, 7),
+   TeXToken.new(Character, 11, "r", 1, 8),
 ])
 
 

@@ -4,7 +4,7 @@ import strutils
 
 
 type
-   TeXTokenType* {.pure.} = enum
+   TeXTokenType* = enum
       Invalid
       EndOfFile
       ControlWord
@@ -56,7 +56,7 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken)
 
 
 proc init*(t: var TeXToken) =
-   t.token_type = TeXTokenType.Invalid
+   t.token_type = Invalid
    t.catcode = 0
    set_len(t.token, 0)
    t.line = 0
@@ -162,11 +162,11 @@ proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
       # long as we don't move past the CR/LF character. We also keep the current
       # state for this reason.
       set_len(tok.token, 0)
-      tok.token_type = TeXTokenType.ControlWord
+      tok.token_type = ControlWord
    of CATEGORY[11]:
       # If the next character is of category 11, we construct a control
       # word and move to state S.
-      tok.token_type = TeXTokenType.ControlWord
+      tok.token_type = ControlWord
       while buf[pos] in CATEGORY[11]:
          add(tok.token, buf[pos])
          inc(pos)
@@ -176,7 +176,7 @@ proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
    of CATEGORY[10]:
       # If the next character is of category 10, we construct a control
       # space and move to state S.
-      tok.token_type = TeXTokenType.ControlSymbol
+      tok.token_type = ControlSymbol
       add(tok.token, buf[pos])
       inc(pos)
       state = StateS
@@ -191,7 +191,7 @@ proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
       else:
          # For any other character, we construct a control symbol and move to
          # state M.
-         tok.token_type = TeXTokenType.ControlSymbol
+         tok.token_type = ControlSymbol
          add(tok.token, buf[pos])
          inc(pos)
          state = StateM
@@ -209,7 +209,7 @@ proc handle_category_7(l: var TeXLexer, tok: var TeXToken) =
       pos = l.bufpos
    else:
       # Regular superscript character
-      tok.token_type = TeXTokenType.Character
+      tok.token_type = Character
       tok.token = $l.buf[pos]
       tok.catcode = 7
       inc(pos)
@@ -219,7 +219,7 @@ proc handle_category_7(l: var TeXLexer, tok: var TeXToken) =
 
 proc get_token*(l: var TeXLexer, tok: var TeXToken) =
    # Initialize the token
-   tok.token_type = TeXTokenType.Invalid
+   tok.token_type = Invalid
    tok.catcode = 0
    set_len(tok.token, 0)
    update_token_position(l, tok)
@@ -227,7 +227,7 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
    let c = l.buf[l.bufpos]
    case c:
    of lexbase.EndOfFile:
-      tok.token_type = TeXTokenType.EndOfFile
+      tok.token_type = EndOfFile
    of CATEGORY[0]:
       handle_category_0(l, tok)
    of CATEGORY[5]:
@@ -237,10 +237,10 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
 
       case prev_state:
       of StateN:
-         tok.token_type = TeXTokenType.ControlWord
+         tok.token_type = ControlWord
          tok.token = "par"
       of StateM:
-         tok.token_type = TeXTokenType.Character
+         tok.token_type = Character
          tok.token = " "
          tok.catcode = 10
       of StateS:
@@ -261,7 +261,7 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
          inc(l.bufpos)
          get_token(l, tok)
       of StateM:
-         tok.token_type = TeXTokenType.Character
+         tok.token_type = Character
          tok.token = " "
          tok.catcode = 10
          l.state = StateS
@@ -282,14 +282,14 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
       get_token(l, tok)
    of CATEGORY[1] + CATEGORY[2] + CATEGORY[3] + CATEGORY[4] + CATEGORY[6] +
       CATEGORY[8] + CATEGORY[11] + CATEGORY[13]:
-      tok.token_type = TeXTokenType.Character
+      tok.token_type = Character
       tok.catcode = get_category_code(c)
       tok.token = $c
       l.state = StateM
       inc(l.bufpos)
    else:
       # A character of category 12, i.e. the class of 'other' characters.
-      tok.token_type = TeXTokenType.Character
+      tok.token_type = Character
       tok.catcode = 12
       tok.token = $c
       l.state = StateM
