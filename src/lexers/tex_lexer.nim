@@ -15,9 +15,9 @@ type
 
    TeXToken* = object
       token_type*: TeXTokenType
-      catcode: CategoryCode
+      catcode*: CategoryCode
       token*: string
-      line, col: int
+      line*, col*: int
 
    State = enum
       StateN
