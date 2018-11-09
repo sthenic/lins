@@ -30,6 +30,7 @@ type
       seg_stack: seq[TextSegment]
       scope: seq[ScopeEntry]
       scope_entry: ScopeEntry
+      add_offset_pt: bool
 
    OffsetPoint = tuple
       pos, line, col: int
@@ -44,6 +45,14 @@ type
 const ESCAPED_CHARACTERS: set[char] = {'%', '&'}
 
 
+proc is_empty[T](s: seq[T]): bool =
+   return s == @[]
+
+
+proc is_empty(s: ScopeEntry): bool =
+   return s.kind == ScopeKind.Invalid
+
+
 proc get_token*(p: var LaTeXParser) =
    ## Get the next token from the lexer and store it in the `tok` member.
    get_token(p.lex, p.tok)
@@ -56,6 +65,24 @@ proc open_parser*(p: var LaTeXParser, filename: string, s: Stream) =
 
 proc close_parser*(p: var LaTeXParser) =
    close_lexer(p.lex)
+
+
+template pop_if_update(s: seq[OffsetPoint], pt: OffsetPoint) =
+   if not is_empty(s) and s[^1].pos == pt.pos:
+      discard pop(s)
+
+
+proc add_tok(p: var LaTeXParser) =
+   if len(p.seg.text) == 0:
+      p.seg.line = p.tok.line
+      p.seg.col = p.tok.col
+
+   if p.add_offset_pt:
+      let pt: OffsetPoint = (len(p.seg.text), p.tok.line, p.tok.col)
+      pop_if_update(p.seg.offset_pts, pt)
+      add(p.seg.offset_pts, pt)
+      p.add_offset_pt = false
+   add(p.seg.text, p.tok.token)
 
 
 proc begin_enclosure(p: var LaTeXParser) =
@@ -77,7 +104,9 @@ proc end_enclosure(p: var LaTeXParser) =
    p.seg = pop(p.seg_stack)
    # TODO: Maybe this +1 should be removed, depends on what is assumed about the
    #       parser when this function is entered.
-   add(p.seg.offset_pts, (len(p.seg.text), p.tok.line, p.tok.col + 1))
+   let pt: OffsetPoint = (len(p.seg.text), p.tok.line, p.tok.col + 1)
+   pop_if_update(p.seg.offset_pts, pt)
+   add(p.seg.offset_pts, pt)
    # Restore the scope entry.
    p.scope_entry = pop(p.scope)
 
@@ -86,43 +115,50 @@ proc clear_scope(p: var LaTeXParser) =
    p.scope_entry = ScopeEntry()
 
 
-proc is_empty[T](s: seq[T]): bool =
-   return s == @[]
-
-
 proc parse_character(p: var LaTeXParser) =
-   # A character gets added to the text segment.
+   var add_token = true
+   # A character token gets added to the text segment except in a few cases.
+   # TODO: Maybe detect unbalanced grouping characters.
    case p.tok.catcode
-   of {10, 11}:
-      add(p.seg.text, p.tok.token)
    of 1:
-      if not is_empty(p.scope):
+      # Beginning of group character. If the current scope entry is empty, this
+      # group does not belong to any object. We ignore the character but
+      # indicate that the next character added to the text segment should add
+      # an offset point.
+      if not is_empty(p.scope_entry):
          p.scope_entry = ScopeEntry(name: p.scope_entry.name,
                                     kind: ControlSequence,
                                     enclosure: Group)
          begin_enclosure(p)
-      # TODO: Add offset point for when the character is ignored.
+      else:
+         p.add_offset_pt = true
+      add_token = false
    of 2:
-      if not is_empty(p.scope):
+      if not is_empty(p.scope) and p.scope[^1].enclosure == Group:
          end_enclosure(p)
-      # TODO: Add offset point for when the character is ignored.
+      else:
+         p.add_offset_pt = true
+      add_token = false
    of 12:
-      if p.tok.token == "[":
-         if not is_empty(p.scope):
-            p.scope_entry = ScopeEntry(name: p.scope_entry.name,
-                                       kind: ControlSequence,
-                                       enclosure: Option)
-            begin_enclosure(p)
-         else:
-            add(p.seg.text, p.tok.token)
-      elif p.tok.token == "]":
-         if not is_empty(p.scope):
-            end_enclosure(p)
-         else:
-            add(p.seg.text, p.tok.token)
-      # TODO: Add offset point for when the character is ignored.
+      if p.tok.token == "[" and not is_empty(p.scope_entry):
+         p.scope_entry = ScopeEntry(name: p.scope_entry.name,
+                                    kind: ControlSequence,
+                                    enclosure: Option)
+         begin_enclosure(p)
+         add_token = false
+         p.add_offset_pt = true
+      elif p.tok.token == "]" and not is_empty(p.scope) and
+           p.scope[^1].enclosure == Option:
+         end_enclosure(p)
+         add_token = false
+         p.add_offset_pt = true
    else:
-      add(p.seg.text, p.tok.token)
+      clear_scope(p)
+      discard
+
+   if add_token:
+      add_tok(p)
+
    get_token(p)
 
 
@@ -162,13 +198,21 @@ proc parse_control_word(p: var LaTeXParser) =
       begin_enclosure(p)
       get_token(p)
    of "end":
-      let env = get_group_as_string(p) # Stops at '}'
-      end_enclosure(p)
-      get_token(p) # Scan over '}'
-      if p.scope_entry.name != env:
-         echo "Environment name mismatch"
+      # TODO: Create bool testing functions for these kinds of expressions, i.e.
+      #       checking if the scope is empty and if not, validating the
+      #       enclosure closing conditions.
+      if not is_empty(p.scope) and p.scope[^1].enclosure == Enclosure.Environment:
+         let env = get_group_as_string(p) # Stops at '}'
+         end_enclosure(p)
+         clear_scope(p)
+         get_token(p) # Scan over '}'
+         if p.scope_entry.name != env:
+            echo "Environment name mismatch"
+         else:
+            echo "Closed matched environment"
       else:
-         echo "Closed matched environment"
+         echo "lonely environment end"
+         get_token(p)
    else:
       var name = p.tok.token
       get_token(p)
@@ -187,7 +231,7 @@ proc parse_control_word(p: var LaTeXParser) =
 proc parse_control_symbol(p: var LaTeXParser) =
    # TODO: Fix this indexing business?
    if p.tok.token[0] in ESCAPED_CHARACTERS:
-      add(p.seg.text, p.tok.token)
+      add_tok(p)
    # TODO: \[ \] opens a math environment, handle that.
    get_token(p)
 
