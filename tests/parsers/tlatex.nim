@@ -5,7 +5,6 @@ import strformat
 include ../../src/parsers/latex_parser
 
 var
-   response: seq[string] = @[]
    nof_passed = 0
    nof_failed = 0
 
@@ -13,14 +12,13 @@ var
 template run_test(title, stimuli: string; reference: seq[TextSegment]) =
    var response: seq[TextSegment] = @[]
    response = parse_string(stimuli)
-
    try:
-      # for i in 0..<response.len:
-      #    echo response[i]
-      #    echo reference[i]
-      #    do_assert(response[i] == reference[i], "'" & $response[i] & "'")
-      # styledWriteLine(stdout, styleBright, fgGreen, "[✓] ",
-      #                 fgWhite, "Test '",  title, "'")
+      for i in 0..<response.len:
+         # echo response[i]
+         # echo reference[i]
+         do_assert(response[i] == reference[i], "'" & $response[i] & "'")
+      styledWriteLine(stdout, styleBright, fgGreen, "[✓] ",
+                      fgWhite, "Test '",  title, "'")
       nof_passed += 1
    except AssertionError:
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
@@ -33,16 +31,108 @@ template run_test(title, stimuli: string; reference: seq[TextSegment]) =
       nof_failed += 1
 
 
-# Control sequences
-run_test("Control word", """Nice!
-Cool}\begin{table}%
-This is some \emph[a[{t{}hing]{call me}[Maybe][] text.
-\end{table}\end{table}[Cool]Do you have something for me?""", @[])
+run_test("Simple sentence",
+"""A simple sentence.""", @[
+   TextSegment.new("A simple sentence.", 1, 0, @[], @[], false)
+])
 
 
-# run_test("Control word",
-# """
-# Hello \emph{This is some \textbf{cool} emphasized text.} there.""", @[])
+run_test("Multiline sentence",
+"""A sentence spanning
+several lines
+of text.""", @[
+   TextSegment.new(
+      "A sentence spanning several lines of text.", 1, 0,
+      @[
+         (20, 2, 0),
+         (34, 3, 0)
+      ],
+      @[], false)
+])
+
+
+run_test("Multiline sentence, irregular spacing",
+"""   A sentence  spanning
+  several   lines
+ of
+text.""", @[
+   TextSegment.new(
+      "A sentence spanning several lines of text.", 1, 3,
+      @[
+         (11, 1, 15),
+         (20, 2, 2),
+         (28, 2, 12),
+         (34, 3, 1),
+         (37, 4, 0)
+      ],
+      @[], false)
+])
+
+
+# (La)TeX constructions
+
+run_test("Group w/o control sequence",
+"""That's a {\bfseries bold} statement.""", @[
+   TextSegment.new(
+      """That's a bold statement.""", 1, 0,
+      @[(9, 1, 20), (13, 1, 25)],
+      @[], false)
+])
+
+
+run_test("Option delimiters w/o control sequence",
+"""That's a [\bfseries bold] statement.""", @[
+   TextSegment.new(
+      """That's a [bold] statement.""", 1, 0,
+      @[(10, 1, 20)],
+      @[], false)
+])
+
+
+run_test("Control sequence in text, removed",
+"""A sentence \foo with a control sequence.""", @[
+   TextSegment.new(
+      """A sentence with a control sequence.""", 1, 0,
+      @[
+         (11, 1, 16),
+      ],
+      @[], false)
+])
+
+run_test("Control sequence in text, expanded",
+"""A sentence with \emph{emphasized} text.""", @[
+   TextSegment.new(
+      """A sentence with emphasized text.""", 1, 0, @[
+         (16, 1, 22),
+         (26, 1, 33)
+      ], @[], false)
+])
+
+
+run_test("Control sequence followed by a group",
+"""A sentence with \foo{grouped text} another control sequence.""", @[
+   TextSegment.new(
+      """grouped text""", 1, 21, @[], @[
+         ScopeEntry.new("foo", ControlSequence, Group, 1)
+      ], false),
+   TextSegment.new(
+      """A sentence with  another control sequence.""", 1, 0, @[
+         (16, 1, 34),
+      ], @[], false),
+])
+
+
+run_test("Control sequence followed by options",
+"""Another sentence with \bar[option text in here]a few options.""", @[
+   TextSegment.new(
+      """option text in here""", 1, 27, @[], @[
+         ScopeEntry.new("bar", ControlSequence, Option, 1)
+      ], false),
+   TextSegment.new(
+      """Another sentence with a few options.""", 1, 0, @[
+         (22, 1, 47),
+      ], @[], false),
+])
 
 
 # Print summary
