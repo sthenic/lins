@@ -87,12 +87,19 @@ template pop_if_update(s: seq[OffsetPoint], pt: OffsetPoint) =
       discard pop(s)
 
 
+proc is_first_char(p: LaTeXParser): bool =
+   if is_empty(p.seg.offset_pts):
+      result = p.tok.line > p.seg.line
+   else:
+      result = p.tok.line > p.seg.offset_pts[^1].line
+
+
 proc add_tok(p: var LaTeXParser) =
    if len(p.seg.text) == 0:
       p.seg.line = p.tok.line
       p.seg.col = p.tok.col
 
-   if p.add_offset_pt:
+   if p.add_offset_pt or is_first_char(p):
       let pt: OffsetPoint = (len(p.seg.text), p.tok.line, p.tok.col)
       pop_if_update(p.seg.offset_pts, pt)
       add(p.seg.offset_pts, pt)
