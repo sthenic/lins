@@ -44,7 +44,8 @@ type
 
 
 const ESCAPED_CHARACTERS: set[char] = {'%', '&'}
-const EXPANDED_CONTROL_WORDS: seq[string] = @["emph", "textbf", ""]
+const EXPANDED_CONTROL_WORDS: seq[string] = @["emph", "textbf", "texttt"]
+const EXPANDED_ENVIRONMENTS: seq[string] = @[]
 
 
 proc is_empty[T](s: seq[T]): bool =
@@ -218,7 +219,7 @@ proc parse_control_word(p: var LaTeXParser) =
       # p.cs.name = env
       p.scope_entry = ScopeEntry(name: env, kind: ScopeKind.Environment,
                                  enclosure: Enclosure.Environment)
-      begin_enclosure(p, true, false)
+      begin_enclosure(p, true, contains(EXPANDED_ENVIRONMENTS, env))
       get_token(p)
    of "end":
       # TODO: Create bool testing functions for these kinds of expressions, i.e.
@@ -249,6 +250,10 @@ proc parse_control_word(p: var LaTeXParser) =
                                     enclosure: Option, count: 1)
          begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name))
          get_token(p)
+      else:
+         # The control word is discarded from the input stream, the next
+         # character should add an offset point.
+         p.add_offset_pt = true
 
 
 proc parse_control_symbol(p: var LaTeXParser) =
