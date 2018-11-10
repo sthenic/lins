@@ -40,9 +40,11 @@ type
       line, col: int
       offset_pts: seq[OffsetPoint]
       scope: seq[ScopeEntry]
+      expand: bool
 
 
 const ESCAPED_CHARACTERS: set[char] = {'%', '&'}
+const EXPANDED_CONTROL_WORDS: seq[string] = @["emph", "textbf", ""]
 
 
 proc is_empty[T](s: seq[T]): bool =
@@ -89,7 +91,7 @@ proc add_tok(p: var LaTeXParser) =
    add(p.seg.text, p.tok.token)
 
 
-proc begin_enclosure(p: var LaTeXParser, keep_scope: bool) =
+proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
    # Push the current text segment to the stack.
    add(p.seg_stack, p.seg)
    # Push the current scope entry to the scope.
@@ -97,23 +99,37 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope: bool) =
    # Initialize a new text segment w/ the current scope.
    p.seg = TextSegment()
    p.seg.scope = p.scope
+   p.seg.expand = expand
    # Initialize a new scope entry unless we're told to keep it. This only
    # happens when an environment is entered since there may be options and
    # capture groups following the \begin{env} statement.
    if not keep_scope:
       p.scope_entry = ScopeEntry()
+   # Explicitly set the parser state indicating that we should generate an
+   # offset point on the next character to false if we're entering an enclosure.
+   p.add_offset_pt = false
 
 
 proc end_enclosure(p: var LaTeXParser) =
    # Emit the text segment.
-   echo "Enclosure ended, emitting text segment ", p.seg
+   let inner = p.seg
    # Pop the text segment stack.
    p.seg = pop(p.seg_stack)
-   # TODO: Maybe this +1 should be removed, depends on what is assumed about the
-   #       parser when this function is entered.
-   let pt: OffsetPoint = (len(p.seg.text), p.tok.line, p.tok.col + 1)
-   pop_if_update(p.seg.offset_pts, pt)
-   add(p.seg.offset_pts, pt)
+   if inner.expand:
+      # The completed segment should be expanded and added to the outer text
+      # segment. All the offset points of the inner segment gets added to the
+      # outer with modified positions (their coordinates are absolute).
+      let outer_len = len(p.seg.text)
+      add(p.seg.offset_pts, (outer_len, inner.line, inner.col))
+      for pt in inner.offset_pts:
+         add(p.seg.offset_pts, (outer_len + pt.pos, pt.line, pt.col))
+      add(p.seg.text, inner.text)
+      echo "Enclosure ended but inner text segment is absorbed by the outer."
+   else:
+      echo "Enclosure ended, emitting text segment ", inner
+   # Signal that the next character added should also add an updated offset
+   # point.
+   p.add_offset_pt = true
    # Restore the scope entry.
    p.scope_entry = pop(p.scope)
 
@@ -137,7 +153,7 @@ proc parse_character(p: var LaTeXParser) =
                                     kind: p.scope_entry.kind,
                                     enclosure: Group,
                                     count: p.scope_entry.count + 1)
-         begin_enclosure(p, false)
+         begin_enclosure(p, false, false)
       else:
          p.add_offset_pt = true
       add_token = false
@@ -153,7 +169,7 @@ proc parse_character(p: var LaTeXParser) =
                                     kind: p.scope_entry.kind,
                                     enclosure: Option,
                                     count: p.scope_entry.count + 1)
-         begin_enclosure(p, false)
+         begin_enclosure(p, false, false)
          add_token = false
          p.add_offset_pt = true
       elif p.tok.token == "]" and is_in_enclosure(p, Option):
@@ -202,7 +218,7 @@ proc parse_control_word(p: var LaTeXParser) =
       # p.cs.name = env
       p.scope_entry = ScopeEntry(name: env, kind: ScopeKind.Environment,
                                  enclosure: Enclosure.Environment)
-      begin_enclosure(p, true)
+      begin_enclosure(p, true, false)
       get_token(p)
    of "end":
       # TODO: Create bool testing functions for these kinds of expressions, i.e.
@@ -226,12 +242,12 @@ proc parse_control_word(p: var LaTeXParser) =
       if p.tok.catcode == 1:
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
                                     enclosure: Group, count: 1)
-         begin_enclosure(p, false)
+         begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name))
          get_token(p)
       elif p.tok.catcode == 12 and p.tok.token == "[":
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
                                     enclosure: Option, count: 1)
-         begin_enclosure(p, false)
+         begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name))
          get_token(p)
 
 
