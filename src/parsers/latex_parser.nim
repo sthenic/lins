@@ -37,6 +37,7 @@ type
       scope_entry: ScopeEntry # Scope entry under construction
       add_offset_pt: bool
       last_tok: TeXToken
+      delimiter_count: int # Delimiter count
 
    OffsetPoint* = tuple
       pos, line, col: int
@@ -184,7 +185,8 @@ proc parse_character(p: var LaTeXParser) =
       # Beginning of group character. If the current scope entry is empty, this
       # group does not belong to any object. We ignore the character but
       # indicate that the next character added to the text segment should add
-      # an offset point.
+      # an offset point. Additionally, we keep track of the delimiter count
+      # within the segment.
       if not is_empty(p.scope_entry):
          p.scope_entry = ScopeEntry(name: p.scope_entry.name,
                                     kind: p.scope_entry.kind,
@@ -193,12 +195,14 @@ proc parse_character(p: var LaTeXParser) =
          begin_enclosure(p, false, false)
       else:
          p.add_offset_pt = true
+         inc(p.delimiter_count)
       add_token = false
    of 2:
-      if is_in_enclosure(p, Group):
+      if is_in_enclosure(p, Group) and p.delimiter_count == 0:
          end_enclosure(p)
       else:
          p.add_offset_pt = true
+         dec(p.delimiter_count)
       add_token = false
    of 12:
       if p.tok.token == "[" and not is_empty(p.scope_entry):
