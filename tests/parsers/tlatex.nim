@@ -177,6 +177,19 @@ run_test("Nested control sequences",
 ])
 
 
+run_test("Uncaptured group nested in control sequence capture group",
+"""\foo{And {some} text}""", @[
+   TextSegment.new(
+      """And some text""", 1, 5, @[
+         (4, 1, 10),
+         (8, 1, 15),
+      ], @[
+         ScopeEntry.new("foo", ControlSequence, Group, 1),
+      ], false),
+   TextSegment.new("""""", 0, 0, @[], @[], false),
+])
+
+
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
 var test_str = "test"
