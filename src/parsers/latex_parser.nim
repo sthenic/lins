@@ -53,6 +53,10 @@ proc is_empty(s: ScopeEntry): bool =
    return s.kind == ScopeKind.Invalid
 
 
+proc is_in_enclosure(p: LaTeXParser, encl: Enclosure): bool =
+   return not is_empty(p.scope) and p.scope[^1].enclosure == encl
+
+
 proc get_token*(p: var LaTeXParser) =
    ## Get the next token from the lexer and store it in the `tok` member.
    get_token(p.lex, p.tok)
@@ -134,7 +138,7 @@ proc parse_character(p: var LaTeXParser) =
          p.add_offset_pt = true
       add_token = false
    of 2:
-      if not is_empty(p.scope) and p.scope[^1].enclosure == Group:
+      if is_in_enclosure(p, Group):
          end_enclosure(p)
       else:
          p.add_offset_pt = true
@@ -147,8 +151,7 @@ proc parse_character(p: var LaTeXParser) =
          begin_enclosure(p)
          add_token = false
          p.add_offset_pt = true
-      elif p.tok.token == "]" and not is_empty(p.scope) and
-           p.scope[^1].enclosure == Option:
+      elif p.tok.token == "]" and is_in_enclosure(p, Option):
          end_enclosure(p)
          add_token = false
          p.add_offset_pt = true
@@ -201,7 +204,7 @@ proc parse_control_word(p: var LaTeXParser) =
       # TODO: Create bool testing functions for these kinds of expressions, i.e.
       #       checking if the scope is empty and if not, validating the
       #       enclosure closing conditions.
-      if not is_empty(p.scope) and p.scope[^1].enclosure == Enclosure.Environment:
+      if is_in_enclosure(p, Enclosure.Environment):
          let env = get_group_as_string(p) # Stops at '}'
          end_enclosure(p)
          clear_scope(p)
