@@ -4,6 +4,10 @@ import strutils
 import ../lexers/tex_lexer
 import ../utils/log
 
+# TODO: Think about if it's worth tracking all the column positions what with
+#       TeX eating additional whitespace etc. Any person would be able to track
+#       down an issue given just the line number.
+
 
 type
    Enclosure {.pure.} = enum
@@ -42,6 +46,7 @@ type
       offset_pts*: seq[OffsetPoint]
       scope*: seq[ScopeEntry]
       expand*: bool
+      last_tok: TeXToken
 
 
 const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$'}
@@ -54,6 +59,10 @@ proc new*(t: typedesc[TextSegment], text: string, line, col: int,
           expand: bool): TextSegment =
    result = TextSegment(text: text, line: line, col: col,
                         offset_pts: offset_pts, scope: scope, expand: expand)
+
+proc new*(t: typedesc[ScopeEntry], name: string, kind: ScopeKind,
+          encl: Enclosure, count: int): ScopeEntry =
+   result = ScopeEntry(name: name, kind: kind, enclosure: encl, count: count)
 
 
 proc is_empty[T](s: seq[T]): bool =
@@ -94,17 +103,30 @@ proc is_first_char(p: LaTeXParser): bool =
       result = p.tok.line > p.seg.offset_pts[^1].line
 
 
+proc is_skip(p: LaTeXParser): bool =
+   if len(p.seg.text) == 0:
+      return false
+
+   let line_diff = p.tok.line - p.seg.last_tok.line
+   let col_diff = p.tok.col - p.seg.last_tok.col
+   if line_diff > 0:
+      result = true
+   elif col_diff > 1:
+      result = true
+
+
 proc add_tok(p: var LaTeXParser) =
    if len(p.seg.text) == 0:
       p.seg.line = p.tok.line
       p.seg.col = p.tok.col
 
-   if p.add_offset_pt or is_first_char(p):
+   if p.add_offset_pt or is_skip(p):
       let pt: OffsetPoint = (len(p.seg.text), p.tok.line, p.tok.col)
       pop_if_update(p.seg.offset_pts, pt)
       add(p.seg.offset_pts, pt)
       p.add_offset_pt = false
    add(p.seg.text, p.tok.token)
+   p.seg.last_tok = p.tok
 
 
 proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
@@ -128,7 +150,7 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
 
 proc end_enclosure(p: var LaTeXParser) =
    # Emit the text segment.
-   let inner = p.seg
+   var inner = p.seg
    # Pop the text segment stack.
    p.seg = pop(p.seg_stack)
    if inner.expand:
@@ -141,6 +163,7 @@ proc end_enclosure(p: var LaTeXParser) =
          add(p.seg.offset_pts, (outer_len + pt.pos, pt.line, pt.col))
       add(p.seg.text, inner.text)
    else:
+      inner.last_tok = TeXToken()
       add(p.segs, inner)
    # Signal that the next character added should also add an updated offset
    # point.
@@ -293,6 +316,7 @@ proc parse_all*(p: var LaTeXParser): seq[TextSegment] =
    get_token(p)
    while p.tok.token_type != EndOfFile:
       parse_token(p)
+   p.seg.last_tok = TeXToken()
    add(p.segs, p.seg)
    result = p.segs
 
