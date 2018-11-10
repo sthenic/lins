@@ -135,6 +135,48 @@ run_test("Control sequence followed by options",
 ])
 
 
+run_test("Control sequence followed by options and groups",
+"""Text before \mycontrolseq[options here]{first group}{second group}.""", @[
+   TextSegment.new(
+      """options here""", 1, 26, @[], @[
+         ScopeEntry.new("mycontrolseq", ControlSequence, Option, 1)
+      ], false),
+   TextSegment.new(
+      """first group""", 1, 40, @[], @[
+         ScopeEntry.new("mycontrolseq", ControlSequence, Group, 2)
+      ], false),
+   TextSegment.new(
+      """second group""", 1, 53, @[], @[
+         ScopeEntry.new("mycontrolseq", ControlSequence, Group, 3)
+      ], false),
+   TextSegment.new(
+      """Text before .""", 1, 0, @[(12, 1, 66)], @[], false),
+])
+
+
+run_test("Nested control sequences",
+"""\foo{And some \bar{with some} extra} \baz{added for effect}.""", @[
+   TextSegment.new(
+      """with some""", 1, 19, @[], @[
+         ScopeEntry.new("foo", ControlSequence, Group, 1),
+         ScopeEntry.new("bar", ControlSequence, Group, 1)
+      ], false),
+   TextSegment.new(
+      """And some  extra""", 1, 5, @[(9, 1, 29)], @[
+         ScopeEntry.new("foo", ControlSequence, Group, 1)
+      ], false),
+   TextSegment.new(
+      """added for effect""", 1, 42, @[], @[
+         ScopeEntry.new("baz", ControlSequence, Group, 1)
+      ], false),
+   TextSegment.new(
+      """ .""", 1, 36, @[
+         (0, 1, 36), # TODO: This may be undesired behavior
+         (1, 1, 59),
+      ], @[], false),
+])
+
+
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
 var test_str = "test"
