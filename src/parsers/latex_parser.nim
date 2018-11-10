@@ -24,7 +24,7 @@ type
    ScopeEntry = object
       name: string
       kind: ScopeKind
-      enclosure: Enclosure
+      encl: Enclosure
       count: int
 
    LaTeXParser* = object
@@ -62,7 +62,7 @@ proc new*(t: typedesc[TextSegment], text: string, line, col: int,
 
 proc new*(t: typedesc[ScopeEntry], name: string, kind: ScopeKind,
           encl: Enclosure, count: int): ScopeEntry =
-   result = ScopeEntry(name: name, kind: kind, enclosure: encl, count: count)
+   result = ScopeEntry(name: name, kind: kind, encl: encl, count: count)
 
 
 proc is_empty[T](s: seq[T]): bool =
@@ -74,7 +74,7 @@ proc is_empty(s: ScopeEntry): bool =
 
 
 proc is_in_enclosure(p: LaTeXParser, encl: Enclosure): bool =
-   return not is_empty(p.scope) and p.scope[^1].enclosure == encl
+   return not is_empty(p.scope) and p.scope[^1].encl == encl
 
 
 proc get_token*(p: var LaTeXParser) =
@@ -189,7 +189,7 @@ proc parse_character(p: var LaTeXParser) =
       if not is_empty(p.scope_entry):
          p.scope_entry = ScopeEntry(name: p.scope_entry.name,
                                     kind: p.scope_entry.kind,
-                                    enclosure: Group,
+                                    encl: Group,
                                     count: p.scope_entry.count + 1)
          begin_enclosure(p, false, false)
       else:
@@ -205,7 +205,7 @@ proc parse_character(p: var LaTeXParser) =
       if p.tok.token == "[" and not is_empty(p.scope_entry):
          p.scope_entry = ScopeEntry(name: p.scope_entry.name,
                                     kind: p.scope_entry.kind,
-                                    enclosure: Option,
+                                    encl: Option,
                                     count: p.scope_entry.count + 1)
          begin_enclosure(p, false, false)
          add_token = false
@@ -254,7 +254,7 @@ proc parse_control_word(p: var LaTeXParser) =
    of "begin":
       let env = get_group_as_string(p)
       p.scope_entry = ScopeEntry(name: env, kind: ScopeKind.Environment,
-                                 enclosure: Enclosure.Environment)
+                                 encl: Enclosure.Environment)
       begin_enclosure(p, true, contains(EXPANDED_ENVIRONMENTS, env))
       get_token(p)
    of "end":
@@ -278,12 +278,12 @@ proc parse_control_word(p: var LaTeXParser) =
       get_token(p)
       if p.tok.catcode == 1:
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
-                                    enclosure: Group, count: 1)
+                                    encl: Group, count: 1)
          begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name))
          get_token(p)
       elif p.tok.catcode == 12 and p.tok.token == "[":
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
-                                    enclosure: Option, count: 1)
+                                    encl: Option, count: 1)
          begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name))
          get_token(p)
       else:
