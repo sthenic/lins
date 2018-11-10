@@ -89,7 +89,7 @@ proc add_tok(p: var LaTeXParser) =
    add(p.seg.text, p.tok.token)
 
 
-proc begin_enclosure(p: var LaTeXParser) =
+proc begin_enclosure(p: var LaTeXParser, keep_scope: bool) =
    # Push the current text segment to the stack.
    add(p.seg_stack, p.seg)
    # Push the current scope entry to the scope.
@@ -97,8 +97,11 @@ proc begin_enclosure(p: var LaTeXParser) =
    # Initialize a new text segment w/ the current scope.
    p.seg = TextSegment()
    p.seg.scope = p.scope
-   # Initialize a new scope entry.
-   p.scope_entry = ScopeEntry()
+   # Initialize a new scope entry unless we're told to keep it. This only
+   # happens when an environment is entered since there may be options and
+   # capture groups following the \begin{env} statement.
+   if not keep_scope:
+      p.scope_entry = ScopeEntry()
 
 
 proc end_enclosure(p: var LaTeXParser) =
@@ -131,9 +134,10 @@ proc parse_character(p: var LaTeXParser) =
       # an offset point.
       if not is_empty(p.scope_entry):
          p.scope_entry = ScopeEntry(name: p.scope_entry.name,
-                                    kind: ControlSequence,
-                                    enclosure: Group)
-         begin_enclosure(p)
+                                    kind: p.scope_entry.kind,
+                                    enclosure: Group,
+                                    count: p.scope_entry.count + 1)
+         begin_enclosure(p, false)
       else:
          p.add_offset_pt = true
       add_token = false
@@ -146,9 +150,10 @@ proc parse_character(p: var LaTeXParser) =
    of 12:
       if p.tok.token == "[" and not is_empty(p.scope_entry):
          p.scope_entry = ScopeEntry(name: p.scope_entry.name,
-                                    kind: ControlSequence,
-                                    enclosure: Option)
-         begin_enclosure(p)
+                                    kind: p.scope_entry.kind,
+                                    enclosure: Option,
+                                    count: p.scope_entry.count + 1)
+         begin_enclosure(p, false)
          add_token = false
          p.add_offset_pt = true
       elif p.tok.token == "]" and is_in_enclosure(p, Option):
@@ -157,7 +162,6 @@ proc parse_character(p: var LaTeXParser) =
          p.add_offset_pt = true
    else:
       clear_scope(p)
-      discard
 
    if add_token:
       add_tok(p)
@@ -198,7 +202,7 @@ proc parse_control_word(p: var LaTeXParser) =
       # p.cs.name = env
       p.scope_entry = ScopeEntry(name: env, kind: ScopeKind.Environment,
                                  enclosure: Enclosure.Environment)
-      begin_enclosure(p)
+      begin_enclosure(p, true)
       get_token(p)
    of "end":
       # TODO: Create bool testing functions for these kinds of expressions, i.e.
@@ -221,13 +225,13 @@ proc parse_control_word(p: var LaTeXParser) =
       get_token(p)
       if p.tok.catcode == 1:
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
-                                    enclosure: Group)
-         begin_enclosure(p)
+                                    enclosure: Group, count: 1)
+         begin_enclosure(p, false)
          get_token(p)
       elif p.tok.catcode == 12 and p.tok.token == "[":
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
-                                    enclosure: Option)
-         begin_enclosure(p)
+                                    enclosure: Option, count: 1)
+         begin_enclosure(p, false)
          get_token(p)
 
 
