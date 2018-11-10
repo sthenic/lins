@@ -36,6 +36,7 @@ type
       scope: seq[ScopeEntry] # Complete scope
       scope_entry: ScopeEntry # Scope entry under construction
       add_offset_pt: bool
+      last_tok: TeXToken
 
    OffsetPoint* = tuple
       pos, line, col: int
@@ -46,7 +47,6 @@ type
       offset_pts*: seq[OffsetPoint]
       scope*: seq[ScopeEntry]
       expand*: bool
-      last_tok: TeXToken
 
 
 const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$'}
@@ -107,8 +107,8 @@ proc is_skip(p: LaTeXParser): bool =
    if len(p.seg.text) == 0:
       return false
 
-   let line_diff = p.tok.line - p.seg.last_tok.line
-   let col_diff = p.tok.col - p.seg.last_tok.col
+   let line_diff = p.tok.line - p.last_tok.line
+   let col_diff = p.tok.col - p.last_tok.col
    if line_diff > 0:
       result = true
    elif col_diff > 1:
@@ -126,7 +126,7 @@ proc add_tok(p: var LaTeXParser) =
       add(p.seg.offset_pts, pt)
       p.add_offset_pt = false
    add(p.seg.text, p.tok.token)
-   p.seg.last_tok = p.tok
+   p.last_tok = p.tok
 
 
 proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
@@ -163,7 +163,6 @@ proc end_enclosure(p: var LaTeXParser) =
          add(p.seg.offset_pts, (outer_len + pt.pos, pt.line, pt.col))
       add(p.seg.text, inner.text)
    else:
-      inner.last_tok = TeXToken()
       add(p.segs, inner)
    # Signal that the next character added should also add an updated offset
    # point.
@@ -267,7 +266,7 @@ proc parse_control_word(p: var LaTeXParser) =
          clear_scope(p)
          get_token(p) # Scan over '}'
          if p.scope_entry.name != env:
-            echo "Environment name mismatch"
+            echo "Environment name mismatch ", env, " != ", p.scope_entry.name
          else:
             echo "Closed matched environment"
       else:
@@ -316,7 +315,6 @@ proc parse_all*(p: var LaTeXParser): seq[TextSegment] =
    get_token(p)
    while p.tok.token_type != EndOfFile:
       parse_token(p)
-   p.seg.last_tok = TeXToken()
    add(p.segs, p.seg)
    result = p.segs
 
