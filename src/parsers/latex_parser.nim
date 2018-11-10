@@ -26,26 +26,34 @@ type
    LaTeXParser* = object
       lex: TeXLexer
       tok: TeXToken
-      seg: TextSegment
-      seg_stack: seq[TextSegment]
-      scope: seq[ScopeEntry]
-      scope_entry: ScopeEntry
+      seg: TextSegment # Segment under construction
+      seg_stack: seq[TextSegment] # Incomplete segments
+      segs: seq[TextSegment] # Completed segments
+      scope: seq[ScopeEntry] # Complete scope
+      scope_entry: ScopeEntry # Scope entry under construction
       add_offset_pt: bool
 
-   OffsetPoint = tuple
+   OffsetPoint* = tuple
       pos, line, col: int
 
    TextSegment* = object
-      text: string
-      line, col: int
-      offset_pts: seq[OffsetPoint]
-      scope: seq[ScopeEntry]
-      expand: bool
+      text*: string
+      line*, col*: int
+      offset_pts*: seq[OffsetPoint]
+      scope*: seq[ScopeEntry]
+      expand*: bool
 
 
 const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$'}
 const EXPANDED_CONTROL_WORDS: seq[string] = @["emph", "textbf", "texttt"]
 const EXPANDED_ENVIRONMENTS: seq[string] = @[]
+
+
+proc new*(t: typedesc[TextSegment], text: string, line, col: int,
+          offset_pts: seq[OffsetPoint], scope: seq[ScopeEntry],
+          expand: bool): TextSegment =
+   result = TextSegment(text: text, line: line, col: col,
+                        offset_pts: offset_pts, scope: scope, expand: expand)
 
 
 proc is_empty[T](s: seq[T]): bool =
@@ -125,9 +133,8 @@ proc end_enclosure(p: var LaTeXParser) =
       for pt in inner.offset_pts:
          add(p.seg.offset_pts, (outer_len + pt.pos, pt.line, pt.col))
       add(p.seg.text, inner.text)
-      echo "Enclosure ended but inner text segment is absorbed by the outer."
    else:
-      echo "Enclosure ended, emitting text segment ", inner
+      add(p.segs, inner)
    # Signal that the next character added should also add an updated offset
    # point.
    p.add_offset_pt = true
@@ -216,7 +223,6 @@ proc parse_control_word(p: var LaTeXParser) =
    case p.tok.token
    of "begin":
       let env = get_group_as_string(p)
-      # p.cs.name = env
       p.scope_entry = ScopeEntry(name: env, kind: ScopeKind.Environment,
                                  enclosure: Enclosure.Environment)
       begin_enclosure(p, true, contains(EXPANDED_ENVIRONMENTS, env))
@@ -276,16 +282,17 @@ proc parse_token(p: var LaTeXParser) =
       get_token(p)
 
 
-proc parse_all*(p: var LaTeXParser) =
+proc parse_all*(p: var LaTeXParser): seq[TextSegment] =
    get_token(p)
    while p.tok.token_type != EndOfFile:
       parse_token(p)
-   echo "Completed parsing, last text segment: ", p.seg
+   add(p.segs, p.seg)
+   result = p.segs
 
 
 proc parse_string*(s: string, filename: string = ""): seq[TextSegment] =
    var p: LaTeXParser
    var ss = new_string_stream(s)
    open_parser(p, filename, ss)
-   parse_all(p)
+   result = parse_all(p)
    close_parser(p)
