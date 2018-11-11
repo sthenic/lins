@@ -57,7 +57,7 @@ const EXPANDED_ENVIRONMENTS: seq[string] = @[]
 
 proc new*(t: typedesc[TextSegment], text: string, line, col: int,
           offset_pts: seq[OffsetPoint], scope: seq[ScopeEntry],
-          expand: bool): TextSegment =
+          expand: bool = false): TextSegment =
    result = TextSegment(text: text, line: line, col: col,
                         offset_pts: offset_pts, scope: scope, expand: expand)
 
@@ -106,13 +106,10 @@ proc is_first_char(p: LaTeXParser): bool =
 
 proc is_skip(p: LaTeXParser): bool =
    if len(p.seg.text) == 0:
-      return false
-
-   let line_diff = p.tok.line - p.last_tok.line
-   let col_diff = p.tok.col - p.last_tok.col
-   if line_diff > 0:
+      result = false
+   elif p.tok.line - p.last_tok.line > 0:
       result = true
-   elif col_diff > 1:
+   elif p.tok.col - p.last_tok.col > 1:
       result = true
 
 

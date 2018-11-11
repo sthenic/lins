@@ -33,7 +33,7 @@ template run_test(title, stimuli: string; reference: seq[TextSegment]) =
 
 run_test("Simple sentence",
 """A simple sentence.""", @[
-   TextSegment.new("A simple sentence.", 1, 0, @[], @[], false)
+   TextSegment.new("A simple sentence.", 1, 0, @[], @[])
 ])
 
 
@@ -47,7 +47,7 @@ of text.""", @[
          (20, 2, 0),
          (34, 3, 0)
       ],
-      @[], false)
+      @[])
 ])
 
 
@@ -64,8 +64,7 @@ text.""", @[
          (28, 2, 12),
          (34, 3, 1),
          (37, 4, 0)
-      ],
-      @[], false)
+      ], @[])
 ])
 
 
@@ -75,8 +74,7 @@ run_test("Group w/o control sequence",
 """That's a {\bfseries bold} statement.""", @[
    TextSegment.new(
       """That's a bold statement.""", 1, 0,
-      @[(9, 1, 20), (13, 1, 25)],
-      @[], false)
+      @[(9, 1, 20), (13, 1, 25)], @[])
 ])
 
 
@@ -84,8 +82,7 @@ run_test("Option delimiters w/o control sequence",
 """That's a [\bfseries bold] statement.""", @[
    TextSegment.new(
       """That's a [bold] statement.""", 1, 0,
-      @[(10, 1, 20)],
-      @[], false)
+      @[(10, 1, 20)], @[])
 ])
 
 
@@ -95,8 +92,7 @@ run_test("Control sequence in text, removed",
       """A sentence with a control sequence.""", 1, 0,
       @[
          (11, 1, 16),
-      ],
-      @[], false)
+      ], @[])
 ])
 
 run_test("Control sequence in text, expanded",
@@ -105,7 +101,7 @@ run_test("Control sequence in text, expanded",
       """A sentence with emphasized text.""", 1, 0, @[
          (16, 1, 22),
          (26, 1, 33)
-      ], @[], false)
+      ], @[])
 ])
 
 
@@ -114,11 +110,11 @@ run_test("Control sequence followed by a group",
    TextSegment.new(
       """grouped text""", 1, 21, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1)
-      ], false),
+      ]),
    TextSegment.new(
       """A sentence with  another control sequence.""", 1, 0, @[
          (16, 1, 34),
-      ], @[], false),
+      ], @[]),
 ])
 
 
@@ -127,11 +123,11 @@ run_test("Control sequence followed by options",
    TextSegment.new(
       """option text in here""", 1, 27, @[], @[
          ScopeEntry.new("bar", ControlSequence, Option, 1)
-      ], false),
+      ]),
    TextSegment.new(
       """Another sentence with a few options.""", 1, 0, @[
          (22, 1, 47),
-      ], @[], false),
+      ], @[]),
 ])
 
 
@@ -140,17 +136,17 @@ run_test("Control sequence followed by options and groups",
    TextSegment.new(
       """options here""", 1, 26, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Option, 1)
-      ], false),
+      ]),
    TextSegment.new(
       """first group""", 1, 40, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Group, 2)
-      ], false),
+      ]),
    TextSegment.new(
       """second group""", 1, 53, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Group, 3)
-      ], false),
+      ]),
    TextSegment.new(
-      """Text before .""", 1, 0, @[(12, 1, 66)], @[], false),
+      """Text before .""", 1, 0, @[(12, 1, 66)], @[]),
 ])
 
 
@@ -160,20 +156,20 @@ run_test("Nested control sequences",
       """with some""", 1, 19, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1),
          ScopeEntry.new("bar", ControlSequence, Group, 1)
-      ], false),
+      ]),
    TextSegment.new(
       """And some  extra""", 1, 5, @[(9, 1, 29)], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1)
-      ], false),
+      ]),
    TextSegment.new(
       """added for effect""", 1, 42, @[], @[
          ScopeEntry.new("baz", ControlSequence, Group, 1)
-      ], false),
+      ]),
    TextSegment.new(
       """ .""", 1, 36, @[
          (0, 1, 36), # TODO: This may be undesired behavior
          (1, 1, 59),
-      ], @[], false),
+      ], @[]),
 ])
 
 
@@ -185,8 +181,8 @@ run_test("Uncaptured group nested in control sequence capture group",
          (8, 1, 15),
       ], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1),
-      ], false),
-   TextSegment.new("""""", 0, 0, @[], @[], false),
+      ]),
+   TextSegment.new("""""", 0, 0, @[], @[]),
 ])
 
 
