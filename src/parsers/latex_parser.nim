@@ -248,8 +248,6 @@ proc get_group_as_string(p: var LaTeXParser): string =
 
 
 proc parse_control_word(p: var LaTeXParser) =
-   # p.cs.pos = (p.tok.line, p.tok.col)
-   # p.cs.name = p.tok.token
    case p.tok.token
    of "begin":
       let env = get_group_as_string(p)
