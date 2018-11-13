@@ -92,18 +92,12 @@ proc close_parser*(p: var LaTeXParser) =
    close_lexer(p.lex)
 
 
-template pop_if_update(s: seq[Linebreak], lb: Linebreak) =
-   if not is_empty(s) and s[^1].pos == lb.pos:
-      discard pop(s)
-
-
 proc add_tok(p: var LaTeXParser) =
    if len(p.seg.text) == 0:
       p.seg.line = p.tok.line
       p.seg.col = p.tok.col
    elif p.tok.line > p.last_tok.line:
       let lb: Linebreak = (len(p.seg.text), p.tok.line)
-      pop_if_update(p.seg.linebreaks, lb)
       add(p.seg.linebreaks, lb)
 
    add(p.seg.text, p.tok.token)
