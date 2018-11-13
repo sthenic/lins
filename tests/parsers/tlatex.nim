@@ -43,11 +43,7 @@ several lines
 of text.""", @[
    TextSegment.new(
       "A sentence spanning several lines of text.", 1, 0,
-      @[
-         (20, 2, 0),
-         (34, 3, 0)
-      ],
-      @[])
+      @[(20, 2), (34, 3)], @[])
 ])
 
 
@@ -58,13 +54,7 @@ run_test("Multiline sentence, irregular spacing",
 text.""", @[
    TextSegment.new(
       "A sentence spanning several lines of text.", 1, 3,
-      @[
-         (11, 1, 15),
-         (20, 2, 2),
-         (28, 2, 12),
-         (34, 3, 1),
-         (37, 4, 0)
-      ], @[])
+      @[(20, 2), (34, 3), (37, 4)], @[])
 ])
 
 
@@ -73,35 +63,27 @@ text.""", @[
 run_test("Group w/o control sequence",
 """That's a {\bfseries bold} statement.""", @[
    TextSegment.new(
-      """That's a bold statement.""", 1, 0,
-      @[(9, 1, 20), (13, 1, 25)], @[])
+      """That's a bold statement.""", 1, 0, @[], @[])
 ])
 
 
 run_test("Option delimiters w/o control sequence",
 """That's a [\bfseries bold] statement.""", @[
    TextSegment.new(
-      """That's a [bold] statement.""", 1, 0,
-      @[(10, 1, 20)], @[])
+      """That's a [bold] statement.""", 1, 0, @[], @[])
 ])
 
 
 run_test("Control sequence in text, removed",
 """A sentence \foo with a control sequence.""", @[
    TextSegment.new(
-      """A sentence with a control sequence.""", 1, 0,
-      @[
-         (11, 1, 16),
-      ], @[])
+      """A sentence with a control sequence.""", 1, 0, @[], @[])
 ])
 
 run_test("Control sequence in text, expanded",
 """A sentence with \emph{emphasized} text.""", @[
    TextSegment.new(
-      """A sentence with emphasized text.""", 1, 0, @[
-         (16, 1, 22),
-         (26, 1, 33)
-      ], @[])
+      """A sentence with emphasized text.""", 1, 0, @[], @[])
 ])
 
 
@@ -112,9 +94,7 @@ run_test("Control sequence followed by a group",
          ScopeEntry.new("foo", ControlSequence, Group, 1)
       ]),
    TextSegment.new(
-      """A sentence with  another control sequence.""", 1, 0, @[
-         (16, 1, 34),
-      ], @[]),
+      """A sentence with  another control sequence.""", 1, 0, @[], @[]),
 ])
 
 
@@ -125,9 +105,7 @@ run_test("Control sequence followed by options",
          ScopeEntry.new("bar", ControlSequence, Option, 1)
       ]),
    TextSegment.new(
-      """Another sentence with a few options.""", 1, 0, @[
-         (22, 1, 47),
-      ], @[]),
+      """Another sentence with a few options.""", 1, 0, @[], @[]),
 ])
 
 
@@ -146,7 +124,7 @@ run_test("Control sequence followed by options and groups",
          ScopeEntry.new("mycontrolseq", ControlSequence, Group, 3)
       ]),
    TextSegment.new(
-      """Text before .""", 1, 0, @[(12, 1, 66)], @[]),
+      """Text before .""", 1, 0, @[], @[]),
 ])
 
 
@@ -158,7 +136,7 @@ run_test("Nested control sequences",
          ScopeEntry.new("bar", ControlSequence, Group, 1)
       ]),
    TextSegment.new(
-      """And some  extra""", 1, 5, @[(9, 1, 29)], @[
+      """And some  extra""", 1, 5, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1)
       ]),
    TextSegment.new(
@@ -166,20 +144,14 @@ run_test("Nested control sequences",
          ScopeEntry.new("baz", ControlSequence, Group, 1)
       ]),
    TextSegment.new(
-      """ .""", 1, 36, @[
-         (0, 1, 36), # TODO: This may be undesired behavior
-         (1, 1, 59),
-      ], @[]),
+      """ .""", 1, 36, @[], @[]),
 ])
 
 
 run_test("Uncaptured group nested in control sequence capture group",
 """\foo{And {some} text}""", @[
    TextSegment.new(
-      """And some text""", 1, 5, @[
-         (4, 1, 10),
-         (8, 1, 15),
-      ], @[
+      """And some text""", 1, 5, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1),
       ]),
    TextSegment.new("""""", 0, 0, @[], @[]),

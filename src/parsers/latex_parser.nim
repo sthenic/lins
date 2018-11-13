@@ -35,17 +35,16 @@ type
       segs: seq[TextSegment] # Completed segments
       scope: seq[ScopeEntry] # Complete scope
       scope_entry: ScopeEntry # Scope entry under construction
-      add_offset_pt: bool
       last_tok: TeXToken
       delimiter_count: int # Delimiter count
 
-   OffsetPoint* = tuple
-      pos, line, col: int
+   Linebreak* = tuple
+      pos, line: int
 
    TextSegment* = object
       text*: string
       line*, col*: int
-      offset_pts*: seq[OffsetPoint]
+      linebreaks*: seq[Linebreak]
       scope*: seq[ScopeEntry]
       expand*: bool
 
@@ -56,10 +55,11 @@ const EXPANDED_ENVIRONMENTS: seq[string] = @[]
 
 
 proc new*(t: typedesc[TextSegment], text: string, line, col: int,
-          offset_pts: seq[OffsetPoint], scope: seq[ScopeEntry],
+          linebreaks: seq[Linebreak], scope: seq[ScopeEntry],
           expand: bool = false): TextSegment =
    result = TextSegment(text: text, line: line, col: col,
-                        offset_pts: offset_pts, scope: scope, expand: expand)
+                        linebreaks: linebreaks, scope: scope, expand: expand)
+
 
 proc new*(t: typedesc[ScopeEntry], name: string, kind: ScopeKind,
           encl: Enclosure, count: int): ScopeEntry =
@@ -92,37 +92,20 @@ proc close_parser*(p: var LaTeXParser) =
    close_lexer(p.lex)
 
 
-template pop_if_update(s: seq[OffsetPoint], pt: OffsetPoint) =
-   if not is_empty(s) and s[^1].pos == pt.pos:
+template pop_if_update(s: seq[Linebreak], lb: Linebreak) =
+   if not is_empty(s) and s[^1].pos == lb.pos:
       discard pop(s)
-
-
-proc is_first_char(p: LaTeXParser): bool =
-   if is_empty(p.seg.offset_pts):
-      result = p.tok.line > p.seg.line
-   else:
-      result = p.tok.line > p.seg.offset_pts[^1].line
-
-
-proc is_skip(p: LaTeXParser): bool =
-   if len(p.seg.text) == 0:
-      result = false
-   elif p.tok.line - p.last_tok.line > 0:
-      result = true
-   elif p.tok.col - p.last_tok.col > 1:
-      result = true
 
 
 proc add_tok(p: var LaTeXParser) =
    if len(p.seg.text) == 0:
       p.seg.line = p.tok.line
       p.seg.col = p.tok.col
+   elif p.tok.line > p.last_tok.line:
+      let lb: Linebreak = (len(p.seg.text), p.tok.line)
+      pop_if_update(p.seg.linebreaks, lb)
+      add(p.seg.linebreaks, lb)
 
-   if p.add_offset_pt or is_skip(p):
-      let pt: OffsetPoint = (len(p.seg.text), p.tok.line, p.tok.col)
-      pop_if_update(p.seg.offset_pts, pt)
-      add(p.seg.offset_pts, pt)
-      p.add_offset_pt = false
    add(p.seg.text, p.tok.token)
    p.last_tok = p.tok
 
@@ -141,9 +124,6 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
    # capture groups following the \begin{env} statement.
    if not keep_scope:
       p.scope_entry = ScopeEntry()
-   # Explicitly set the parser state indicating that we should generate an
-   # offset point on the next character to false if we're entering an enclosure.
-   p.add_offset_pt = false
 
 
 proc end_enclosure(p: var LaTeXParser) =
@@ -153,18 +133,14 @@ proc end_enclosure(p: var LaTeXParser) =
    p.seg = pop(p.seg_stack)
    if inner.expand:
       # The completed segment should be expanded and added to the outer text
-      # segment. All the offset points of the inner segment gets added to the
+      # segment. All the linebreaks of the inner segment gets added to the
       # outer with modified positions (their coordinates are absolute).
       let outer_len = len(p.seg.text)
-      add(p.seg.offset_pts, (outer_len, inner.line, inner.col))
-      for pt in inner.offset_pts:
-         add(p.seg.offset_pts, (outer_len + pt.pos, pt.line, pt.col))
+      for lb in inner.linebreaks:
+         add(p.seg.linebreaks, (outer_len + lb.pos, lb.line))
       add(p.seg.text, inner.text)
    else:
       add(p.segs, inner)
-   # Signal that the next character added should also add an updated offset
-   # point.
-   p.add_offset_pt = true
    # Restore the scope entry.
    p.scope_entry = pop(p.scope)
 
@@ -180,10 +156,8 @@ proc parse_character(p: var LaTeXParser) =
    case p.tok.catcode
    of 1:
       # Beginning of group character. If the current scope entry is empty, this
-      # group does not belong to any object. We ignore the character but
-      # indicate that the next character added to the text segment should add
-      # an offset point. Additionally, we keep track of the delimiter count
-      # within the segment.
+      # group does not belong to any object.  Additionally, we keep track of the
+      # delimiter count within the segment.
       if not is_empty(p.scope_entry):
          p.scope_entry = ScopeEntry(name: p.scope_entry.name,
                                     kind: p.scope_entry.kind,
@@ -191,14 +165,12 @@ proc parse_character(p: var LaTeXParser) =
                                     count: p.scope_entry.count + 1)
          begin_enclosure(p, false, false)
       else:
-         p.add_offset_pt = true
          inc(p.delimiter_count)
       add_token = false
    of 2:
       if is_in_enclosure(p, Group) and p.delimiter_count == 0:
          end_enclosure(p)
       else:
-         p.add_offset_pt = true
          dec(p.delimiter_count)
       add_token = false
    of 12:
@@ -209,11 +181,9 @@ proc parse_character(p: var LaTeXParser) =
                                     count: p.scope_entry.count + 1)
          begin_enclosure(p, false, false)
          add_token = false
-         p.add_offset_pt = true
       elif p.tok.token == "]" and is_in_enclosure(p, Option):
          end_enclosure(p)
          add_token = false
-         p.add_offset_pt = true
    else:
       clear_scope(p)
 
@@ -284,10 +254,6 @@ proc parse_control_word(p: var LaTeXParser) =
                                     encl: Option, count: 1)
          begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name))
          get_token(p)
-      else:
-         # The control word is discarded from the input stream, the next
-         # character should add an offset point.
-         p.add_offset_pt = true
 
 
 proc parse_control_symbol(p: var LaTeXParser) =
