@@ -3,6 +3,7 @@ import terminal
 import strformat
 
 include ../../src/parsers/latex_parser
+include ../../src/utils/log
 
 var
    nof_passed = 0
@@ -157,6 +158,22 @@ run_test("Uncaptured group nested in control sequence capture group",
    TextSegment.new("""""", 0, 0, @[], @[]),
 ])
 
+
+run_test("Inline Math",
+"""A simple sentence with inline $xa_n(k)$ math.""", @[
+   TextSegment.new("xa_n(k)", 1, 31, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0)
+   ]),
+   TextSegment.new("A simple sentence with inline  math.", 1, 0, @[], @[])
+])
+
+run_test("Display math",
+"""A simple sentence with display $$xa_n(k)$$ math.""", @[
+   TextSegment.new("xa_n(k)", 1, 33, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0)
+   ]),
+   TextSegment.new("A simple sentence with display  math.", 1, 0, @[], @[])
+])
 
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")

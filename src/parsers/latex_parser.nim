@@ -15,11 +15,14 @@ type
       Option
       Group
       Environment
+      Math
+      DisplayMath
 
    ScopeKind {.pure.} = enum
       Invalid
       ControlSequence
       Environment
+      Math
 
    ScopeEntry = object
       name: string
@@ -53,6 +56,9 @@ const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$'}
 const EXPANDED_CONTROL_WORDS: seq[string] = @["emph", "textbf", "texttt"]
 const EXPANDED_ENVIRONMENTS: seq[string] = @[]
 
+# Forward declaration
+proc parse_character(p: var LaTeXParser)
+
 
 proc new*(t: typedesc[TextSegment], text: string, line, col: int,
           linebreaks: seq[Linebreak], scope: seq[ScopeEntry],
@@ -81,6 +87,7 @@ proc is_in_enclosure(p: LaTeXParser, encl: Enclosure): bool =
 proc get_token*(p: var LaTeXParser) =
    ## Get the next token from the lexer and store it in the `tok` member.
    get_token(p.lex, p.tok)
+   # echo p.tok
 
 
 proc open_parser*(p: var LaTeXParser, filename: string, s: Stream) =
@@ -143,48 +150,94 @@ proc clear_scope(p: var LaTeXParser) =
    p.scope_entry = ScopeEntry()
 
 
+proc handle_category_1(p: var LaTeXParser) =
+   # Beginning of group character. If the current scope entry is empty, this
+   # group does not belong to any object.  Additionally, we keep track of the
+   # delimiter count within the segment.
+   if not is_empty(p.scope_entry):
+      p.scope_entry = ScopeEntry(name: p.scope_entry.name,
+                                 kind: p.scope_entry.kind,
+                                 encl: Group,
+                                 count: p.scope_entry.count + 1)
+      begin_enclosure(p, false, false)
+   else:
+      inc(p.delimiter_count)
+   get_token(p)
+
+
+proc handle_category_2(p: var LaTeXParser) =
+   # Handle end of group characters.
+   if is_in_enclosure(p, Group) and p.delimiter_count == 0:
+      end_enclosure(p)
+   else:
+      dec(p.delimiter_count)
+   get_token(p)
+
+
+proc handle_category_3(p: var LaTeXParser) =
+   # Handle math shift characters.
+   if is_in_enclosure(p, Enclosure.DisplayMath):
+      # Ends with the next character.
+      end_enclosure(p)
+      get_token(p)
+      if p.tok.catcode != 3:
+         # Error condition.
+         # TODO: Display some warning or even raise an exception? Have to
+         # recursively call parse_character right now.
+         echo "Not good at all!"
+      get_token(p)
+   elif is_in_enclosure(p, Enclosure.Math):
+      # Ends with this character.
+      end_enclosure(p)
+      get_token(p)
+   else:
+      # Enclosure begins, peek the next character to determine the type
+      # of math enclosure. For display math, TeX requires that the '$$'
+      # delimiter occurs next to each other.
+      get_token(p)
+      if p.tok.catcode == 3:
+         p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
+                                    encl: Enclosure.DisplayMath)
+         begin_enclosure(p, false, false)
+         get_token(p)
+      else:
+         p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
+                                    encl: Enclosure.Math)
+         begin_enclosure(p, false, false)
+         # Recursively parse the character.
+         parse_character(p)
+
+
+proc handle_category_12(p: var LaTeXParser) =
+   # Handle 'other' characters.
+   if p.tok.token == "[" and not is_empty(p.scope_entry):
+      p.scope_entry = ScopeEntry(name: p.scope_entry.name,
+                                 kind: p.scope_entry.kind,
+                                 encl: Option,
+                                 count: p.scope_entry.count + 1)
+      begin_enclosure(p, false, false)
+   elif p.tok.token == "]" and is_in_enclosure(p, Option):
+      end_enclosure(p)
+   else:
+      add_tok(p)
+   get_token(p)
+
+
 proc parse_character(p: var LaTeXParser) =
-   var add_token = true
-   # A character token gets added to the text segment except in a few cases.
    # TODO: Maybe detect unbalanced grouping characters.
    case p.tok.catcode
    of 1:
-      # Beginning of group character. If the current scope entry is empty, this
-      # group does not belong to any object.  Additionally, we keep track of the
-      # delimiter count within the segment.
-      if not is_empty(p.scope_entry):
-         p.scope_entry = ScopeEntry(name: p.scope_entry.name,
-                                    kind: p.scope_entry.kind,
-                                    encl: Group,
-                                    count: p.scope_entry.count + 1)
-         begin_enclosure(p, false, false)
-      else:
-         inc(p.delimiter_count)
-      add_token = false
+      handle_category_1(p)
    of 2:
-      if is_in_enclosure(p, Group) and p.delimiter_count == 0:
-         end_enclosure(p)
-      else:
-         dec(p.delimiter_count)
-      add_token = false
+      handle_category_2(p)
+   of 3:
+      handle_category_3(p)
    of 12:
-      if p.tok.token == "[" and not is_empty(p.scope_entry):
-         p.scope_entry = ScopeEntry(name: p.scope_entry.name,
-                                    kind: p.scope_entry.kind,
-                                    encl: Option,
-                                    count: p.scope_entry.count + 1)
-         begin_enclosure(p, false, false)
-         add_token = false
-      elif p.tok.token == "]" and is_in_enclosure(p, Option):
-         end_enclosure(p)
-         add_token = false
+      handle_category_12(p)
    else:
       clear_scope(p)
-
-   if add_token:
       add_tok(p)
-
-   get_token(p)
+      get_token(p)
 
 
 proc get_group_as_string(p: var LaTeXParser): string =
