@@ -167,8 +167,24 @@ run_test("Inline Math",
    TextSegment.new("A simple sentence with inline  math.", 1, 0, @[], @[])
 ])
 
-run_test("Display math",
+run_test("Inline math with delimiters \\(, \\)",
+"""A simple sentence with inline \(xa_n(k)\) math.""", @[
+   TextSegment.new("xa_n(k)", 1, 32, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0)
+   ]),
+   TextSegment.new("A simple sentence with inline  math.", 1, 0, @[], @[])
+])
+
+run_test("Display math with delimiter $$",
 """A simple sentence with display $$xa_n(k)$$ math.""", @[
+   TextSegment.new("xa_n(k)", 1, 33, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0)
+   ]),
+   TextSegment.new("A simple sentence with display  math.", 1, 0, @[], @[])
+])
+
+run_test("Display math with delimiters \\[, \\]",
+"""A simple sentence with display \[xa_n(k)\] math.""", @[
    TextSegment.new("xa_n(k)", 1, 33, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0)
    ]),

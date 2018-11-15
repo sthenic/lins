@@ -10,6 +10,8 @@ import ../utils/log
 
 
 type
+   LaTeXParseError* = object of Exception
+
    Enclosure {.pure.} = enum
       Invalid
       Option
@@ -182,9 +184,8 @@ proc handle_category_3(p: var LaTeXParser) =
       get_token(p)
       if p.tok.catcode != 3:
          # Error condition.
-         # TODO: Display some warning or even raise an exception? Have to
-         # recursively call parse_character right now.
-         echo "Not good at all!"
+         raise new_exception(LaTeXParseError, "Display math section ended " &
+                             "without two characters of catcode 3, e.g. '$$'.")
       get_token(p)
    elif is_in_enclosure(p, Enclosure.Math):
       # Ends with this character.
@@ -307,7 +308,25 @@ proc parse_control_symbol(p: var LaTeXParser) =
    # TODO: Fix this indexing business?
    if p.tok.token[0] in ESCAPED_CHARACTERS:
       add_tok(p)
-   # TODO: \[ \] opens a math environment, handle that.
+   elif p.tok.token == "[":
+      # In LaTeX, '\[' is equivalent to plain TeX's '$$' which means that they
+      # may be interchanged to begin and end displayed math sections. However,
+      # the 'amsmath' package (which is widely used) redefines \[ to mean
+      # '\begin{equation*}', whereby the constructions can no longer be
+      # interchanged. Let's assume the user is a responsible adult and avoid
+      # doing delimter pairing which would allow us to raise a parse error.
+      p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
+                                 encl: Enclosure.DisplayMath)
+      begin_enclosure(p, false, false)
+   elif p.tok.token == "]" and is_in_enclosure(p, Enclosure.DisplayMath):
+      end_enclosure(p)
+   elif p.tok.token == "(":
+      p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
+                                 encl: Enclosure.Math)
+      begin_enclosure(p, false, false)
+   elif p.tok.token == ")" and is_in_enclosure(p, Enclosure.Math):
+      end_enclosure(p)
+
    get_token(p)
 
 
