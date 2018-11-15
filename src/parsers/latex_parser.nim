@@ -89,7 +89,6 @@ proc is_in_enclosure(p: LaTeXParser, encl: Enclosure): bool =
 proc get_token*(p: var LaTeXParser) =
    ## Get the next token from the lexer and store it in the `tok` member.
    get_token(p.lex, p.tok)
-   # echo p.tok
 
 
 proc open_parser*(p: var LaTeXParser, filename: string, s: Stream) =
@@ -268,27 +267,23 @@ proc get_group_as_string(p: var LaTeXParser): string =
 proc parse_control_word(p: var LaTeXParser) =
    case p.tok.token
    of "begin":
-      let env = get_group_as_string(p)
+      let env = get_group_as_string(p) # Stops at '}'
       p.scope_entry = ScopeEntry(name: env, kind: ScopeKind.Environment,
                                  encl: Enclosure.Environment)
       begin_enclosure(p, true, contains(EXPANDED_ENVIRONMENTS, env))
       get_token(p)
    of "end":
-      # TODO: Create bool testing functions for these kinds of expressions, i.e.
-      #       checking if the scope is empty and if not, validating the
-      #       enclosure closing conditions.
+      let env = get_group_as_string(p) # Stops at '}'
       if is_in_enclosure(p, Enclosure.Environment):
-         let env = get_group_as_string(p) # Stops at '}'
          end_enclosure(p)
+         if p.scope_entry.name != env:
+            raise new_exception(LaTeXParseError, "Environment name mismatch '" &
+                                env & "' closes '" & p.scope_entry.name & "'.")
          clear_scope(p)
          get_token(p) # Scan over '}'
-         if p.scope_entry.name != env:
-            echo "Environment name mismatch ", env, " != ", p.scope_entry.name
-         else:
-            echo "Closed matched environment"
       else:
-         echo "lonely environment end"
-         get_token(p)
+         raise new_exception(LaTeXParseError, "Environment " & env &
+                             "ended without matching begin statement.")
    else:
       var name = p.tok.token
       get_token(p)

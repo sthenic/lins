@@ -10,13 +10,15 @@ var
    nof_failed = 0
 
 
-template run_test(title, stimuli: string; reference: seq[TextSegment]) =
+template run_test(title, stimuli: string; reference: seq[TextSegment],
+                  debug: bool = false) =
    var response: seq[TextSegment] = @[]
    response = parse_string(stimuli)
    try:
       for i in 0..<response.len:
-         # echo response[i]
-         # echo reference[i]
+         if debug:
+            echo response[i]
+            echo reference[i]
          do_assert(response[i] == reference[i], "'" & $response[i] & "'")
       styledWriteLine(stdout, styleBright, fgGreen, "[✓] ",
                       fgWhite, "Test '",  title, "'")
@@ -167,6 +169,7 @@ run_test("Inline Math",
    TextSegment.new("A simple sentence with inline  math.", 1, 0, @[], @[])
 ])
 
+
 run_test("Inline math with delimiters \\(, \\)",
 """A simple sentence with inline \(xa_n(k)\) math.""", @[
    TextSegment.new("xa_n(k)", 1, 32, @[], @[
@@ -174,6 +177,7 @@ run_test("Inline math with delimiters \\(, \\)",
    ]),
    TextSegment.new("A simple sentence with inline  math.", 1, 0, @[], @[])
 ])
+
 
 run_test("Display math with delimiter $$",
 """A simple sentence with display $$xa_n(k)$$ math.""", @[
@@ -183,12 +187,24 @@ run_test("Display math with delimiter $$",
    TextSegment.new("A simple sentence with display  math.", 1, 0, @[], @[])
 ])
 
+
 run_test("Display math with delimiters \\[, \\]",
 """A simple sentence with display \[xa_n(k)\] math.""", @[
    TextSegment.new("xa_n(k)", 1, 33, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0)
    ]),
    TextSegment.new("A simple sentence with display  math.", 1, 0, @[], @[])
+])
+
+
+# Environments
+
+run_test("Environment on one line.",
+"""\begin{environment}Some words.\end{environment}""", @[
+   TextSegment.new("Some words.", 1, 19, @[], @[
+      ScopeEntry.new("environment", ScopeKind.Environment, Enclosure.Environment, 0)
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 # Print summary
