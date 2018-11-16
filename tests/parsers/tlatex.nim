@@ -90,6 +90,13 @@ run_test("Control sequence in text, expanded",
 ])
 
 
+run_test("Expanded control sequence at the beginning of the text segment",
+"""\emph{Emphasized} text.""", @[
+   TextSegment.new(
+      """Emphasized text.""", 1, 6, @[], @[])
+])
+
+
 run_test("Control sequence followed by a group",
 """A sentence with \foo{grouped text} another control sequence.""", @[
    TextSegment.new(
@@ -199,13 +206,260 @@ run_test("Display math with delimiters \\[, \\]",
 
 # Environments
 
-run_test("Environment on one line.",
+
+run_test("Empty environment", # Without any characters, the starting point is unknown.
+"""\begin{empty}\end{empty}""", @[
+   TextSegment.new("", 0, 0, @[], @[
+      ScopeEntry.new("empty", ScopeKind.Environment, Enclosure.Environment, 0),
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Environment on one line",
 """\begin{environment}Some words.\end{environment}""", @[
    TextSegment.new("Some words.", 1, 19, @[], @[
       ScopeEntry.new("environment", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
    TextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
+
+
+run_test("Environment spanning several lines",
+"""
+\begin{tabular}%
+Some words. Continuing on
+many
+lines.
+\end{tabular}""", @[
+   TextSegment.new("Some words. Continuing on many lines. ", 2, 0, @[
+      (26, 3), (31, 4)
+   ], @[
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Environment with nested control sequence, removed",
+"""
+\begin{tabular}%
+The quick brown
+fox jumps over the \foo
+lazy dog.
+\end{tabular}""", @[
+   TextSegment.new("The quick brown fox jumps over the lazy dog. ", 2, 0, @[
+      (16, 3), (35, 4)
+   ], @[
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Environment with nested control sequence, emitted",
+"""
+\begin{tabular}%
+The quick brown
+fox jumps \bar{over the}
+lazy dog.
+\end{tabular}""", @[
+   TextSegment.new("over the", 3, 15, @[], @[
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("bar", ControlSequence, Group, 1)
+   ]),
+   TextSegment.new("The quick brown fox jumps  lazy dog. ", 2, 0, @[
+      (16, 3), (27, 4)
+   ], @[
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Environment with nested control sequence, expanded",
+"""
+\begin{tabular}%
+The quick brown
+fox jumps \texttt{over the}
+lazy dog.
+\end{tabular}""", @[
+   TextSegment.new("The quick brown fox jumps over the lazy dog. ", 2, 0, @[
+      (16, 3), (35, 4)
+   ], @[
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Environment with space token after closing brace",
+"""
+\begin{tabular}
+The quick brown fox jumps over the lazy dog.
+\end{tabular}""", @[
+   TextSegment.new(" The quick brown fox jumps over the lazy dog. ", 1, 15, @[
+      (1, 2)
+   ], @[
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Environment nested in a control sequence",
+"""
+\vbox{
+   \begin{tabular}%
+   The quick brown fox jumps over the lazy dog.
+   \end{tabular}
+}""", @[
+   TextSegment.new("The quick brown fox jumps over the lazy dog. ", 3, 3,
+      @[], @[
+      ScopeEntry.new("vbox", ControlSequence, Group, 1),
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ]),
+   TextSegment.new("  ", 1, 6, @[(1, 4)], @[
+      ScopeEntry.new("vbox", ControlSequence, Group, 1)
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Environment followed by a group",
+"""
+\begin{mytext}{Capture group 1}%
+A simple sentence.
+\end{mytext}""", @[
+   TextSegment.new("Capture group 1", 1, 15, @[], @[
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 1)
+   ]),
+   TextSegment.new("A simple sentence. ", 2, 0, @[], @[
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Environment followed by options",
+"""
+\begin{mytext}[a few optional parameters]%
+A simple sentence.
+\end{mytext}""", @[
+   TextSegment.new("a few optional parameters", 1, 15, @[], @[
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Option, 1)
+   ]),
+   TextSegment.new("A simple sentence. ", 2, 0, @[], @[
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Environment followed by options and groups",
+"""
+\begin{mytext}[up to you to include]{required capture group}{also required}%
+A simple sentence.
+\end{mytext}""", @[
+   TextSegment.new("up to you to include", 1, 15, @[], @[
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Option, 1)
+   ]),
+   TextSegment.new("required capture group", 1, 37, @[], @[
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 2)
+   ]),
+   TextSegment.new("also required", 1, 61, @[], @[
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 3)
+   ]),
+   TextSegment.new("A simple sentence. ", 2, 0, @[], @[
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Starred environment",
+"""
+\begin{mystar*}%
+Contents of a starred environment.
+\end{mystar*}""", @[
+   TextSegment.new("Contents of a starred environment. ", 2, 0, @[], @[
+      ScopeEntry.new("mystar*", ScopeKind.Environment, Enclosure.Environment, 0),
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Table environment: table nested with tabular",
+"""
+\begin{table}%
+\begin{tabular}{ll}%
+\textbf{Header column 0} & \textbf{Header column 1} \\\hline
+Row 0, column 0 & Row 0, column 1 \\\hline
+Row 1, column 0 & Row 1, column 1 \\\hline
+Row 2, column 0 & Row 2, column 1
+\end{tabular}
+\end{table}""", @[
+   TextSegment.new("ll", 2, 16, @[], @[
+      ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Group, 1),
+   ]),
+   TextSegment.new("Header column 0 & Header column 1 Row 0, column 0 & Row 0, column 1 Row 1, column 0 & Row 1, column 1 Row 2, column 0 & Row 2, column 1 ",
+   3, 8, @[(34, 4), (68, 5), (102, 6)], @[
+      ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ]),
+   TextSegment.new(" ", 7, 13, @[], @[
+      ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
+   ]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
+run_test("Complex environment",
+"""
+\begin{tgtab}{%
+  header={\textbf{Column 0} & \textbf{Column 1} & \textbf{Column 2}},
+  numcols=3,
+  footer={This is some footer text.},
+  caption={This is the table caption.}
+}{}
+Row 0, column 0 & Row 0, column 1 & Row 0, column 2 \\
+Row 1, column 0 & Row 1, column 1 & Row 1, column 2 \\
+Row 2, column 0 & Row 2, column 1 & Row 2, column 2
+\end{tgtab}
+""", @[
+   TextSegment.new("header=Column 0 & Column 1 & Column 2, " &
+                   "numcols=3, footer=This is some footer text., " &
+                   "caption=This is the table caption. ", 2, 2,
+   @[
+      (39, 3), (50, 4), (84, 5)
+   ], @[
+      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 1)
+   ]),
+   TextSegment.new("", 0, 0, @[], @[
+      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 2)
+   ]),
+   TextSegment.new(" Row 0, column 0 & Row 0, column 1 & Row 0, column 2  " &
+                   "Row 1, column 0 & Row 1, column 1 & Row 1, column 2  " &
+                   "Row 2, column 0 & Row 2, column 1 & Row 2, column 2 ", 6, 3,
+   @[
+      (1, 7), (54, 8), (107, 9)
+   ], @[
+      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
+   ]),
+   TextSegment.new(" ", 10, 11, @[], @[]),
+   TextSegment.new("", 0, 0, @[], @[]) # Empty segment
+])
+
+
 
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
