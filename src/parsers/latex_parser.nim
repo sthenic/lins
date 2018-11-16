@@ -58,8 +58,9 @@ const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$'}
 const EXPANDED_CONTROL_WORDS: seq[string] = @["emph", "textbf", "texttt"]
 const EXPANDED_ENVIRONMENTS: seq[string] = @[]
 
-# Forward declaration
+# Forward declarations
 proc parse_character(p: var LaTeXParser)
+proc parse_token(p: var LaTeXParser)
 
 
 proc new*(t: typedesc[TextSegment], text: string, line, col: int,
@@ -105,8 +106,7 @@ proc add_tok(p: var LaTeXParser) =
       p.seg.line = p.tok.line
       p.seg.col = p.tok.col
    elif p.tok.line > p.last_tok.line:
-      let lb: Linebreak = (len(p.seg.text), p.tok.line)
-      add(p.seg.linebreaks, lb)
+      add(p.seg.linebreaks, (len(p.seg.text), p.tok.line))
 
    add(p.seg.text, p.tok.token)
    p.last_tok = p.tok
@@ -204,8 +204,8 @@ proc handle_category_3(p: var LaTeXParser) =
          p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
                                     encl: Enclosure.Math)
          begin_enclosure(p, false, false)
-         # Recursively parse the character.
-         parse_character(p)
+         # Recursively parse the token.
+         parse_token(p)
 
 
 proc handle_category_12(p: var LaTeXParser) =
