@@ -168,7 +168,7 @@ run_test("Uncaptured group nested in control sequence capture group",
 ])
 
 
-run_test("Inline Math",
+run_test("Inline math",
 """A simple sentence with inline $xa_n(k)$ math.""", @[
    TextSegment.new("xa_n(k)", 1, 31, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0)

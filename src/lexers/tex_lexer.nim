@@ -208,11 +208,12 @@ proc handle_category_7(l: var TeXLexer, tok: var TeXToken) =
       get_token(l, tok)
       pos = l.bufpos
    else:
-      # Regular superscript character
+      # Regular superscript character, append and move to state M.
       tok.token_type = Character
       tok.token = $l.buf[pos]
       tok.catcode = 7
       inc(pos)
+      l.state = StateM
 
    l.bufpos = pos
 
