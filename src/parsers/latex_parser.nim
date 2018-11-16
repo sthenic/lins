@@ -259,8 +259,8 @@ proc get_group_as_string(p: var LaTeXParser): string =
          elif p.tok.catcode == 2:
             dec(count)
          elif p.tok.token_type == EndOfFile:
-            echo "Unexpected end of file." # TODO: Error handling
-            break
+            raise new_exception(LaTeXParseError, "Unexpected end of file " &
+                                "when parsing capture group.")
          else:
             add(result, p.tok.token)
          if count == 0:
@@ -337,9 +337,10 @@ proc parse_token(p: var LaTeXParser) =
    of ControlWord: parse_control_word(p)
    of ControlSymbol: parse_control_symbol(p)
    else:
-      # Seems to parse the first invalid token
-      echo "Some error!", p.tok
-      get_token(p)
+      # We should raise an exception if we're forced to parse a token that is
+      # not one of the above. Currently, that's 'Invalid' and "EndOfFile'.
+      raise new_exception(LaTeXParseError,
+                          "Parser encountered an invalid token: " & $p.tok)
 
 
 proc parse_all*(p: var LaTeXParser): seq[TextSegment] =
