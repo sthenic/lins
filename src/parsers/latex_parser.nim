@@ -136,8 +136,13 @@ proc end_enclosure(p: var LaTeXParser) =
    if inner.expand:
       # The completed segment should be expanded and added to the outer text
       # segment. All the linebreaks of the inner segment gets added to the
-      # outer with modified positions (their coordinates are absolute).
+      # outer with modified positions (their coordinates are absolute). If the
+      # outer segment has length zero, we also pass on the segment starting
+      # position.
       let outer_len = len(p.seg.text)
+      if outer_len == 0:
+         p.seg.line = inner.line
+         p.seg.col = inner.col
       for lb in inner.linebreaks:
          add(p.seg.linebreaks, (outer_len + lb.pos, lb.line))
       add(p.seg.text, inner.text)
