@@ -14,7 +14,7 @@ type
 
    PlainToken* = object
       token_type*: PlainTokenType
-      token: string
+      token*: string
       line*, col*: int
 
    State = enum
