@@ -1,4 +1,4 @@
-import yaml.serialization
+import yaml/serialization
 import streams
 import tables
 import typetraits

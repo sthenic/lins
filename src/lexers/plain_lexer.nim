@@ -10,7 +10,7 @@ type PlainTextLexerFileIOError* = object of Exception
 type
    Sentence* = tuple
       str: seq[Rune]
-      newlines: seq[int]
+      offset_pts: seq[tuple[pos, row, col: int]]
       par_idx: int
       row_begin: int
       col_begin: int
@@ -45,7 +45,7 @@ const
       toRunes("st.")
    ]
 
-# Forward declarations of conditions and transisiton callback functions.
+# Forward declarations of conditions and transition callback functions.
 proc is_letter(meta: PlainTextMeta, stimuli: Rune): bool
 proc is_digit(meta: PlainTextMeta, stimuli: Rune): bool
 proc is_not_capital_letter(meta: PlainTextMeta, stimuli: Rune): bool
@@ -227,14 +227,14 @@ proc is_abbreviation(meta: PlainTextMeta, stimuli: Rune): bool =
       if ($meta.sentence.str & $stimuli).ends_with($abr):
          return true
 
-proc dead_state_callback(meta: var PlainTextMeta, stimul: Rune) =
+proc dead_state_callback(meta: var PlainTextMeta, stimuli: Rune) =
    # Invoke the callback function for a completed sentence.
    if not is_nil(meta.sentence_callback):
       meta.sentence_callback(meta.sentence)
 
    # Reset
    meta.sentence.str = @[]
-   meta.sentence.newlines = @[]
+   meta.sentence.offset_pts = @[]
 
 # Transition callbacks
 proc append(meta: var PlainTextMeta, stimuli: Rune) =
@@ -263,7 +263,7 @@ proc prepend_accumulated_ws(meta: var PlainTextMeta, stimuli: Rune) =
    meta.ws = @[]
 
 proc prepend_space_incr_nl(meta: var PlainTextMeta, stimuli: Rune) =
-   meta.sentence.newlines.add(meta.sentence.str.len)
+   meta.sentence.offset_pts.add((meta.sentence.str.len, 1, 0))
    prepend_space(meta, stimuli)
 
 proc prepend_space(meta: var PlainTextMeta, stimuli: Rune) =
@@ -290,7 +290,7 @@ proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
       meta: PlainTextMeta =
          (row: row_init, col: col_init, new_par: true, ws: @[],
           sentence_callback: callback,
-          sentence: (str: @[], newlines: @[], par_idx: 0, row_begin: 0,
+          sentence: (str: @[], offset_pts: @[], par_idx: 0, row_begin: 0,
                      col_begin: 0, row_end: 1, col_end: 1))
 
    # Reset the state machine.
@@ -314,7 +314,7 @@ proc lex*(s: Stream, callback: proc (s: Sentence), row_init, col_init: int) =
                s.set_position(pos_last_final)
             except IOError:
                log.abort(PlainTextLexerFileIOError,
-                         "Failed to seek to position $#.", $pos_last_final)
+                         "Failed to seek to position $1.", $pos_last_final)
 
             # Reset the state machine
             state_machine.reset(sm)

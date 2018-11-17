@@ -108,24 +108,28 @@ proc create_violation(r: Rule, pos: Position,
 # sentence (one-dimensional) and the (original) newline positions within the
 # sencence.
 proc calculate_position(r: Rule, row_begin, col_begin: int,
-                        offset_violation: int, newlines: seq[int]): Position =
-   if newlines.len == 0:
+                        offset_violation: int,
+                        offset_pts: seq[tuple[pos, row, col: int]]): Position =
+   if offset_pts.len == 0:
       return (row_begin, col_begin + offset_violation - 1)
    else:
       var
          i = 0
          offset_closest_newline = 0
          col = col_begin + offset_violation - 1
+         row = row_begin
 
-      while newlines[i] <= offset_violation:
-         offset_closest_newline = newlines[i]
-         col = offset_violation
+      while offset_pts[i].pos <= offset_violation:
+         offset_closest_newline = offset_pts[i].pos
+         col = offset_violation + offset_pts[i].col
+         row += offset_pts[i].row
 
          i += 1
-         if i == newlines.len:
+         if i == offset_pts.len:
             break
 
-      return (row_begin + i, col - offset_closest_newline)
+      return (row, col - offset_closest_newline)
+
 
 method enforce*(r: Rule, sentence: Sentence): seq[Violation] {.base.}  =
    log.abort(EnforceNotImplementedError,
@@ -153,7 +157,7 @@ method enforce*(r: RuleExistence, sentence: Sentence): seq[Violation] =
       let violation_pos = r.calculate_position(sentence.row_begin,
                                                sentence.col_begin,
                                                m.match_bounds.a + 1,
-                                               sentence.newlines)
+                                               sentence.offset_pts)
 
       violations.add(r.create_violation(violation_pos, $m))
 
@@ -190,7 +194,7 @@ method enforce*(r: RuleSubstitution, sentence: Sentence): seq[Violation] =
       let violation_pos = r.calculate_position(sentence.row_begin,
                                                sentence.col_begin,
                                                mpos + 1,
-                                               sentence.newlines)
+                                               sentence.offset_pts)
       # If we have found a match, we have to do a costly search through the
       # substitution table in search of a key (an uncompiled regex string)
       # that will yield a match achored at the position reported above. If the
@@ -332,7 +336,7 @@ method enforce*(r: RuleRepetition, sentence: Sentence): seq[Violation] =
          let violation_pos = r.calculate_position(sentence.row_begin,
                                                   sentence.col_begin,
                                                   m.match_bounds.a + 1,
-                                                  sentence.newlines)
+                                                  sentence.offset_pts)
 
          violations.add(r.create_violation(violation_pos, $m))
 
@@ -390,7 +394,7 @@ method enforce*(r: RuleConsistency, sentence: Sentence): seq[Violation] =
          let violation_pos = r.calculate_position(sentence.row_begin,
                                                   sentence.col_begin,
                                                   m.match_bounds.a + 1,
-                                                  sentence.newlines)
+                                                  sentence.offset_pts)
 
          violations.add(r.create_violation(violation_pos, $m))
 
@@ -402,7 +406,7 @@ method enforce*(r: RuleConsistency, sentence: Sentence): seq[Violation] =
          let violation_pos = r.calculate_position(sentence.row_begin,
                                                   sentence.col_begin,
                                                   m.match_bounds.a + 1,
-                                                  sentence.newlines)
+                                                  sentence.offset_pts)
 
          violations.add(r.create_violation(violation_pos, $m))
 
@@ -458,7 +462,7 @@ method enforce*(r: RuleDefinition, sentence: Sentence): seq[Violation] =
          let pos = r.calculate_position(sentence.row_begin,
                                         sentence.col_begin,
                                         m_def.capture_bounds[0].get.a + 1,
-                                        sentence.newlines)
+                                        sentence.offset_pts)
 
          if r.definitions.has_key_or_put(def, pos):
             # TODO: Insert this warning message into a custom violation and
@@ -486,7 +490,7 @@ method enforce*(r: RuleDefinition, sentence: Sentence): seq[Violation] =
          let (row_decl, col_decl) =
             r.calculate_position(sentence.row_begin, sentence.col_begin,
                                  m_decl.capture_bounds[0].get.a + 1,
-                                 sentence.newlines)
+                                 sentence.offset_pts)
 
          var is_violated = false
          if not r.definitions.has_key(decl):
@@ -561,7 +565,7 @@ method enforce*(r: RuleConditional, sentence: Sentence): seq[Violation] =
          (row_first, col_first) =
             r.calculate_position(sentence.row_begin, sentence.col_begin,
                                  m_first.get.capture_bounds[0].get.a + 1,
-                                 sentence.newlines)
+                                 sentence.offset_pts)
 
          r.first_observed = true
 
@@ -576,7 +580,7 @@ method enforce*(r: RuleConditional, sentence: Sentence): seq[Violation] =
       let (row_second, col_second) =
          r.calculate_position(sentence.row_begin, sentence.col_begin,
                               m_second.match_bounds.a + 1, # TODO: Group here?
-                              sentence.newlines)
+                              sentence.offset_pts)
       if (not r.first_observed or
           (row_first == row_second and col_first > col_second) or
           (row_first > row_second)):

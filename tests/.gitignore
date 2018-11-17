@@ -1,0 +1,3 @@
+# Exclude everything in the subdirs, except .nim files.
+*/*
+!*/*.nim
