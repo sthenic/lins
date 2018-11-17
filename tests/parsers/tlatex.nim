@@ -460,6 +460,53 @@ Row 2, column 0 & Row 2, column 1 & Row 2, column 2
 ])
 
 
+run_test("Pangrams: Swedish",
+"""Flygande bäckasiner söka hwila på mjuka tuvor.""", @[
+   TextSegment.new("Flygande bäckasiner söka hwila på mjuka tuvor.", 1, 0, @[], @[]),
+   TextSegment.new("", 0, 0, @[], @[]), # Empty segment
+])
+
+
+run_test("Pangrams: French",
+"""Ça me fait peur de fêter noël là, sur cette île bizarroïde où une mère et sa môme essaient de me tuer avec un gâteau à la cigüe brûlé.""", @[
+   TextSegment.new("Ça me fait peur de fêter noël là, sur cette île bizarroïde où une mère et sa môme essaient de me tuer avec un gâteau à la cigüe brûlé.", 1, 0, @[], @[]),
+   TextSegment.new("", 0, 0, @[], @[]), # Empty segment
+])
+
+
+run_test("Pangrams: German",
+"""Falsches Üben von Xylophonmusik quält jeden größeren Zwerg""", @[
+   TextSegment.new("Falsches Üben von Xylophonmusik quält jeden größeren Zwerg", 1, 0, @[], @[]),
+   TextSegment.new("", 0, 0, @[], @[]), # Empty segment
+])
+
+
+run_test("Pangrams: Spanish",
+"""Benjamín pidió una bebida de kiwi y fresa; Noé, sin vergüenza, la más exquisita champaña del menú.""", @[
+   TextSegment.new("Benjamín pidió una bebida de kiwi y fresa; Noé, sin vergüenza, la más exquisita champaña del menú.", 1, 0, @[], @[]),
+   TextSegment.new("", 0, 0, @[], @[]), # Empty segment
+])
+
+
+run_test("Pangrams: Greek",
+"""Ταχίστη αλώπηξ βαφής ψημένη γη, δρασκελίζει υπέρ νωθρού κυνός Takhístè alôpèx vaphês psèménè gè, draskelízei ypér nòthroý kynós""", @[
+   TextSegment.new("Ταχίστη αλώπηξ βαφής ψημένη γη, δρασκελίζει υπέρ νωθρού κυνός Takhístè alôpèx vaphês psèménè gè, draskelízei ypér nòthroý kynós", 1, 0, @[], @[]),
+   TextSegment.new("", 0, 0, @[], @[]), # Empty segment
+])
+
+
+run_test("Pangrams: Czech",
+"""Nechť již hříšné saxofony ďáblů rozezvučí síň úděsnými tóny waltzu, tanga a quickstepu.""", @[
+   TextSegment.new("Nechť již hříšné saxofony ďáblů rozezvučí síň úděsnými tóny waltzu, tanga a quickstepu.", 1, 0, @[], @[]),
+   TextSegment.new("", 0, 0, @[], @[]), # Empty segment
+])
+
+
+run_test("Pangrams: Japanese",
+"""いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす（ん）""", @[
+   TextSegment.new("いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす（ん）", 1, 0, @[], @[]),
+   TextSegment.new("", 0, 0, @[], @[]), # Empty segment
+],)
 
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
