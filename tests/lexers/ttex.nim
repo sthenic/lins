@@ -384,6 +384,89 @@ run_test("Invalid character, removed", # Should we raise an exception?
    TeXToken.new(Character, 11, "d", 1, 9),
 ])
 
+# Non-english characters, Unicode etc.
+run_test("Non-ASCII characters: Swedish",
+"""åäöÅÄÖ""", @[
+   TeXToken.new(Character, 12, "\xC3", 1, 0),
+   TeXToken.new(Character, 12, "\xA5", 1, 1),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 2),
+   TeXToken.new(Character, 12, "\xA4", 1, 3),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 4),
+   TeXToken.new(Character, 12, "\xB6", 1, 5),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 6),
+   TeXToken.new(Character, 12, "\x85", 1, 7),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 8),
+   TeXToken.new(Character, 12, "\x84", 1, 9),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 10),
+   TeXToken.new(Character, 12, "\x96", 1, 11),
+])
+
+run_test("Non-ASCII characters: French",
+"""Çêëèéàâûùüôîï""", @[
+   TeXToken.new(Character, 12, "\xC3", 1, 0),
+   TeXToken.new(Character, 12, "\x87", 1, 1),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 2),
+   TeXToken.new(Character, 12, "\xAA", 1, 3),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 4),
+   TeXToken.new(Character, 12, "\xAB", 1, 5),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 6),
+   TeXToken.new(Character, 12, "\xA8", 1, 7),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 8),
+   TeXToken.new(Character, 12, "\xA9", 1, 9),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 10),
+   TeXToken.new(Character, 12, "\xA0", 1, 11),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 12),
+   TeXToken.new(Character, 12, "\xA2", 1, 13),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 14),
+   TeXToken.new(Character, 12, "\xBB", 1, 15),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 16),
+   TeXToken.new(Character, 12, "\xB9", 1, 17),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 18),
+   TeXToken.new(Character, 12, "\xBC", 1, 19),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 20),
+   TeXToken.new(Character, 12, "\xB4", 1, 21),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 22),
+   TeXToken.new(Character, 12, "\xAE", 1, 23),
+
+   TeXToken.new(Character, 12, "\xC3", 1, 24),
+   TeXToken.new(Character, 12, "\xAF", 1, 25),
+])
+
+run_test("Non-ASCII characters: German",
+"""ß""", @[
+   TeXToken.new(Character, 12, "\xC3", 1, 0),
+   TeXToken.new(Character, 12, "\x9F", 1, 1),
+])
+
+run_test("Non-ASCII characters: Emojis",
+"""😆😇""", @[
+   TeXToken.new(Character, 12, "\xF0", 1, 0),
+   TeXToken.new(Character, 12, "\x9F", 1, 1),
+   TeXToken.new(Character, 12, "\x98", 1, 2),
+   TeXToken.new(Character, 12, "\x86", 1, 3),
+
+   TeXToken.new(Character, 12, "\xF0", 1, 4),
+   TeXToken.new(Character, 12, "\x9F", 1, 5),
+   TeXToken.new(Character, 12, "\x98", 1, 6),
+   TeXToken.new(Character, 12, "\x87", 1, 7),
+])
+
 
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
