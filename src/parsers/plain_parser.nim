@@ -3,6 +3,7 @@ import strutils
 
 import ../lexers/plain_lexer
 import ../utils/log
+import ./base_parser
 
 type
    PlainParseError* = object of Exception
@@ -18,18 +19,11 @@ type
       last_tok: PlainToken
       par_idx: int
 
-   Linebreak* = tuple
-      pos, line: int
-
-   PlainTextSegment* = object
-      text*: string
-      line*, col*: int
-      linebreaks*: seq[Linebreak]
-      scope*: seq[PlainScopeEntry]
+   PlainTextSegment* = object of TextSegment
+      par_idx*: int
 
 
 proc get_token*(p: var PlainParser) =
-   ## Get the next token from the lexer and store it in the `tok` member.
    get_token(p.lex, p.tok)
 
 
@@ -62,7 +56,7 @@ proc parse_paragraph_break(p: var PlainParser) =
    add(p.segs, p.seg)
    inc(p.par_idx)
    p.seg = PlainTextSegment()
-   add(p.seg.scope, PlainScopeEntry(par_idx: p.par_idx))
+   p.seg.par_idx = p.par_idx
    get_token(p)
 
 
