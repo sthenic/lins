@@ -13,6 +13,12 @@ task tests, "Run the test suite":
    setCommand "nop"
 
 
+task plaintests, "Run the plain text lexer test suite":
+   withDir("tests"):
+      exec("nim c -r lexers/tplain")
+   setCommand "nop"
+
+
 task textests, "Run the TeX lexer test suite":
    withDir("tests"):
       exec("nim c -r lexers/ttex")
