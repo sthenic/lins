@@ -23,6 +23,7 @@ const ESUCCESS = 0
 const EINVAL = -1
 const ENORULES = -2
 const EFILE = -3
+const EPARSE = -4
 
 const STATIC_HELP_TEXT = static_read("help_cli.txt")
 let HELP_TEXT = "Lins v" & VERSION_STR & "\n\n" & STATIC_HELP_TEXT
@@ -99,8 +100,10 @@ if not (cli_state.files == @[]):
       found_violations = lint_files(cli_state.files, lint_rules,
                                     cli_state.row_init, cli_state.col_init,
                                     debug_options)
-   except PlainTextLinterFileIOError:
+   except PlainLinterFileIOError:
       quit(EFILE)
+   except PlainLinterParseError:
+      quit(EPARSE)
 
 elif cli_state.has_arguments:
    # If the input file list is empty but the user has provided at least one
@@ -117,8 +120,12 @@ else:
    var tmp = ""
    while stdin.read_line(tmp):
       text.add(tmp & "\n")
-   found_violations = lint_string(text, lint_rules, cli_state.row_init,
-                                  cli_state.col_init, debug_options)
+
+   try:
+      found_violations = lint_string(text, lint_rules, cli_state.row_init,
+                                    cli_state.col_init, debug_options)
+   except PlainLinterParseError:
+      quit(EPARSE)
 
 if found_violations:
    quit(EVIOL)

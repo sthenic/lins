@@ -9,14 +9,15 @@ import sequtils
 
 import ../utils/log
 import ../rules/rules
-import ../rules/plain_rules # TODO: What happens w/ enforce if this is omitted?
+import ../rules/plain_rules
 import ../parsers/plain_parser
 
-type
-   PlainTextLinterFileIOError* = object of Exception
-   PlainTextLinterValueError* = object of Exception
 
 type
+   PlainLinterFileIOError* = object of Exception
+   PlainLinterValueError* = object of Exception
+   PlainLinterParseError* = object of Exception
+
    ViolationCount = tuple
       error: int
       warning: int
@@ -75,7 +76,7 @@ proc print_violation(v: Violation) =
       severity_str = "error"
       severity_color = fgRed
    else:
-      log.abort(PlainTextLinterValueError, "Unsupported severity level '$#'.",
+      log.abort(PlainLinterValueError, "Unsupported severity level '$1'.",
                 $v.severity)
 
    call_styled_write_line(&" {v.position.line:>4}:{v.position.col:<5} ",
@@ -128,13 +129,13 @@ proc parse_debug_options(debug_options: PlainDebugOptions) =
       lexer_output_fs = new_file_stream(debug_options.lexer_output_filename,
                                         fmWrite)
       if is_nil(lexer_output_fs):
-         log.error("Failed to open file '$#' for writing.",
+         log.error("Failed to open file '$1' for writing.",
                    debug_options.lexer_output_filename)
       else:
-         log.info("Lexer output will be written to file '$#'.",
+         log.info("Lexer output will be written to file '$1'.",
                   debug_options.lexer_output_filename)
 
-proc lint_sentence(seg: PlainTextSegment) =
+proc lint_segment(seg: PlainTextSegment) =
    var violations: seq[Violation] = @[]
 
    if not is_nil(lexer_output_fs):
@@ -160,9 +161,9 @@ proc lint_sentence(seg: PlainTextSegment) =
 
       print_violation(v)
 
-
+# TODO: Think about how best to add line and col initialization values.
 proc lint_files*(file_list: seq[string], rules: seq[Rule],
-                 row_init, col_init: int,
+                 line_init, col_init: int,
                  debug_options: PlainDebugOptions): bool =
    var t_start, t_stop, delta_analysis: float
    lint_rules = rules
@@ -179,26 +180,24 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
       # in the file.
       var fs = new_file_stream(filename, fmRead)
       if is_nil(fs):
-         log.abort(PlainTextLinterFileIOError,
-                   "Failed to open input file '$#' for reading.", filename)
+         log.abort(PlainLinterFileIOError,
+                   "Failed to open input file '$1' for reading.", filename)
 
       print_header(filename)
 
       try:
          var p: PlainParser
-         t_start = cpu_time()
          open_parser(p, filename, fs)
-         let segs = parse_all(p)
-         close_parser(p)
-         # plain_lexer.lex(fs, lint_sentence, row_init, col_init)
-         for seg in segs:
-            lint_sentence(seg)
+         t_start = cpu_time()
+         for seg in parse_all(p):
+            lint_segment(seg)
          t_stop = cpu_time()
-      except PlainParseError:
+         close_parser(p)
+      except PlainParseError as e:
          # Catch and reraise the exception with a type local to this module.
-         # Callers are not aware of the lexing process.
-         raise new_exception(PlainTextLinterFileIOError,
-                             "FileIO exception while lexing file.")
+         # Callers are not aware of the lexing and parsing process.
+         log.abort(PlainLinterParseError,
+                   "Parse error when processing file '$1'.", filename)
 
       delta_analysis += (t_stop - t_start) * 1000.0
 
@@ -216,7 +215,34 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
    print_footer(delta_analysis, nof_violations_total, nof_files)
 
 
-proc lint_string*(str: string, rules: seq[Rule],
-                  row_init, col_init: int,
+proc lint_string*(str: string, rules: seq[Rule], line_init, col_init: int,
                   debug_options: PlainDebugOptions): bool =
-   discard
+   var t_start, t_stop: float
+   lint_rules = rules
+   result = true
+
+   parse_debug_options(debug_options)
+
+   var ss = new_string_stream(str)
+
+   print_header("String input")
+
+   try:
+      var p: PlainParser
+      open_parser(p, "stdin", ss)
+      t_start = cpu_time()
+      for seg in parse_all(p):
+         lint_segment(seg)
+      t_stop = cpu_time()
+      close_parser(p)
+   except PlainParseError:
+      log.abort(PlainLinterParseError,
+                "Parse error when processing input from stdin.")
+
+   if (nof_violations_file.error == 0 and
+       nof_violations_file.warning == 0 and
+       nof_violations_file.suggestion == 0):
+      result = false
+      echo "No style errors found."
+
+   print_footer((t_stop - t_start) * 1000.0, nof_violations_file, 0)

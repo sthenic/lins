@@ -6,7 +6,7 @@ import ../utils/log
 import ./base_parser
 
 type
-   PlainParseError* = object of Exception
+   PlainParseError* = object of ParseError
 
    PlainScopeEntry = object
       par_idx: int
@@ -68,8 +68,8 @@ proc parse_token(p: var PlainParser) =
    else:
       # We should raise an exception if we're forced to parse a token that is
       # not one of the above. Currently, that's 'Invalid' and "EndOfFile'.
-      raise new_exception(PlainParseError,
-                          "Parser encountered an invalid token: " & $p.tok)
+      log.abort(PlainParseError,
+                "Parser encountered an invalid token: $1", $p.tok)
 
 
 proc parse_all*(p: var PlainParser): seq[PlainTextSegment] =

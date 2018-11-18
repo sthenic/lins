@@ -11,7 +11,7 @@ import ./base_parser
 
 
 type
-   LaTeXParseError* = object of Exception
+   LaTeXParseError* = object of ParseError
 
    Enclosure {.pure.} = enum
       Invalid
