@@ -39,7 +39,7 @@ type
 
 
 proc new(t: typedesc[CfgState], filename, dir: string): CfgState =
-   result = CfgState(filename: filename, dir: dir, rule_dirs: @[], styles: @[])
+   result = CfgState(filename: filename, dir: dir)
 
 
 proc new(t: typedesc[CfgRuleDir], name, path: string): CfgRuleDir =
@@ -47,11 +47,11 @@ proc new(t: typedesc[CfgRuleDir], name, path: string): CfgRuleDir =
 
 
 proc new(t: typedesc[CfgStyle], name: string): CfgStyle =
-   result = CfgStyle(name: name, is_default: false, rules: @[])
+   result = CfgStyle(name: name)
 
 
 proc new(t: typedesc[CfgStyleRule], name: string): CfgStyleRule =
-   result = CfgStyleRule(name: name, exceptions: @[], only: @[])
+   result = CfgStyleRule(name: name)
 
 
 proc is_section_ruledirs(meta: CfgState, stimuli: CfgEvent): bool
