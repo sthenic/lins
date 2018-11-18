@@ -348,31 +348,32 @@ proc enforce_base*(r: RuleRepetition, seg: TextSegment): seq[Violation] =
 
 
 proc enforce_base*(r: RuleConsistency, seg: TextSegment): seq[Violation] =
-   # Analyze matches for the first and second regex.
-   var regex_first_pos: seq[int]
-   var regex_second_pos: seq[int]
-   for m in nre.find_iter(seg.text, r.regex_first):
-      add(regex_first_pos, m.match_bounds.a)
-   for m in nre.find_iter(seg.text, r.regex_second):
-      add(regex_second_pos, m.match_bounds.a)
+   if not r.first_observed and not r.second_observed:
+      # Analyze matches for the first and second regex.
+      var regex_first_pos: seq[int]
+      var regex_second_pos: seq[int]
+      for m in nre.find_iter(seg.text, r.regex_first):
+         add(regex_first_pos, m.match_bounds.a)
+      for m in nre.find_iter(seg.text, r.regex_second):
+         add(regex_second_pos, m.match_bounds.a)
 
-   # Determine which one occurrs first
-   if len(regex_first_pos) > 0 and len(regex_second_pos) > 0:
-      if regex_first_pos[0] == regex_second_pos[0]:
-         log.abort(EnforceError,
-            "Coinciding matches for conistency rule '$1' on line $2",
-            r.display_name, $r.calculate_position(seg.line, seg.col,
-                                                  regex_first_pos[0] + 1,
-                                                  seg.linebreaks).line
-         )
-      elif regex_first_pos[0] < regex_second_pos[0]:
-         r.first_observed = true
-      else:
+      # Determine which one occurrs first.
+      if len(regex_first_pos) > 0 and len(regex_second_pos) > 0:
+         if regex_first_pos[0] == regex_second_pos[0]:
+            log.abort(EnforceError,
+               "Coinciding matches for conistency rule '$1' on line $2",
+               r.display_name, $r.calculate_position(seg.line, seg.col,
+                                                     regex_first_pos[0] + 1,
+                                                     seg.linebreaks).line
+            )
+         elif regex_first_pos[0] < regex_second_pos[0]:
+            r.first_observed = true
+         else:
+            r.second_observed = true
+      elif len(regex_first_pos) == 0 and len(regex_second_pos) > 0:
          r.second_observed = true
-   elif len(regex_first_pos) == 0 and len(regex_second_pos) > 0:
-      r.second_observed = true
-   elif len(regex_first_pos) > 0 and len(regex_second_pos) == 0:
-      r.first_observed = true
+      elif len(regex_first_pos) > 0 and len(regex_second_pos) == 0:
+         r.first_observed = true
 
    # Go through the text segment again, generating violations for any
    # relevant matches.
