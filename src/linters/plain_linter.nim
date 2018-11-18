@@ -7,9 +7,10 @@ import unicode
 import nre
 import sequtils
 
-import ../lexers/plain_lexer
-import ../rules/rules
 import ../utils/log
+import ../rules/rules
+import ../rules/plain_rules # TODO: What happens w/ enforce if this is omitted?
+import ../parsers/plain_parser
 
 type
    PlainTextLinterFileIOError* = object of Exception
@@ -77,7 +78,7 @@ proc print_violation(v: Violation) =
       log.abort(PlainTextLinterValueError, "Unsupported severity level '$#'.",
                 $v.severity)
 
-   call_styled_write_line(&" {v.position.row:>4}:{v.position.col:<5} ",
+   call_styled_write_line(&" {v.position.line:>4}:{v.position.col:<5} ",
                           styleBright, severity_color, &"{severity_str:<12}",
                           resetStyle, &"{message[0]:<48}    ",
                           styleBright, &"{v.display_name:<20}", resetStyle)
@@ -133,18 +134,18 @@ proc parse_debug_options(debug_options: PlainDebugOptions) =
          log.info("Lexer output will be written to file '$#'.",
                   debug_options.lexer_output_filename)
 
-proc lint_sentence(s: Sentence) =
+proc lint_sentence(seg: PlainTextSegment) =
    var violations: seq[Violation] = @[]
 
    if not is_nil(lexer_output_fs):
       # Dump the lexer output if the file stream is defined.
-      lexer_output_fs.write_line(s, "\n")
+      lexer_output_fs.write_line(seg, "\n")
 
    for r in lint_rules:
       # Ignore rules if the log level is set too low.
       if r.severity > severity_threshold:
          continue
-      violations.add(r.enforce(s))
+      violations.add(r.enforce(seg))
 
    for v in violations:
       case v.severity
@@ -184,10 +185,16 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
       print_header(filename)
 
       try:
+         var p: PlainParser
          t_start = cpu_time()
-         plain_lexer.lex(fs, lint_sentence, row_init, col_init)
+         open_parser(p, filename, fs)
+         let segs = parse_all(p)
+         close_parser(p)
+         # plain_lexer.lex(fs, lint_sentence, row_init, col_init)
+         for seg in segs:
+            lint_sentence(seg)
          t_stop = cpu_time()
-      except PlainTextLexerFileIOError:
+      except PlainParseError:
          # Catch and reraise the exception with a type local to this module.
          # Callers are not aware of the lexing process.
          raise new_exception(PlainTextLinterFileIOError,
@@ -212,28 +219,4 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
 proc lint_string*(str: string, rules: seq[Rule],
                   row_init, col_init: int,
                   debug_options: PlainDebugOptions): bool =
-   var t_start, t_stop: float
-   lint_rules = rules
-   result = true
-
-   parse_debug_options(debug_options)
-
-   var ss = new_string_stream(str)
-
-   print_header("String input")
-
-   try:
-      t_start = cpu_time()
-      plain_lexer.lex(ss, lint_sentence, row_init, col_init)
-      t_stop = cpu_time()
-   except PlainTextLexerFileIOError:
-      raise new_exception(PlainTextLinterFileIOError,
-                           "FileIO exception while lexing file.")
-
-   if (nof_violations_file.error == 0 and
-       nof_violations_file.warning == 0 and
-       nof_violations_file.suggestion == 0):
-      result = false
-      echo "No style errors found."
-
-   print_footer((t_stop - t_start) * 1000.0, nof_violations_file, 0)
+   discard

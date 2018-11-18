@@ -141,72 +141,33 @@ set_default_value(DefinitionYAML, exceptions, @[])
 
 
 proc new(t: typedesc[ExistenceYAML]): ExistenceYAML =
-   result = ExistenceYAML(extends: "existence",
-                          message: "",
-                          level: "",
-                          ignorecase: false,
-                          nonword: false,
-                          tokens: @[])
+   result = ExistenceYAML(extends: "existence")
 
 
 proc new(t: typedesc[SubstitutionYAML]): SubstitutionYAML =
    result = SubstitutionYAML(extends: "substitution",
-                             message: "",
-                             level: "",
-                             ignorecase: false,
-                             nonword: false,
                              swap: init_table[string, string]())
 
 
 proc new(t: typedesc[OccurrenceYAML]): OccurrenceYAML =
-   result = OccurrenceYAML(extends: "occurrence",
-                           message: "",
-                           level: "",
-                           ignorecase: false,
-                           scope: "",
-                           limit: 0,
-                           limit_kind: "",
-                           token: "")
+   result = OccurrenceYAML(extends: "occurrence")
 
 
 proc new(t: typedesc[RepetitionYAML]): RepetitionYAML =
-   result = RepetitionYAML(extends: "repetition",
-                           message: "",
-                           level: "",
-                           ignorecase: false,
-                           scope: "",
-                           token: "")
+   result = RepetitionYAML(extends: "repetition")
 
 
 proc new(t: typedesc[ConsistencyYAML]): ConsistencyYAML =
    result = ConsistencyYAML(extends: "consistency",
-                            message: "",
-                            level: "",
-                            ignorecase: false,
-                            nonword: false,
-                            scope: "",
                             either: init_table[string, string]())
 
 
 proc new(t: typedesc[DefinitionYAML]): DefinitionYAML =
-   result = DefinitionYAML(extends: "definition",
-                           message: "",
-                           level: "",
-                           ignorecase: false,
-                           scope: "",
-                           definition: "",
-                           declaration: "",
-                           exceptions: @[])
+   result = DefinitionYAML(extends: "definition")
 
 
 proc new(t: typedesc[ConditionalYAML]): ConditionalYAML =
-   result = ConditionalYAML(extends: "conditional",
-                            message: "",
-                            level: "",
-                            ignorecase: false,
-                            scope: "",
-                            first: "",
-                            second: "")
+   result = ConditionalYAML(extends: "conditional")
 
 
 proc new(t: typedesc[Rules]): Rules =
@@ -257,8 +218,6 @@ template validate_scope(data: typed, filename: string, scope: untyped) =
       scope = Scope.TEXT
    of "paragraph":
       scope = Scope.PARAGRAPH
-   of "sentence":
-      scope = Scope.SENTENCE
    else:
       log.warning("Unsupported scope '$#' defined for rule in file '$#', " &
                   "skipping.", data.scope, filename)
