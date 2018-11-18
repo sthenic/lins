@@ -400,8 +400,7 @@ proc enforce_base*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
    for m_def in nre.find_iter(seg.text, r.regex_def):
       try:
          let def = m_def.captures[0]
-         let pos = r.calculate_position(seg.line,
-                                        seg.col,
+         let pos = r.calculate_position(seg.line, seg.col,
                                         m_def.capture_bounds[0].get.a + 1,
                                         seg.linebreaks)
 
@@ -427,7 +426,7 @@ proc enforce_base*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
          if decl in r.exceptions:
             continue
 
-         let (row_decl, col_decl) =
+         let (line_decl, col_decl) =
             r.calculate_position(seg.line, seg.col,
                                  m_decl.capture_bounds[0].get.a + 1,
                                  seg.linebreaks)
@@ -436,16 +435,16 @@ proc enforce_base*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
          if not r.definitions.has_key(decl):
             is_violated = true
          else:
-            let (row_def, col_def) = r.definitions[decl]
+            let (line_def, col_def) = r.definitions[decl]
 
-            if (row_def == row_decl and col_def > col_decl or
-                row_def > row_decl):
+            if (line_def == line_decl and col_def > col_decl or
+                line_def > line_decl):
                is_violated = true
 
          if is_violated:
             # TODO: Fix the Position type, maybe a raw tuple instead
-            # let pos: Position = (row: row_decl, col: col_decl)
-            result.add(r.create_violation((row_decl, col_decl), decl))
+            # let pos: Position = (line: line_decl, col: col_decl)
+            result.add(r.create_violation((line_decl, col_decl), decl))
 
 
       except IndexError:
@@ -457,13 +456,13 @@ proc enforce_base*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
 
 
 proc enforce_base*(r: RuleConditional, seg: TextSegment): seq[Violation] =
-   var row_first = 0
+   var line_first = 0
    var col_first = 0
 
    let m_first = nre.find(seg.text, r.regex_first)
    if not is_none(m_first) and not r.first_observed:
       try:
-         (row_first, col_first) =
+         (line_first, col_first) =
             r.calculate_position(seg.line, seg.col,
                                  m_first.get.capture_bounds[0].get.a + 1,
                                  seg.linebreaks)
@@ -478,14 +477,14 @@ proc enforce_base*(r: RuleConditional, seg: TextSegment): seq[Violation] =
                    "This should not have occurred.", r.source_file)
 
    for m_second in nre.find_iter(seg.text, r.regex_second):
-      let (row_second, col_second) =
+      let (line_second, col_second) =
          r.calculate_position(seg.line, seg.col,
                               m_second.match_bounds.a + 1, # TODO: Group here?
                               seg.linebreaks)
       if (not r.first_observed or
-          (row_first == row_second and col_first > col_second) or
-          (row_first > row_second)):
-         result.add(r.create_violation((row_second, col_second), $m_second))
+          (line_first == line_second and col_first > col_second) or
+          (line_first > line_second)):
+         result.add(r.create_violation((line_second, col_second), $m_second))
 
 
 # Base implementations of enforcement methods. Input segment type is the base
