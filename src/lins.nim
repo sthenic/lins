@@ -98,7 +98,7 @@ if not (cli_state.files == @[]):
    # If there are any files in the list of input files, run the linter.
    try:
       found_violations = lint_files(cli_state.files, lint_rules,
-                                    cli_state.row_init, cli_state.col_init,
+                                    cli_state.line_init, cli_state.col_init,
                                     debug_options)
    except PlainLinterFileIOError:
       quit(EFILE)
@@ -122,8 +122,8 @@ else:
       text.add(tmp & "\n")
 
    try:
-      found_violations = lint_string(text, lint_rules, cli_state.row_init,
-                                    cli_state.col_init, debug_options)
+      found_violations = lint_string(text, lint_rules, cli_state.line_init,
+                                     cli_state.col_init, debug_options)
    except PlainLinterParseError:
       quit(EPARSE)
 

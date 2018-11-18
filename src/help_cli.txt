@@ -19,7 +19,7 @@ options:
 
   --col=COL                Specify the column index of the first character
                            in the input data. Default value: 1. See also the
-                           'row' option.
+                           'line' option.
 
   --list                   List available styles and current rule set.
 
@@ -42,9 +42,8 @@ options:
   --style=STYLE            Specify which style to use for linting. Styles
                            are defined in the configuration file.
 
-  --row=ROW                Specify the row index of the first character
-                           in the input data. Default value: 1. See also the
-                           'col' option.
+  --line=LINE              Specify the line of the first character in the input
+                           data. Default value: 1. See also the 'col' option.
 
   --rule=RULE              Specify a rule set by name. The rule set will have
                            to be defined in the configuration file.
