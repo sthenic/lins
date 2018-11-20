@@ -6,7 +6,7 @@ import ./rules
 import ../utils/log
 import ../parsers/plain_parser
 
-export rules.reset
+export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation
 
 method enforce*(r: RuleOccurrence, seg: PlainTextSegment): seq[Violation] =
    # Reset the match counter and alert status depending on the scope.

@@ -8,7 +8,6 @@ import nre
 import sequtils
 
 import ../utils/log
-import ../rules/rules
 import ../rules/plain_rules
 import ../parsers/plain_parser
 
