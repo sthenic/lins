@@ -261,7 +261,44 @@ proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
                           scope: scope)
 
 
-proc enforce_base*(r: RuleExistence, seg: TextSegment): seq[Violation] =
+method reset(r: Rule) {.base.} =
+   discard
+
+
+method reset(r: RuleOccurrence) =
+   r.nof_matches = 0
+   r.has_alerted = false
+
+
+method reset(r: RuleRepetition) =
+   r.par_prev = 0
+   r.matches = init_table[string, int]()
+
+
+method reset(r: RuleConsistency) =
+   r.par_prev = 0
+   r.first_observed = false
+   r.second_observed = false
+
+
+method reset(r: RuleDefinition) =
+   r.par_prev = 0
+   r.definitions = init_table[string, Position]()
+
+
+method reset(r: RuleConditional) =
+   r.par_prev = 0
+   r.first_observed = false
+
+
+# Base implementations of enforcement methods. Input segment type is the base
+# 'TextSegment' as defined by the base parser module.
+method enforce*(r: Rule, seg: TextSegment): seq[Violation] {.base.} =
+   log.abort(EnforceNotImplementedError,
+             "Rule enforcement not implemented for rule '$1'.", r.kind)
+
+
+method enforce*(r: RuleExistence, seg: TextSegment): seq[Violation] =
    for m in nre.find_iter(seg.text, r.regex):
       let violation_pos = r.calculate_position(seg.line, seg.col,
                                                m.match_bounds.a + 1,
@@ -270,7 +307,7 @@ proc enforce_base*(r: RuleExistence, seg: TextSegment): seq[Violation] =
       result.add(r.create_violation(violation_pos, $m))
 
 
-proc enforce_base*(r: RuleSubstitution, seg: TextSegment): seq[Violation] =
+method enforce*(r: RuleSubstitution, seg: TextSegment): seq[Violation] =
    for m in nre.find_iter(seg.text, r.regex):
       let mpos = m.match_bounds.a
       let violation_pos = r.calculate_position(seg.line, seg.col, mpos + 1,
@@ -306,7 +343,7 @@ proc enforce_base*(r: RuleSubstitution, seg: TextSegment): seq[Violation] =
          result.add(r.create_violation(violation_pos, $m, subst))
 
 
-proc enforce_base*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
+method enforce*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
    for m in nre.find_iter(seg.text, r.regex):
       # Count the match (pre-incrementation).
       r.nof_matches += 1
@@ -319,7 +356,6 @@ proc enforce_base*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
          let sentence_pos = (seg.line, seg.col)
          result.add(r.create_violation(sentence_pos))
          break
-   echo "In this place"
    # Check against the specified minimum limit. This is only supported in
    # the sentence scope.
    if (not r.has_alerted and
@@ -328,7 +364,7 @@ proc enforce_base*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
       result.add(r.create_violation(sentence_pos))
 
 
-proc enforce_base*(r: RuleRepetition, seg: TextSegment): seq[Violation] =
+method enforce*(r: RuleRepetition, seg: TextSegment): seq[Violation] =
    for m in nre.find_iter(seg.text, r.regex):
       var tmp: string
       if r.ignore_case:
@@ -347,7 +383,7 @@ proc enforce_base*(r: RuleRepetition, seg: TextSegment): seq[Violation] =
          result.add(r.create_violation(violation_pos, $m))
 
 
-proc enforce_base*(r: RuleConsistency, seg: TextSegment): seq[Violation] =
+method enforce*(r: RuleConsistency, seg: TextSegment): seq[Violation] =
    if not r.first_observed and not r.second_observed:
       # Analyze matches for the first and second regex.
       var regex_first_pos: seq[int]
@@ -393,7 +429,7 @@ proc enforce_base*(r: RuleConsistency, seg: TextSegment): seq[Violation] =
          result.add(r.create_violation(violation_pos, $m))
 
 
-proc enforce_base*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
+method enforce*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
    # Go through the sentence looking for definitions. Store the position to
    # make sure we can differentiate the order of definitions and
    # declarations within a sentence.
@@ -455,7 +491,7 @@ proc enforce_base*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
                    "This should not have occurred.", r.source_file)
 
 
-proc enforce_base*(r: RuleConditional, seg: TextSegment): seq[Violation] =
+method enforce*(r: RuleConditional, seg: TextSegment): seq[Violation] =
    var line_first = 0
    var col_first = 0
 
@@ -485,38 +521,3 @@ proc enforce_base*(r: RuleConditional, seg: TextSegment): seq[Violation] =
           (line_first == line_second and col_first > col_second) or
           (line_first > line_second)):
          result.add(r.create_violation((line_second, col_second), $m_second))
-
-
-# Base implementations of enforcement methods. Input segment type is the base
-# 'TextSegment' as defined by the base parser module.
-method enforce*(r: Rule, seg: TextSegment): seq[Violation] {.base.} =
-   log.abort(EnforceNotImplementedError,
-             "Rule enforcement not implemented for rule '$1'.", r.kind)
-
-
-method enforce*(r: RuleExistence, seg: TextSegment): seq[Violation] =
-   enforce_base(r, seg)
-
-
-method enforce*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
-   enforce_base(r, seg)
-
-
-method enforce*(r: RuleSubstitution, seg: TextSegment): seq[Violation] =
-   enforce_base(r, seg)
-
-
-method enforce*(r: RuleRepetition, seg: TextSegment): seq[Violation] =
-   enforce_base(r, seg)
-
-
-method enforce*(r: RuleConsistency, seg: TextSegment): seq[Violation] =
-   enforce_base(r, seg)
-
-
-method enforce*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
-   enforce_base(r, seg)
-
-
-method enforce*(r: RuleConditional, seg: TextSegment): seq[Violation] =
-   enforce_base(r, seg)

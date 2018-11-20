@@ -5,6 +5,8 @@ import ../lexers/plain_lexer
 import ../utils/log
 import ./base_parser
 
+export TextSegment
+
 type
    PlainParseError* = object of ParseError
 

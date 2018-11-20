@@ -27,14 +27,13 @@ type
       lexer_output_filename: string
 
 
-var
-   nof_violations_total: ViolationCount
-   nof_violations_file: ViolationCount
-   nof_files: int
-   lint_rules: seq[Rule]
-   minimal_mode = false
-   severity_threshold = SUGGESTION
-   lexer_output_fs : FileStream
+var nof_violations_total: ViolationCount
+var nof_violations_file: ViolationCount
+var nof_files: int
+var lint_rules: seq[Rule]
+var minimal_mode = false
+var severity_threshold = SUGGESTION
+var lexer_output_fs : FileStream
 
 
 proc set_minimal_mode*(state: bool) =

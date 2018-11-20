@@ -18,7 +18,7 @@ method enforce*(r: RuleOccurrence, seg: PlainTextSegment): seq[Violation] =
       discard
 
    # Call the base enforcement function
-   result = enforce_base(r, seg)
+   result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.
    r.par_prev = seg.par_idx
@@ -33,7 +33,7 @@ method enforce*(r: RuleRepetition, seg: PlainTextSegment): seq[Violation] =
       discard
 
    # Call the base enforcement function
-   result = enforce_base(r, seg)
+   result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.
    r.par_prev = seg.par_idx
@@ -49,7 +49,7 @@ method enforce*(r: RuleConsistency, seg: PlainTextSegment): seq[Violation] =
       discard
 
    # Call the base enforcement function
-   result = enforce_base(r, seg)
+   result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.
    r.par_prev = seg.par_idx
@@ -65,7 +65,7 @@ method enforce*(r: RuleDefinition, seg: PlainTextSegment): seq[Violation] =
       discard
 
    # Call the base enforcement function
-   result = enforce_base(r, seg)
+   result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.
    r.par_prev = seg.par_idx
@@ -81,7 +81,7 @@ method enforce*(r: RuleConditional, seg: PlainTextSegment): seq[Violation] =
       discard
 
    # Call the base enforcement function
-   result = enforce_base(r, seg)
+   result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.
    r.par_prev = seg.par_idx
