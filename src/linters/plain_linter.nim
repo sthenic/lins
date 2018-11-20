@@ -174,6 +174,7 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
    delta_analysis = 0
    for filename in file_list:
       nof_violations_file = (0, 0, 0)
+      reset(lint_rules)
 
       # Open the input file as a file stream since we will have to move around
       # in the file.

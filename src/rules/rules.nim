@@ -261,34 +261,38 @@ proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
                           scope: scope)
 
 
-method reset(r: Rule) {.base.} =
+method reset*(r: Rule) {.base.} =
    discard
 
 
-method reset(r: RuleOccurrence) =
+method reset*(r: RuleOccurrence) =
    r.nof_matches = 0
    r.has_alerted = false
 
 
-method reset(r: RuleRepetition) =
+method reset*(r: RuleRepetition) =
    r.par_prev = 0
    r.matches = init_table[string, int]()
 
 
-method reset(r: RuleConsistency) =
+method reset*(r: RuleConsistency) =
    r.par_prev = 0
    r.first_observed = false
    r.second_observed = false
 
 
-method reset(r: RuleDefinition) =
+method reset*(r: RuleDefinition) =
    r.par_prev = 0
    r.definitions = init_table[string, Position]()
 
 
-method reset(r: RuleConditional) =
+method reset*(r: RuleConditional) =
    r.par_prev = 0
    r.first_observed = false
+
+
+proc reset*(s: seq[Rule]) =
+   for r in s: reset(r)
 
 
 # Base implementations of enforcement methods. Input segment type is the base
