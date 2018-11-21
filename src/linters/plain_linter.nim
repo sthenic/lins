@@ -29,7 +29,6 @@ type
 var nof_violations_total: ViolationCount
 var nof_violations_file: ViolationCount
 var nof_files: int
-var lint_rules: seq[Rule]
 var minimal_mode = false
 var severity_threshold = SUGGESTION
 var lexer_output_fs : FileStream
@@ -133,14 +132,14 @@ proc parse_debug_options(debug_options: PlainDebugOptions) =
          log.info("Lexer output will be written to file '$1'.",
                   debug_options.lexer_output_filename)
 
-proc lint_segment(seg: PlainTextSegment) =
+proc lint_segment(seg: PlainTextSegment, rules: seq[Rule]) =
    var violations: seq[Violation] = @[]
 
    if not is_nil(lexer_output_fs):
       # Dump the lexer output if the file stream is defined.
       lexer_output_fs.write_line(seg, "\n")
 
-   for r in lint_rules:
+   for r in rules:
       # Ignore rules if the log level is set too low.
       if r.severity > severity_threshold:
          continue
@@ -164,7 +163,6 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
                  line_init, col_init: int,
                  debug_options: PlainDebugOptions): bool =
    var t_start, t_stop, delta_analysis: float
-   lint_rules = rules
    result = true
 
    # Handle debug options.
@@ -173,7 +171,7 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
    delta_analysis = 0
    for filename in file_list:
       nof_violations_file = (0, 0, 0)
-      reset(lint_rules)
+      reset(rules)
 
       # Open the input file as a file stream since we will have to move around
       # in the file.
@@ -189,7 +187,7 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
          open_parser(p, filename, fs)
          t_start = cpu_time()
          for seg in parse_all(p):
-            lint_segment(seg)
+            lint_segment(seg, rules)
          t_stop = cpu_time()
          close_parser(p)
       except PlainParseError as e:
@@ -217,7 +215,6 @@ proc lint_files*(file_list: seq[string], rules: seq[Rule],
 proc lint_string*(str: string, rules: seq[Rule], line_init, col_init: int,
                   debug_options: PlainDebugOptions): bool =
    var t_start, t_stop: float
-   lint_rules = rules
    result = true
 
    parse_debug_options(debug_options)
@@ -231,7 +228,7 @@ proc lint_string*(str: string, rules: seq[Rule], line_init, col_init: int,
       open_parser(p, "stdin", ss)
       t_start = cpu_time()
       for seg in parse_all(p):
-         lint_segment(seg)
+         lint_segment(seg, rules)
       t_stop = cpu_time()
       close_parser(p)
    except PlainParseError:
