@@ -3,7 +3,6 @@ import strutils
 import strformat
 import streams
 import terminal
-import unicode
 import nre
 import sequtils
 

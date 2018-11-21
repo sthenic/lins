@@ -1,5 +1,4 @@
 import nre
-import unicode
 import strutils
 import tables
 
