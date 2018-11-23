@@ -10,9 +10,9 @@ type
    EnforceNotImplementedError* = object of Exception
 
    Severity* = enum
-      ERROR
-      WARNING
       SUGGESTION
+      WARNING
+      ERROR
 
    Scope* = enum
       TEXT

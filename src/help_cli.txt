@@ -3,54 +3,55 @@ usage:
 
 
 arguments:
-  file [file [file ...]]   Input file(s) to lint. To lint several files,
-                           separate them by whitespace. If no files are
-                           specified, piped input from stdin is assumed.
+  file [file [file ...]]    Input file(s) to lint. To lint several files,
+                            separate them by whitespace. If no files are
+                            specified, piped input from stdin is assumed.
 
-                           Pattern matching is supported but the extent of this
-                           support is OS-dependent. The "*.ext" notation is
-                           always supported. The glob call is used on POSIX
-                           systems.
+                            Pattern matching is supported but the extent of this
+                            support is OS-dependent. The "*.ext" notation is
+                            always supported. The glob call is used on POSIX
+                            systems.
 
 
 options:
-  -h, --help               Print this help message and exit.
-  -v, --version            Print the version information and exit.
+  -h, --help                Print this help message and exit.
+  -v, --version             Print the version information and exit.
 
-  --col=COL                Specify the column index of the first character
-                           in the input data. Default value: 1. See also the
-                           'line' option.
+  --col=COL                 Specify the column index of the first character
+                            in the input data. Default value: 1. See also the
+                            'line' option.
 
-  --list                   List available styles and current rule set.
+  --list                    List available styles and current rule set.
 
-  --no-cfg                 Don't look for a configuration file.
+  --no-cfg                  Don't look for a configuration file.
 
-  --no-color               Don't color the output. Suppresses the ANSI escape
-                           sequences on UNIX.
+  --no-color                Don't color the output. Suppresses the ANSI escape
+                            sequences on UNIX.
 
-  --no-default             Don't use a default style (if defined in the
-                           configuration file).
+  --no-default              Don't use a default style (if defined in the
+                            configuration file).
 
-  --minimal                Enable minimal output mode. All output except the
-                           violation information is suppressed.
+  --minimal                 Enable minimal output mode. All output except the
+                            violation information is suppressed.
 
-  --severity=SEVERITY      Set the severity threshold. Only violations reaching
-                           this level are printed. For example, 'warning' would
-                           print both errors and warnings but not suggestions.
-                           Valid values are 'error', 'warning' and 'suggestion'.
+  --severity=SEVERITY       Set the severity threshold. Only violations reaching
+                            this level are printed. For example, 'warning' would
+                            print both errors and warnings but not suggestions.
+                            Valid values are 'error', 'warning' and
+                            'suggestion'.
 
-  --style=STYLE            Specify which style to use for linting. Styles
-                           are defined in the configuration file.
+  --style=STYLE             Specify which style to use for linting. Styles
+                            are defined in the configuration file.
 
-  --line=LINE              Specify the line of the first character in the input
-                           data. Default value: 1. See also the 'col' option.
+  --line=LINE               Specify the line of the first character in the input
+                            data. Default value: 1. See also the 'col' option.
 
-  --rule=RULE              Specify a rule set by name. The rule set will have
-                           to be defined in the configuration file.
+  --rule=RULE               Specify a rule set by name. The rule set will have
+                            to be defined in the configuration file.
 
-  --rule-dir=RULE_DIR      Specify a root directory to traverse in search of
-                           rule files.
+  --rule-dir=RULE_DIR       Specify a root directory to traverse in search of
+                            rule files.
 
 debug options:
-  --lexer-output=FILENAME  Write the output from the lexer to the specified
-                           file.
+  --parser-output=FILENAME  Write the output from the parser to the specified
+                            file.

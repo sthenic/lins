@@ -60,8 +60,13 @@ elif cli_state.print_version:
 # Propagate CLI state to other modules.
 log.set_quiet_mode(cli_state.minimal)
 log.set_color_mode(cli_state.color_mode)
-plain_linter.set_minimal_mode(cli_state.minimal)
-plain_linter.set_severity_threshold(cli_state.severity)
+
+# Create linters
+let debug_options: PlainDebugOptions = (
+   parser_output_filename: cli_state.parser_output_filename
+)
+var linter = PlainLinter.new(cli_state.minimal, cli_state.severity,
+                             debug_options)
 
 # Parse configuration file.
 var cfg_state: CfgState
@@ -87,22 +92,17 @@ if lint_rules == @[]:
    log.error("No rules specified.")
    quit(ENORULES)
 
-# Construct debug options
-let debug_options: PlainDebugOptions = (
-   lexer_output_filename: cli_state.lexer_output_filename
-)
-
 # Lint files
 var found_violations: bool
 if not (cli_state.files == @[]):
    # If there are any files in the list of input files, run the linter.
    try:
-      found_violations = lint_files(cli_state.files, lint_rules,
-                                    cli_state.line_init, cli_state.col_init,
-                                    debug_options)
-   except PlainLinterFileIOError:
+      found_violations = linter.lint_files(cli_state.files, lint_rules,
+                                           cli_state.line_init,
+                                           cli_state.col_init)
+   except LinterFileIOError:
       quit(EFILE)
-   except PlainLinterParseError:
+   except LinterParseError:
       quit(EPARSE)
 
 elif cli_state.has_arguments:
@@ -122,9 +122,10 @@ else:
       text.add(tmp & "\n")
 
    try:
-      found_violations = lint_string(text, lint_rules, cli_state.line_init,
-                                     cli_state.col_init, debug_options)
-   except PlainLinterParseError:
+      found_violations = linter.lint_string(text, lint_rules,
+                                            cli_state.line_init,
+                                            cli_state.col_init)
+   except LinterParseError:
       quit(EPARSE)
 
 if found_violations:

@@ -29,7 +29,7 @@ type CLIState* = object
    line_init*: int
    col_init*: int
 
-   lexer_output_filename*: string
+   parser_output_filename*: string
 
 # CLI constructor, initializes an object with default values.
 proc new(t: typedesc[CLIState]): CLIState =
@@ -103,12 +103,12 @@ proc parse_cli*(): CLIState =
          of "list":
             result.print_list = true
             result.is_ok = true
-         of "lexer-output":
+         of "parser-output":
             if val == "":
                log.abort(CLIValueError,
-                         "Option --lexer-output expects a filename.")
+                         "Option --parser-output expects a filename.")
 
-            result.lexer_output_filename = val
+            result.parser_output_filename = val
          of "line":
             if val == "":
                log.abort(CLIValueError, "Option --line expects a value.")
