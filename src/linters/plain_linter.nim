@@ -1,9 +1,5 @@
 import times
-import strutils
-import strformat
 import streams
-import terminal
-import nre
 import sequtils
 
 import ./base_linter
