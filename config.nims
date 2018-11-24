@@ -8,27 +8,22 @@ task build, "Compile the application into an executable.":
 
 
 task tests, "Run the test suite":
-   withDir("tests"):
-      exec("nim c -r lexers/tgolden")
+   exec("nim lexertests")
+   exec("nim parsertests")
    setCommand "nop"
 
 
-task plaintests, "Run the plain text lexer & parser test suite":
-   withDir("tests"):
-      exec("nim c -r lexers/tplain")
-      exec("nim c -r parsers/tplain")
+task lexertests, "Run the lexer test suite":
+   withDir("tests/lexers"):
+      exec("nim c -r tplain")
+      exec("nim c -r ttex")
    setCommand "nop"
 
 
-task textests, "Run the TeX lexer test suite":
-   withDir("tests"):
-      exec("nim c -r lexers/ttex")
-   setCommand "nop"
-
-
-task latextests, "Run the LaTeX parser test suite":
-   withDir("tests"):
-      exec("nim c -r parsers/tlatex")
+task parsertests, "Run the TeX lexer test suite":
+   withDir("tests/parsers"):
+      exec("nim c -r tplain")
+      exec("nim c -r tlatex")
    setCommand "nop"
 
 
