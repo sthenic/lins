@@ -26,31 +26,15 @@ type CLIState* = object
    rules*: seq[string]
    rule_dirs*: seq[string]
    styles*: seq[string]
-   row_init*: int
+   line_init*: int
    col_init*: int
 
-   lexer_output_filename*: string
+   parser_output_filename*: string
 
 # CLI constructor, initializes an object with default values.
 proc new(t: typedesc[CLIState]): CLIState =
-   result = CLIState(has_arguments: false,
-                     input_from_stdin: false,
-                     is_ok: false,
-                     print_help: false,
-                     print_version: false,
-                     print_list: false,
-                     no_cfg: false,
-                     no_default: false,
-                     color_mode: Color,
-                     severity: SUGGESTION,
-                     minimal: false,
-                     files: @[],
-                     rules: @[],
-                     rule_dirs: @[],
-                     styles: @[],
-                     row_init: 1,
-                     col_init: 1,
-                     lexer_output_filename: "")
+   result = CLIState(color_mode: Color, severity: SUGGESTION, line_init: 1,
+                     col_init: 1)
 
 
 proc parse_cli*(): CLIState =
@@ -119,24 +103,24 @@ proc parse_cli*(): CLIState =
          of "list":
             result.print_list = true
             result.is_ok = true
-         of "lexer-output":
+         of "parser-output":
             if val == "":
                log.abort(CLIValueError,
-                         "Option --lexer-output expects a filename.")
+                         "Option --parser-output expects a filename.")
 
-            result.lexer_output_filename = val
-         of "row":
+            result.parser_output_filename = val
+         of "line":
             if val == "":
-               log.abort(CLIValueError, "Option --row expects a value.")
+               log.abort(CLIValueError, "Option --line expects a value.")
 
             try:
-               result.row_init = parse_int(val)
+               result.line_init = parse_int(val)
             except ValueError:
                log.abort(CLIValueError,
                          "Failed to convert '$1' to an integer.", val)
          of "col":
             if val == "":
-               log.abort(CLIValueError, "Option --row expects a value.")
+               log.abort(CLIValueError, "Option --col expects a value.")
 
             try:
                result.col_init = parse_int(val)

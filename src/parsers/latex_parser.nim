@@ -3,6 +3,7 @@ import strutils
 
 import ../lexers/tex_lexer
 import ../utils/log
+import ./base_parser
 
 # TODO: Think about if it's worth tracking all the column positions what with
 #       TeX eating additional whitespace etc. Any person would be able to track
@@ -10,7 +11,7 @@ import ../utils/log
 
 
 type
-   LaTeXParseError* = object of Exception
+   LaTeXParseError* = object of ParseError
 
    Enclosure {.pure.} = enum
       Invalid
@@ -35,21 +36,15 @@ type
    LaTeXParser* = object
       lex: TeXLexer
       tok: TeXToken
-      seg: TextSegment # Segment under construction
-      seg_stack: seq[TextSegment] # Incomplete segments
-      segs: seq[TextSegment] # Completed segments
+      seg: LaTeXTextSegment # Segment under construction
+      seg_stack: seq[LaTeXTextSegment] # Incomplete segments
+      segs: seq[LaTeXTextSegment] # Completed segments
       scope: seq[ScopeEntry] # Complete scope
       scope_entry: ScopeEntry # Scope entry under construction
       last_tok: TeXToken
       delimiter_count: int # Delimiter count
 
-   Linebreak* = tuple
-      pos, line: int
-
-   TextSegment* = object
-      text*: string
-      line*, col*: int
-      linebreaks*: seq[Linebreak]
+   LaTeXTextSegment* = object of TextSegment
       scope*: seq[ScopeEntry]
       expand*: bool
 
@@ -63,10 +58,10 @@ proc parse_character(p: var LaTeXParser)
 proc parse_token(p: var LaTeXParser)
 
 
-proc new*(t: typedesc[TextSegment], text: string, line, col: int,
+proc new*(t: typedesc[LaTeXTextSegment], text: string, line, col: int,
           linebreaks: seq[Linebreak], scope: seq[ScopeEntry],
-          expand: bool = false): TextSegment =
-   result = TextSegment(text: text, line: line, col: col,
+          expand: bool = false): LaTeXTextSegment =
+   result = LaTeXTextSegment(text: text, line: line, col: col,
                         linebreaks: linebreaks, scope: scope, expand: expand)
 
 
@@ -118,7 +113,7 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
    # Push the current scope entry to the scope.
    add(p.scope, p.scope_entry)
    # Initialize a new text segment w/ the current scope.
-   p.seg = TextSegment()
+   p.seg = LaTeXTextSegment()
    p.seg.scope = p.scope
    p.seg.expand = expand
    # Initialize a new scope entry unless we're told to keep it. This only
@@ -343,7 +338,7 @@ proc parse_token(p: var LaTeXParser) =
                           "Parser encountered an invalid token: " & $p.tok)
 
 
-proc parse_all*(p: var LaTeXParser): seq[TextSegment] =
+proc parse_all*(p: var LaTeXParser): seq[LaTeXTextSegment] =
    get_token(p)
    while p.tok.token_type != EndOfFile:
       parse_token(p)
@@ -351,7 +346,7 @@ proc parse_all*(p: var LaTeXParser): seq[TextSegment] =
    result = p.segs
 
 
-proc parse_string*(s: string, filename: string = ""): seq[TextSegment] =
+proc parse_string*(s: string, filename: string = ""): seq[LaTeXTextSegment] =
    var p: LaTeXParser
    var ss = new_string_stream(s)
    open_parser(p, filename, ss)

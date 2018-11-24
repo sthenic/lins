@@ -141,72 +141,33 @@ set_default_value(DefinitionYAML, exceptions, @[])
 
 
 proc new(t: typedesc[ExistenceYAML]): ExistenceYAML =
-   result = ExistenceYAML(extends: "existence",
-                          message: "",
-                          level: "",
-                          ignorecase: false,
-                          nonword: false,
-                          tokens: @[])
+   result = ExistenceYAML(extends: "existence")
 
 
 proc new(t: typedesc[SubstitutionYAML]): SubstitutionYAML =
    result = SubstitutionYAML(extends: "substitution",
-                             message: "",
-                             level: "",
-                             ignorecase: false,
-                             nonword: false,
                              swap: init_table[string, string]())
 
 
 proc new(t: typedesc[OccurrenceYAML]): OccurrenceYAML =
-   result = OccurrenceYAML(extends: "occurrence",
-                           message: "",
-                           level: "",
-                           ignorecase: false,
-                           scope: "",
-                           limit: 0,
-                           limit_kind: "",
-                           token: "")
+   result = OccurrenceYAML(extends: "occurrence")
 
 
 proc new(t: typedesc[RepetitionYAML]): RepetitionYAML =
-   result = RepetitionYAML(extends: "repetition",
-                           message: "",
-                           level: "",
-                           ignorecase: false,
-                           scope: "",
-                           token: "")
+   result = RepetitionYAML(extends: "repetition")
 
 
 proc new(t: typedesc[ConsistencyYAML]): ConsistencyYAML =
    result = ConsistencyYAML(extends: "consistency",
-                            message: "",
-                            level: "",
-                            ignorecase: false,
-                            nonword: false,
-                            scope: "",
                             either: init_table[string, string]())
 
 
 proc new(t: typedesc[DefinitionYAML]): DefinitionYAML =
-   result = DefinitionYAML(extends: "definition",
-                           message: "",
-                           level: "",
-                           ignorecase: false,
-                           scope: "",
-                           definition: "",
-                           declaration: "",
-                           exceptions: @[])
+   result = DefinitionYAML(extends: "definition")
 
 
 proc new(t: typedesc[ConditionalYAML]): ConditionalYAML =
-   result = ConditionalYAML(extends: "conditional",
-                            message: "",
-                            level: "",
-                            ignorecase: false,
-                            scope: "",
-                            first: "",
-                            second: "")
+   result = ConditionalYAML(extends: "conditional")
 
 
 proc new(t: typedesc[Rules]): Rules =
@@ -257,8 +218,6 @@ template validate_scope(data: typed, filename: string, scope: untyped) =
       scope = Scope.TEXT
    of "paragraph":
       scope = Scope.PARAGRAPH
-   of "sentence":
-      scope = Scope.SENTENCE
    else:
       log.warning("Unsupported scope '$#' defined for rule in file '$#', " &
                   "skipping.", data.scope, filename)
@@ -369,8 +328,6 @@ template debug_conditional(data: typed, filename: string) =
 proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'existence' and return a
    ## sequence of RuleExistence objects.
-   result = @[]
-
    validate_extension_point(data, "existence", filename)
    validate_common(data, filename, message, ignore_case, level)
 
@@ -414,8 +371,6 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
 proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'substitution' and return a
    ## sequence of RuleSubstitution objects.
-   result = @[]
-
    validate_extension_point(data, "substitution", filename)
    validate_common(data, filename, message, ignore_case, level)
 
@@ -445,8 +400,6 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
 proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'occurrence' and return a
    ## sequence of RuleOccurrence objects.
-   result = @[]
-
    validate_extension_point(data, "occurrence", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
@@ -462,8 +415,6 @@ proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
 proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'repetition' and return a
    ## sequence of RuleRepetition objects.
-   result = @[]
-
    validate_extension_point(data, "repetition", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
@@ -478,8 +429,6 @@ proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
 proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'consistency' and return a
    ## sequence of RuleConsistency objects.
-   result = @[]
-
    validate_extension_point(data, "consistency", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
@@ -506,8 +455,6 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
 proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'definition' and return a
    ## sequence of RuleDefinition objects.
-   result = @[]
-
    validate_extension_point(data, "definition", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
@@ -525,8 +472,6 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
 proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
    ## Parse and validate YAML data for the rule 'definition' and return a
    ## sequence of RuleDefinition objects.
-   result = @[]
-
    validate_extension_point(data, "conditional", filename)
    validate_common(data, filename, message, ignore_case, level)
    validate_scope(data, filename, scope)
@@ -545,10 +490,9 @@ proc parse_rule_file*(filename: string): seq[Rule] =
    ##
    ##  This function raises RuleValueError when a field has an unexpected or an
    ##  unsupported value.
-   var
-      fs: FileStream
-      success = false
-      data = Rules.new()
+   var fs: FileStream
+   var success = false
+   var data = Rules.new()
 
    # Open the stream
    fs = new_file_stream(filename)
@@ -578,8 +522,6 @@ proc parse_rule_file*(filename: string): seq[Rule] =
 proc parse_rule_dir(rule_root_dir: string, mode: Mode): seq[Rule] =
    if not os.dir_exists(rule_root_dir):
       log.abort(RulePathError, "Invalid path '$1'.", rule_root_dir)
-
-   result = @[]
 
    case mode
    of NonRecursive:
@@ -675,10 +617,8 @@ proc build_databases(cfg_state: CfgState): Database =
 
 proc get_rules*(cfg_state: CfgState, cli_state: CLIState): seq[Rule] =
    ## Return a sequence of rules given the current configuration and CLI state.
-   result = @[]
-
    if cli_state.no_cfg:
-      return result
+      return @[]
 
    # Build rule database and retrieve the name of the default style.
    var (rule_db, style_db) = build_databases(cfg_state)
