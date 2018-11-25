@@ -4,23 +4,20 @@ import sequtils
 
 import ./base_linter
 import ../utils/log
-import ../rules/plain_rules
-import ../parsers/plain_parser
-
-export LinterFileIOError, LinterValueError, LinterParseError
+import ../rules/latex_rules
+import ../parsers/latex_parser
 
 type
-   PlainLinterDebugOptions* = tuple
+   LaTeXLinterDebugOptions* = tuple
       parser_output_filename: string
 
-   PlainLinter* = object of BaseLinter
+   LaTeXLinter* = object of BaseLinter
       parser_output_fs: FileStream
 
-
-proc new*(t: typedesc[PlainLinter], minimal_mode: bool,
-          severity_threshold: Severity,
-          opts: PlainLinterDebugOptions): PlainLinter =
-   result = PlainLinter(minimal_mode: minimal_mode,
+proc new*(t: typedesc[LaTeXLinter],
+          minimal_mode: bool, severity_threshold: Severity,
+          opts: LaTeXLinterDebugOptions): LaTeXLinter =
+   result = LaTeXLinter(minimal_mode: minimal_mode,
                         severity_threshold: severity_threshold)
 
    if len(opts.parser_output_filename) != 0:
@@ -36,7 +33,7 @@ proc new*(t: typedesc[PlainLinter], minimal_mode: bool,
                   opts.parser_output_filename)
 
 
-proc lint_segment(l: var PlainLinter, seg: PlainTextSegment, rules: seq[Rule]) =
+proc lint_segment(l: var LaTeXLinter, seg: LaTeXTextSegment, rules: seq[Rule]) =
    var violations: seq[Violation] = @[]
 
    if not is_nil(l.parser_output_fs):
@@ -63,15 +60,13 @@ proc lint_segment(l: var PlainLinter, seg: PlainTextSegment, rules: seq[Rule]) =
       l.print_violation(v)
 
 
-# TODO: Think about how best to add line and col initialization values.
-proc lint_files*(l: var PlainLinter, file_list: seq[string], rules: seq[Rule],
+proc lint_files*(l: var LaTeXLinter, file_list: seq[string], rules: seq[Rule],
                  line_init, col_init: int): bool =
    var t_start, t_stop, delta_analysis: float
    result = true
 
    delta_analysis = 0
    for filename in file_list:
-      # Reset per-file variables.
       l.nof_violations_file = (0, 0, 0)
       reset(rules)
 
@@ -82,16 +77,14 @@ proc lint_files*(l: var PlainLinter, file_list: seq[string], rules: seq[Rule],
 
       l.print_header(filename)
       try:
-         var p: PlainParser
+         var p: LaTeXParser
          open_parser(p, filename, fs)
          t_start = cpu_time()
          for seg in parse_all(p):
             l.lint_segment(seg, rules)
          t_stop = cpu_time()
          close_parser(p)
-      except PlainParseError as e:
-         # Catch and reraise the exception with a type local to this module.
-         # Callers are not aware of the lexing and parsing process.
+      except LaTeXParseError as e:
          log.abort(LinterParseError,
                    "Parse error when processing file '$1'.", filename)
 
@@ -107,7 +100,7 @@ proc lint_files*(l: var PlainLinter, file_list: seq[string], rules: seq[Rule],
    l.print_footer(delta_analysis)
 
 
-proc lint_string*(l: var PlainLinter, str: string, rules: seq[Rule],
+proc lint_string*(l: var LaTeXLinter, str: string, rules: seq[Rule],
                   line_init, col_init: int): bool =
    var t_start, t_stop: float
    result = true
@@ -116,14 +109,14 @@ proc lint_string*(l: var PlainLinter, str: string, rules: seq[Rule],
 
    l.print_header("String input")
    try:
-      var p: PlainParser
+      var p: LaTeXParser
       open_parser(p, "stdin", ss)
       t_start = cpu_time()
       for seg in parse_all(p):
          l.lint_segment(seg, rules)
       t_stop = cpu_time()
       close_parser(p)
-   except PlainParseError:
+   except LaTeXParseError:
       log.abort(LinterParseError,
                 "Parse error when processing input from stdin.")
 

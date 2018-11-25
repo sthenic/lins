@@ -8,6 +8,7 @@ import ospaths
 import terminal
 
 import linters/plain_linter
+import linters/latex_linter
 import rules/rules
 import rules/parser
 import utils/log
@@ -62,11 +63,17 @@ log.set_quiet_mode(cli_state.minimal)
 log.set_color_mode(cli_state.color_mode)
 
 # Create linters
-let debug_options: PlainDebugOptions = (
+let plain_debug_options: PlainLinterDebugOptions = (
    parser_output_filename: cli_state.parser_output_filename
 )
 var linter = PlainLinter.new(cli_state.minimal, cli_state.severity,
-                             debug_options)
+                             plain_debug_options)
+
+let latex_debug_options: LaTeXLinterDebugOptions = (
+   parser_output_filename: cli_state.parser_output_filename
+)
+var llinter = LaTeXLinter.new(cli_state.minimal, cli_state.severity,
+                              latex_debug_options)
 
 # Parse configuration file.
 var cfg_state: CfgState

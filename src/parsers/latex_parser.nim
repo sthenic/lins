@@ -13,7 +13,7 @@ import ./base_parser
 type
    LaTeXParseError* = object of ParseError
 
-   Enclosure {.pure.} = enum
+   Enclosure* {.pure.} = enum
       Invalid
       Option
       Group
@@ -21,17 +21,17 @@ type
       Math
       DisplayMath
 
-   ScopeKind {.pure.} = enum
+   ScopeKind* {.pure.} = enum
       Invalid
       ControlSequence
       Environment
       Math
 
-   ScopeEntry = object
-      name: string
-      kind: ScopeKind
-      encl: Enclosure
-      count: int
+   ScopeEntry* = object
+      name*: string
+      kind*: ScopeKind
+      encl*: Enclosure
+      count*: int
 
    LaTeXParser* = object
       lex: TeXLexer
