@@ -183,7 +183,7 @@ proc new(t: typedesc[Rules]): Rules =
 template validate_extension_point(data: typed, ext: string, filename: string) =
    if not (to_lower_ascii(data.extends) == ext):
       log.abort(RuleValueError,
-                "Invalid extension point '$#' specified in file '$#'.",
+                "Invalid extension point '$1' specified in file '$2'.",
                 data.extends, filename)
 
 
@@ -203,8 +203,8 @@ template validate_common(data: typed, filename: string, message: untyped,
    of "error":
       level = Severity.ERROR
    else:
-      log.warning("Unsupported severity level '$#' defined for rule in " &
-                  "file '$#', skipping.", data.level, filename)
+      log.warning("Unsupported severity level '$1' defined for rule in " &
+                  "file '$2', skipping.", data.level, filename)
       raise new_exception(RuleValueError, "Unsupported severity level in " &
                                           "file '" & filename & "'")
 
@@ -219,7 +219,7 @@ template validate_scope(data: typed, filename: string, scope: untyped) =
    of "paragraph":
       scope = Scope.PARAGRAPH
    else:
-      log.warning("Unsupported scope '$#' defined for rule in file '$#', " &
+      log.warning("Unsupported scope '$1' defined for rule in file '$2', " &
                   "skipping.", data.scope, filename)
       raise new_exception(RuleValueError, "Unsupported scope in file '" &
                                           filename & "'")
@@ -238,8 +238,8 @@ template validate_limit(data: typed, filename: string, limit: untyped,
    of "max", "maximum":
       limit_kind = Limit.MAX
    else:
-      log.warning("Unsupported limit kind '$#' defined for rule in file " &
-                  "'$#', skipping.", data.scope, filename)
+      log.warning("Unsupported limit kind '$1' defined for rule in file " &
+                  "'$2', skipping.", data.scope, filename)
       raise new_exception(RuleValueError, "Unsupported limit kind in file '" &
                                           filename & "'")
 
@@ -251,8 +251,8 @@ template validate_nof_capture_groups(regex: string, filename: string,
       tmp &= "s"
    let cc = capture_count(re(regex))
    if not (cc == nof_capture_groups):
-      log.warning("The regular expression defined for field '$#' in file " &
-                  "'$#' is expected to have exactly $# capture $#, not $#. " &
+      log.warning("The regular expression defined for field '$1' in file " &
+                  "'$2' is expected to have exactly $3 capture $4, not $5. " &
                   "Skipping the file.",
                   label, filename, $nof_capture_groups, tmp, $cc)
       raise new_exception(RuleValueError, "Expected " & $nof_capture_groups &
@@ -263,7 +263,7 @@ proc get_rule_display_name(rule_filename: string): string =
    var (dir, name, _) = split_file(rule_filename)
    if name == "":
       log.abort(RulePathError,
-                "Attempted to get short name for an invalid path '$#'.",
+                "Attempted to get short name for an invalid path '$1'.",
                 rule_filename)
 
    if dir == "":
@@ -278,51 +278,51 @@ proc get_rule_display_name(rule_filename: string): string =
 
 template debug_header(data: typed, filename: string) =
    if data.debug:
-      log.debug_always("Debug information for rule '$#'.", filename)
+      log.debug_always("Debug information for rule '$1'.", filename)
 
 
 template debug_existence(data: typed, filename, token_str: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug_always("  $#", token_str)
+      log.debug_always("  $1", token_str)
 
 
 template debug_substitution(data: typed, filename, key_str: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug_always("  $#", key_str)
+      log.debug_always("  $1", key_str)
 
 
 template debug_occurrence(data: typed, filename: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug_always("  $#", data.token)
+      log.debug_always("  $1", data.token)
 
 
 template debug_repetition(data: typed, filename: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug_always("  $#", data.token)
+      log.debug_always("  $1", data.token)
 
 
 template debug_consistency_entry(data: typed, first, second: string) =
    if data.debug:
-      log.debug_always("  First:  $#", first)
-      log.debug_always("  Second: $#", second)
+      log.debug_always("  First:  $1", first)
+      log.debug_always("  Second: $1", second)
 
 
 template debug_definition(data: typed, filename: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug_always("  Definition:  $#", data.definition)
-      log.debug_always("  Declaration: $#", data.declaration)
+      log.debug_always("  Definition:  $1", data.definition)
+      log.debug_always("  Declaration: $1", data.declaration)
 
 
 template debug_conditional(data: typed, filename: string) =
    debug_header(data, filename)
    if data.debug:
-      log.debug_always("  First:  $#", data.first)
-      log.debug_always("  Second: $#", data.second)
+      log.debug_always("  First:  $1", data.first)
+      log.debug_always("  Second: $1", data.second)
 
 
 proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
@@ -356,10 +356,10 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
 
    if not raw_is_defined and not tokens_are_defined:
       log.warning("Neither tokens nor raw items are defined for rule in file " &
-                  "'$#', skipping.", filename)
+                  "'$1', skipping.", filename)
       raise new_exception(RuleParseError,
                           format("Missing either tokens or raw items for " &
-                                 "rule in file '$#'.", filename))
+                                 "rule in file '$1'.", filename))
 
    debug_existence(data, filename, token_str)
 
@@ -385,7 +385,7 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
    for key, subst in pairs(data.swap):
       key_str &= key & "|"
       if subst == "":
-         log.warning("Empty substitution for key '$#' in file '$#'.",
+         log.warning("Empty substitution for key '$1' in file '$2'.",
                      key, filename)
       subst_table[key] = subst
    key_str = key_str[0..^2] & ")" & word_boundary
@@ -497,7 +497,7 @@ proc parse_rule_file*(filename: string): seq[Rule] =
    # Open the stream
    fs = new_file_stream(filename)
    if is_nil(fs):
-      log.warning("Rule file '$#' is not a valid path, skipping.", filename)
+      log.warning("Rule file '1' is not a valid path, skipping.", filename)
       raise new_exception(RulePathError, "Rule file '" & filename &
                                          "' is not a valid path, skipping.")
 
@@ -514,7 +514,7 @@ proc parse_rule_file*(filename: string): seq[Rule] =
 
    if not success:
       log.abort(RuleParseError,
-                "Parse error in file '$#'. Either it's not a valid YAML " &
+                "Parse error in file '$1'. Either it's not a valid YAML " &
                 "file or it doesn't specify the required fields for the " &
                 "extension point. Skipping for now.", filename)
 
