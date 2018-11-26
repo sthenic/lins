@@ -44,6 +44,14 @@ template run_test(title, stimuli: string; reference: seq[TeXToken],
       nof_failed += 1
 
 
+# We define a custom constructor to be able to provide a default value to the
+# context without intruding on the full constructor in the lexer module.
+proc new*(t: typedesc[TeXToken], token_type: TeXTokenType,
+         catcode: CategoryCode, token: string, line, col: int): TeXToken =
+   result = TeXToken(token_type: token_type, catcode: catcode, token: token,
+                     line: line, col: col, context: ("", ""))
+
+
 # Control sequences (category 0)
 run_test("Control word",
 """\foo""", @[
