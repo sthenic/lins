@@ -7,41 +7,18 @@ import ../utils/log
 import ../rules/plain_rules
 import ../parsers/plain_parser
 
-export LinterFileIOError, LinterValueError, LinterParseError
+export LinterFileIOError, LinterValueError, LinterParseError, LinterDebugOptions
+export open_linter
 
-type
-   PlainLinterDebugOptions* = tuple
-      parser_output_filename: string
-
-   PlainLinter* = object of BaseLinter
-      parser_output_fs: FileStream
-
-
-proc new*(t: typedesc[PlainLinter], minimal_mode: bool,
-          severity_threshold: Severity,
-          opts: PlainLinterDebugOptions): PlainLinter =
-   result = PlainLinter(minimal_mode: minimal_mode,
-                        severity_threshold: severity_threshold)
-
-   if len(opts.parser_output_filename) != 0:
-      # User has asked for parser output in a separate file.
-      result.parser_output_fs = new_file_stream(
-         opts.parser_output_filename, fmWrite)
-
-      if is_nil(result.parser_output_fs):
-         log.error("Failed to open file '$1' for writing.",
-                   opts.parser_output_filename)
-      else:
-         log.info("Parser output will be written to file '$1'.",
-                  opts.parser_output_filename)
+type PlainLinter* = object of BaseLinter
 
 
 proc lint_segment(l: var PlainLinter, seg: PlainTextSegment, rules: seq[Rule]) =
    var violations: seq[Violation] = @[]
 
-   if not is_nil(l.parser_output_fs):
+   if not is_nil(l.parser_output_stream):
       # Dump the parser output if the file stream is defined.
-      l.parser_output_fs.write_line(seg, "\n")
+      l.parser_output_stream.write_line(seg, "\n")
 
    for r in rules:
       # Ignore rules if the log level is set too low.

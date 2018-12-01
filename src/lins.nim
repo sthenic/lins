@@ -6,6 +6,7 @@ import tables
 import os
 import ospaths
 import terminal
+import streams
 
 import linters/plain_linter
 import linters/latex_linter
@@ -62,18 +63,26 @@ elif cli_state.print_version:
 log.set_quiet_mode(cli_state.minimal)
 log.set_color_mode(cli_state.color_mode)
 
-# Create linters
-let plain_debug_options: PlainLinterDebugOptions = (
-   parser_output_filename: cli_state.parser_output_filename
-)
-var linter = PlainLinter.new(cli_state.minimal, cli_state.severity,
-                             plain_debug_options)
+var parser_output_stream: FileStream
+if len(cli_state.parser_output_filename) != 0:
+   # User has asked for parser output in a separate file.
+   parser_output_stream = new_file_stream(
+      cli_state.parser_output_filename, fmWrite)
 
-let latex_debug_options: LaTeXLinterDebugOptions = (
-   parser_output_filename: cli_state.parser_output_filename
-)
-var llinter = LaTeXLinter.new(cli_state.minimal, cli_state.severity,
-                              latex_debug_options)
+   if is_nil(parser_output_stream):
+      log.error("Failed to open file '$1' for writing.",
+                cli_state.parser_output_filename)
+   else:
+      log.info("Parser output will be written to file '$1'.",
+               cli_state.parser_output_filename)
+
+# Create linters
+var linter = PlainLinter()
+open_linter(linter, cli_state.minimal, cli_state.severity,
+            parser_output_stream)
+var ltxlinter = LaTeXLinter()
+open_linter(ltxlinter, cli_state.minimal, cli_state.severity,
+            parser_output_stream)
 
 # Parse configuration file.
 var cfg_state: CfgState

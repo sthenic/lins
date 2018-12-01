@@ -15,6 +15,9 @@ type
    LinterValueError* = object of Exception
    LinterParseError* = object of Exception
 
+   LinterDebugOptions* = tuple
+      parser_output_filename: string
+
    ViolationCount = tuple
       error: int
       warning: int
@@ -26,6 +29,14 @@ type
       nof_files*: int
       minimal_mode*: bool
       severity_threshold*: Severity
+      parser_output_stream*: Stream
+
+
+proc open_linter*(l: var BaseLinter, minimal_mode: bool,
+                  severity_threshold: Severity, parser_output_stream: Stream) =
+   l.minimal_mode = minimal_mode
+   l.severity_threshold = severity_threshold
+   l.parser_output_stream = parser_output_stream
 
 
 proc inc*(x: var ViolationCount, y: ViolationCount) =
@@ -63,14 +74,14 @@ proc print_violation*(l: BaseLinter, v: Violation) =
       log.abort(LinterValueError, "Unsupported severity level '$1'.",
                 $v.severity)
 
-   call_styled_write_line(&" {v.position.line:>4}:{v.position.col:<5} ",
+   call_styled_write_line(&" l.{v.position.line:<4}  ",
                           styleBright, severity_color, &"{severity_str:<12}",
                           resetStyle, &"{message[0]:<48}    ",
                           styleBright, &"{v.display_name:<20}", resetStyle)
 
    for m in 1..<message.len:
       let tmp = ""
-      call_styled_write_line(&"{tmp:24}{message[m]:<48}")
+      call_styled_write_line(&"{tmp:21}{message[m]:<48}")
 
 
 proc print_header*(l: BaseLinter, str: string) =
