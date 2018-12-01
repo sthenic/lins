@@ -212,7 +212,6 @@ run_test("Empty environment", # Without any characters, the starting point is un
    LaTeXTextSegment.new("", 0, 0, @[], @[
       ScopeEntry.new("empty", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -221,7 +220,6 @@ run_test("Environment on one line",
    LaTeXTextSegment.new("Some words.", 1, 19, @[], @[
       ScopeEntry.new("environment", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -237,7 +235,6 @@ lines.
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -253,7 +250,6 @@ lazy dog.
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -273,7 +269,6 @@ lazy dog.
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -289,7 +284,6 @@ lazy dog.
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -303,7 +297,6 @@ The quick brown fox jumps over the lazy dog.
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -322,7 +315,6 @@ run_test("Environment nested in a control sequence",
    LaTeXTextSegment.new("  ", 1, 6, @[(1, 4)], @[
       ScopeEntry.new("vbox", ControlSequence, Group, 1)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -338,7 +330,6 @@ A simple sentence.
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -354,7 +345,6 @@ A simple sentence.
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -378,7 +368,6 @@ A simple sentence.
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -390,7 +379,6 @@ Contents of a starred environment.
    LaTeXTextSegment.new("Contents of a starred environment. ", 2, 0, @[], @[
       ScopeEntry.new("mystar*", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -417,7 +405,6 @@ Row 2, column 0 & Row 2, column 1
    LaTeXTextSegment.new(" ", 7, 13, @[], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -443,10 +430,6 @@ Row 2, column 0 & Row 2, column 1 & Row 2, column 2
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 1)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[
-      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
-      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 2)
-   ]),
    LaTeXTextSegment.new(" Row 0, column 0 & Row 0, column 1 & Row 0, column 2  " &
                    "Row 1, column 0 & Row 1, column 1 & Row 1, column 2  " &
                    "Row 2, column 0 & Row 2, column 1 & Row 2, column 2 ", 6, 3,
@@ -455,57 +438,48 @@ Row 2, column 0 & Row 2, column 1 & Row 2, column 2
    ], @[
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new(" ", 10, 11, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
 run_test("Pangrams: Swedish",
 """Flygande bäckasiner söka hwila på mjuka tuvor.""", @[
    LaTeXTextSegment.new("Flygande bäckasiner söka hwila på mjuka tuvor.", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: French",
 """Ça me fait peur de fêter noël là, sur cette île bizarroïde où une mère et sa môme essaient de me tuer avec un gâteau à la cigüe brûlé.""", @[
    LaTeXTextSegment.new("Ça me fait peur de fêter noël là, sur cette île bizarroïde où une mère et sa môme essaient de me tuer avec un gâteau à la cigüe brûlé.", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: German",
 """Falsches Üben von Xylophonmusik quält jeden größeren Zwerg""", @[
    LaTeXTextSegment.new("Falsches Üben von Xylophonmusik quält jeden größeren Zwerg", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: Spanish",
 """Benjamín pidió una bebida de kiwi y fresa; Noé, sin vergüenza, la más exquisita champaña del menú.""", @[
    LaTeXTextSegment.new("Benjamín pidió una bebida de kiwi y fresa; Noé, sin vergüenza, la más exquisita champaña del menú.", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: Greek",
 """Ταχίστη αλώπηξ βαφής ψημένη γη, δρασκελίζει υπέρ νωθρού κυνός Takhístè alôpèx vaphês psèménè gè, draskelízei ypér nòthroý kynós""", @[
    LaTeXTextSegment.new("Ταχίστη αλώπηξ βαφής ψημένη γη, δρασκελίζει υπέρ νωθρού κυνός Takhístè alôpèx vaphês psèménè gè, draskelízei ypér nòthroý kynós", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: Czech",
 """Nechť již hříšné saxofony ďáblů rozezvučí síň úděsnými tóny waltzu, tanga a quickstepu.""", @[
    LaTeXTextSegment.new("Nechť již hříšné saxofony ďáblů rozezvučí síň úděsnými tóny waltzu, tanga a quickstepu.", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: Japanese",
 """いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす（ん）""", @[
    LaTeXTextSegment.new("いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす（ん）", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ],)
 
 # Print summary

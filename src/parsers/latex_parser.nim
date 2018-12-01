@@ -107,6 +107,14 @@ proc add_tok(p: var LaTeXParser) =
    p.last_tok = p.tok
 
 
+proc add_seg(p: var LaTeXParser, seg: LaTeXTextSegment) =
+   ## Add a segment to the sequence of completed segments.
+   if len(seg.text.strip()) != 0:
+      # We skip adding segments with length zero or consisting entirely of
+      # whitespace.
+      add(p.segs, seg)
+
+
 proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
    # Push the current text segment to the stack.
    add(p.seg_stack, p.seg)
@@ -123,28 +131,53 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
       p.scope_entry = ScopeEntry()
 
 
+proc expand_segment(p: var LaTeXParser, inner: LaTeXTextSegment) =
+   # The inner segment should be 'expanded' and thus added to the outer text
+   # segment. All the linebreaks of the inner segment gets added to the
+   # outer with modified positions (their coordinates are absolute). If the
+   # outer segment has length zero, we also pass on the segment starting
+   # position.
+   let outer_len = len(p.seg.text)
+   if outer_len == 0:
+      p.seg.line = inner.line
+      p.seg.col = inner.col
+   for lb in inner.linebreaks:
+      add(p.seg.linebreaks, (outer_len + lb.pos, lb.line))
+   add(p.seg.text, inner.text)
+
+
 proc end_enclosure(p: var LaTeXParser) =
-   # Emit the text segment.
-   var inner = p.seg
-   # Pop the text segment stack.
+   let inner = p.seg
    p.seg = pop(p.seg_stack)
    if inner.expand:
-      # The completed segment should be expanded and added to the outer text
-      # segment. All the linebreaks of the inner segment gets added to the
-      # outer with modified positions (their coordinates are absolute). If the
-      # outer segment has length zero, we also pass on the segment starting
-      # position.
-      let outer_len = len(p.seg.text)
-      if outer_len == 0:
-         p.seg.line = inner.line
-         p.seg.col = inner.col
-      for lb in inner.linebreaks:
-         add(p.seg.linebreaks, (outer_len + lb.pos, lb.line))
-      add(p.seg.text, inner.text)
+      # Pop the text segment stack and expand the inner segment into the outer
+      # segment.
+      expand_segment(p, inner)
    else:
-      add(p.segs, inner)
+      # Otherwise, the segment is not to be expanded so we just add the segment
+      # to the list of completed segments.
+      add_seg(p, inner)
    # Restore the scope entry.
    p.scope_entry = pop(p.scope)
+
+
+proc handle_par(p: var LaTeXParser) =
+   # The current text segment should end here and be added to the list of
+   # completed text segments. However, if this segment should be expanded we
+   # add the partial result to the outer segment and push the outer segment
+   # back onto the stack.
+   let inner = p.seg
+   if inner.expand and len(p.seg_stack) != 0:
+      p.seg = pop(p.seg_stack)
+      expand_segment(p, inner)
+      # Push the outer segment back onto the stack.
+      add(p.seg_stack, p.seg)
+   else:
+      add_seg(p, inner)
+
+   # Initialize a new text segment with identical scope to the one we just added
+   # to the list of completed segments.
+   p.seg = LaTeXTextSegment(scope: inner.scope, expand: inner.expand)
 
 
 proc clear_scope(p: var LaTeXParser) =
@@ -284,6 +317,9 @@ proc parse_control_word(p: var LaTeXParser) =
       else:
          raise new_exception(LaTeXParseError, "Environment " & env &
                              "ended without matching begin statement.")
+   of "par":
+      handle_par(p)
+      get_token(p)
    else:
       var name = p.tok.token
       get_token(p)
@@ -342,7 +378,7 @@ proc parse_all*(p: var LaTeXParser): seq[LaTeXTextSegment] =
    get_token(p)
    while p.tok.token_type != EndOfFile:
       parse_token(p)
-   add(p.segs, p.seg)
+   add_seg(p, p.seg)
    result = p.segs
 
 
