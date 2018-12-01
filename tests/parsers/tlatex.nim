@@ -61,6 +61,12 @@ text.""", @[
 ])
 
 
+run_test("Escaped characters",
+"""\%\&\_\#\$\~""", @[
+   LaTeXTextSegment.new("%&_#$~", 1, 0, @[], @[])
+])
+
+
 # (La)TeX constructions
 
 run_test("Group w/o control sequence",

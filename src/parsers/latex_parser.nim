@@ -49,7 +49,7 @@ type
       expand*: bool
 
 
-const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$'}
+const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$', '~'}
 const EXPANDED_CONTROL_WORDS: seq[string] = @["emph", "textbf", "texttt"]
 const EXPANDED_ENVIRONMENTS: seq[string] = @[]
 
