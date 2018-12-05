@@ -43,6 +43,7 @@ type
    LaTeXTextSegment* = object of TextSegment
       scope*: seq[ScopeEntry]
       expand*: bool
+      context*: Context
 
 
 const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$', '~'}
@@ -73,7 +74,7 @@ proc get_token*(p: var LaTeXParser) =
 
 proc open_parser*(p: var LaTeXParser, filename: string, s: Stream) =
    init(p.tok)
-   open_lexer(p.lex, filename, s)
+   open_lexer(p.lex, filename, s, true)
 
 
 proc close_parser*(p: var LaTeXParser) =
@@ -99,7 +100,8 @@ proc add_seg(p: var LaTeXParser, seg: LaTeXTextSegment) =
       add(p.segs, seg)
 
 
-proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
+proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool,
+                     context_before: string = "") =
    # Push the current text segment to the stack.
    add(p.seg_stack, p.seg)
    # Push the current scope entry to the scope.
@@ -108,6 +110,8 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool) =
    p.seg = LaTeXTextSegment()
    p.seg.scope = p.scope
    p.seg.expand = expand
+   # TODO: Add to constructor a few lines above?
+   p.seg.context.before = context_before
    # Initialize a new scope entry unless we're told to keep it. This only
    # happens when an environment is entered since there may be options and
    # capture groups following the \begin{env} statement.
@@ -130,7 +134,8 @@ proc expand_segment(p: var LaTeXParser, inner: LaTeXTextSegment) =
    add(p.seg.text, inner.text)
 
 
-proc end_enclosure(p: var LaTeXParser) =
+proc end_enclosure(p: var LaTeXParser, context_after: string = "") =
+   p.seg.context.after = context_after
    let inner = p.seg
    p.seg = pop(p.seg_stack)
    if inner.expand:
