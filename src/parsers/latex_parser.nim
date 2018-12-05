@@ -5,10 +5,6 @@ import ../lexers/tex_lexer
 import ../utils/log
 import ./base_parser
 
-# TODO: Think about if it's worth tracking all the column positions what with
-#       TeX eating additional whitespace etc. Any person would be able to track
-#       down an issue given just the line number.
-
 
 type
    LaTeXParseError* = object of ParseError
@@ -56,18 +52,6 @@ const EXPANDED_ENVIRONMENTS: seq[string] = @[]
 # Forward declarations
 proc parse_character(p: var LaTeXParser)
 proc parse_token(p: var LaTeXParser)
-
-
-proc new*(t: typedesc[LaTeXTextSegment], text: string, line, col: int,
-          linebreaks: seq[Linebreak], scope: seq[ScopeEntry],
-          expand: bool = false): LaTeXTextSegment =
-   result = LaTeXTextSegment(text: text, line: line, col: col,
-                        linebreaks: linebreaks, scope: scope, expand: expand)
-
-
-proc new*(t: typedesc[ScopeEntry], name: string, kind: ScopeKind,
-          encl: Enclosure, count: int): ScopeEntry =
-   result = ScopeEntry(name: name, kind: kind, encl: encl, count: count)
 
 
 proc is_empty[T](s: seq[T]): bool =

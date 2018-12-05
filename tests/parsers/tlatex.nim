@@ -34,6 +34,19 @@ template run_test(title, stimuli: string; reference: seq[LaTeXTextSegment],
       nof_failed += 1
 
 
+proc new*(t: typedesc[LaTeXTextSegment], text: string, line, col: int,
+          linebreaks: seq[Linebreak], scope: seq[ScopeEntry],
+          context: Context = ("", ""), expand: bool = false): LaTeXTextSegment =
+   result = LaTeXTextSegment(text: text, line: line, col: col,
+                             linebreaks: linebreaks, scope: scope,
+                             expand: expand, context: context)
+
+
+proc new*(t: typedesc[ScopeEntry], name: string, kind: ScopeKind,
+          encl: Enclosure, count: int): ScopeEntry =
+   result = ScopeEntry(name: name, kind: kind, encl: encl, count: count)
+
+
 run_test("Simple sentence",
 """A simple sentence.""", @[
    LaTeXTextSegment.new("A simple sentence.", 1, 0, @[], @[])
