@@ -21,7 +21,7 @@ type
       catcode*: CategoryCode
       token*: string
       line*, col*: int
-      context: Context
+      context*: Context
 
    State = enum
       StateN
@@ -325,10 +325,12 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
       tok.context.after = get_context_after(l)
 
 
-proc open_lexer*(l: var TeXLexer, filename: string, s: Stream) =
+proc open_lexer*(l: var TeXLexer, filename: string, s: Stream,
+                 enable_context: bool) =
    lexbase.open(l, s)
    l.filename = filename
    l.state = StateN
+   l.enable_context = enable_context
 
 
 proc close_lexer*(l: var TeXLexer) =
