@@ -16,7 +16,7 @@ template run_test(title, stimuli: string; reference: seq[TeXToken],
    var lex: TeXLexer
    var tok: TeXToken
    init(tok)
-   open_lexer(lex, "test", new_string_stream(stimuli))
+   open_lexer(lex, "test", new_string_stream(stimuli), false)
    while true:
       get_token(lex, tok)
       if tok.token_type == TeXTokenType.EndOfFile:
