@@ -72,14 +72,18 @@ proc init*(t: var TeXToken) =
 proc get_context_before(l: TeXLexer): string =
    for i in countdown(CONTEXT_CHARS, 1):
       let c = l.buf[l.bufpos - i]
-      if c != '\0':
+      if c == '\0':
+         break
+      else:
          add(result, c)
 
 
 proc get_context_after(l: TeXLexer): string =
    for i in countup(0, CONTEXT_CHARS - 1):
       let c = l.buf[l.bufpos + i]
-      if c != '\0':
+      if c == '\0':
+         break
+      else:
          add(result, c)
 
 
