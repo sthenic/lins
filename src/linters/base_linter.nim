@@ -4,6 +4,7 @@ import streams
 import terminal
 import nre
 import sequtils
+import unicode
 
 import ../utils/log
 import ../rules/rules
@@ -45,18 +46,54 @@ proc inc*(x: var ViolationCount, y: ViolationCount) =
    inc(x.suggestion, y.suggestion)
 
 
-proc split_message(msg: string, limit: int): seq[string] =
-   proc helper(s: string): bool =
-      result = s != ""
+# Borrowed implementation from nim devel until these are released.
+proc olen(s: string): int =
+   var i = 0
+   result = 0
+   while i < s.len:
+      inc result
+      let L = graphemeLen(s, i)
+      inc(i, L)
 
-   let regex_break = re("(.{1," & $limit & "})(?:(?<!')|$)(?:\\b|$|(?=_))(?!')")
-   result = filter(split(msg, regex_break), helper)
-   for i in 0..<result.len:
-      result[i] = result[i].strip()
+
+proc wrap_words*(s: string, maxLineWidth = 80,
+                 splitLongWords = true,
+                 seps: set[char] = Whitespace,
+                 newLine = "\n"): string {.noSideEffect.} =
+   result = newStringOfCap(s.len + s.len shr 6)
+   var spaceLeft = maxLineWidth
+   var lastSep = ""
+   for word, isSep in tokenize(s, seps):
+      let wlen = olen(word)
+      if isSep:
+         lastSep = word
+         spaceLeft = spaceLeft - wlen
+      elif wlen > spaceLeft:
+         if splitLongWords and wlen > maxLineWidth:
+            result.add(lastSep) # Bugfix
+            var i = 0
+            while i < word.len:
+               if spaceLeft <= 0:
+                  spaceLeft = maxLineWidth
+                  result.add(newLine)
+               dec(spaceLeft)
+               let L = graphemeLen(word, i)
+               for j in 0 ..< L:
+                  result.add(word[i+j])
+               inc(i, L)
+         else:
+            spaceLeft = maxLineWidth - wlen
+            result.add(newLine)
+            result.add(word)
+      else:
+         spaceLeft = spaceLeft - wlen
+         result.add(lastSep)
+         result.add(word)
+         lastSep.setLen(0)
 
 
 proc print_violation*(l: BaseLinter, v: Violation) =
-   let message = split_message(v.message, 48)
+   let message = wrap_words(v.message, 48, true).split_lines()
 
    var severity_color: ForegroundColor = fgWhite
    var severity_str: string = ""
