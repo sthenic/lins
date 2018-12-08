@@ -191,7 +191,7 @@ run_test("Inline math",
 """A simple sentence with inline $xa_n(k)$ math.""", @[
    LaTeXTextSegment.new("xa_n(k)", 1, 31, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0)
-   ]),
+   ], ("ne ", " ma")),
    LaTeXTextSegment.new("A simple sentence with inline  math.", 1, 0, @[], @[])
 ])
 
@@ -200,7 +200,7 @@ run_test("Inline math with delimiters \\(, \\)",
 """A simple sentence with inline \(xa_n(k)\) math.""", @[
    LaTeXTextSegment.new("xa_n(k)", 1, 32, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0)
-   ]),
+   ], ("ne ", " ma")),
    LaTeXTextSegment.new("A simple sentence with inline  math.", 1, 0, @[], @[])
 ])
 
@@ -209,7 +209,7 @@ run_test("Display math with delimiter $$",
 """A simple sentence with display $$xa_n(k)$$ math.""", @[
    LaTeXTextSegment.new("xa_n(k)", 1, 33, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0)
-   ]),
+   ], ("ay ", " ma")),
    LaTeXTextSegment.new("A simple sentence with display  math.", 1, 0, @[], @[])
 ])
 
@@ -218,7 +218,7 @@ run_test("Display math with delimiters \\[, \\]",
 """A simple sentence with display \[xa_n(k)\] math.""", @[
    LaTeXTextSegment.new("xa_n(k)", 1, 33, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0)
-   ]),
+   ], ("ay ", " ma")),
    LaTeXTextSegment.new("A simple sentence with display  math.", 1, 0, @[], @[])
 ])
 

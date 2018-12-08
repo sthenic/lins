@@ -204,31 +204,32 @@ proc handle_category_3(p: var LaTeXParser) =
    # Handle math shift characters.
    if is_in_enclosure(p, Enclosure.DisplayMath):
       # Ends with the next character.
-      end_enclosure(p)
       get_token(p)
       if p.tok.catcode != 3:
          # Error condition.
          raise new_exception(LaTeXParseError, "Display math section ended " &
                              "without two characters of catcode 3, e.g. '$$'.")
+      end_enclosure(p, p.tok.context.after)
       get_token(p)
    elif is_in_enclosure(p, Enclosure.Math):
       # Ends with this character.
-      end_enclosure(p)
+      end_enclosure(p, p.tok.context.after)
       get_token(p)
    else:
       # Enclosure begins, peek the next character to determine the type
       # of math enclosure. For display math, TeX requires that the '$$'
       # delimiter occurs next to each other.
+      var context_before = p.tok.context.before
       get_token(p)
       if p.tok.catcode == 3:
          p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
                                     encl: Enclosure.DisplayMath)
-         begin_enclosure(p, false, false)
+         begin_enclosure(p, false, false, context_before)
          get_token(p)
       else:
          p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
                                     encl: Enclosure.Math)
-         begin_enclosure(p, false, false)
+         begin_enclosure(p, false, false, context_before)
          # Recursively parse the token.
          parse_token(p)
 
@@ -344,15 +345,15 @@ proc parse_control_symbol(p: var LaTeXParser) =
       # doing delimter pairing which would allow us to raise a parse error.
       p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
                                  encl: Enclosure.DisplayMath)
-      begin_enclosure(p, false, false)
+      begin_enclosure(p, false, false, p.tok.context.before)
    elif p.tok.token == "]" and is_in_enclosure(p, Enclosure.DisplayMath):
-      end_enclosure(p)
+      end_enclosure(p, p.tok.context.after)
    elif p.tok.token == "(":
       p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
                                  encl: Enclosure.Math)
-      begin_enclosure(p, false, false)
+      begin_enclosure(p, false, false, p.tok.context.before)
    elif p.tok.token == ")" and is_in_enclosure(p, Enclosure.Math):
-      end_enclosure(p)
+      end_enclosure(p, p.tok.context.after)
 
    get_token(p)
 
