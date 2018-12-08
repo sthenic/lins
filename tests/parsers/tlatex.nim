@@ -112,7 +112,7 @@ run_test("Control sequence in text, expanded",
 run_test("Expanded control sequence at the beginning of the text segment",
 """\emph{Emphasized} text.""", @[
    LaTeXTextSegment.new(
-      """Emphasized text.""", 1, 6, @[], @[])
+      """Emphasized text.""", 1, 6, @[(10, 1)], @[])
 ])
 
 
@@ -417,7 +417,7 @@ Row 2, column 0 & Row 2, column 1
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Group, 1),
    ], ("ar}", "%\n\\")),
    LaTeXTextSegment.new("Header column 0 & Header column 1 Row 0, column 0 & Row 0, column 1 Row 1, column 0 & Row 1, column 1 Row 2, column 0 & Row 2, column 1 ",
-   3, 8, @[(34, 4), (68, 5), (102, 6)], @[
+   3, 8, @[(15, 3), (34, 4), (68, 5), (102, 6)], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ], ("}%\n", "\n\\e")),
@@ -500,6 +500,35 @@ run_test("Pangrams: Japanese",
 """いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす（ん）""", @[
    LaTeXTextSegment.new("いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす（ん）", 1, 0, @[], @[]),
 ],)
+
+
+run_test("Itemized list",
+"""
+\begin{itemize}
+\item[0:] A
+\item[1:] B
+\item[2:] C
+\end{itemize}
+""", @[
+   LaTeXTextSegment.new("0:", 2, 6, @[], @[
+      ScopeEntry.new("itemize", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("item", ScopeKind.ControlSequence, Enclosure.Option, 1),
+   ], ("e}\n", " A\n")),
+   LaTeXTextSegment.new("1:", 3, 6, @[], @[
+      ScopeEntry.new("itemize", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("item", ScopeKind.ControlSequence, Enclosure.Option, 1),
+   ], (" A\n", " B\n")),
+   LaTeXTextSegment.new("2:", 4, 6, @[], @[
+      ScopeEntry.new("itemize", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("item", ScopeKind.ControlSequence, Enclosure.Option, 1),
+   ], (" B\n", " C\n")),
+   LaTeXTextSegment.new("  A  B  C ", 1, 15, @[
+      (1, 2), (4, 3), (7, 4)
+   ], @[
+      ScopeEntry.new("itemize", ScopeKind.Environment, Enclosure.Environment, 0),
+   ], ("", "\n")),
+])
+
 
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")

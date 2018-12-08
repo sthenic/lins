@@ -32,12 +32,13 @@ type
    LaTeXParser* = object
       lex: TeXLexer
       tok: TeXToken
+      segs: seq[LaTeXTextSegment] # Completed segments
       seg: LaTeXTextSegment # Segment under construction
       seg_stack: seq[LaTeXTextSegment] # Incomplete segments
-      segs: seq[LaTeXTextSegment] # Completed segments
       scope: seq[ScopeEntry] # Complete scope
       scope_entry: ScopeEntry # Scope entry under construction
       last_tok: TeXToken
+      last_tok_stack: seq[TeXToken]
       delimiter_count: int # Delimiter count
 
    LaTeXTextSegment* = object of TextSegment
@@ -104,6 +105,7 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool,
                      context_before: string = "") =
    # Push the current text segment to the stack.
    add(p.seg_stack, p.seg)
+   add(p.last_tok_stack, p.last_tok)
    # Push the current scope entry to the scope.
    add(p.scope, p.scope_entry)
    # Initialize a new text segment w/ the current scope.
@@ -138,6 +140,7 @@ proc end_enclosure(p: var LaTeXParser, context_after: string = "") =
    p.seg.context.after = context_after
    let inner = p.seg
    p.seg = pop(p.seg_stack)
+   p.last_tok = pop(p.last_tok_stack)
    if inner.expand:
       # Pop the text segment stack and expand the inner segment into the outer
       # segment.
