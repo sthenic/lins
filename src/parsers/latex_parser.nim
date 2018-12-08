@@ -182,7 +182,7 @@ proc handle_category_1(p: var LaTeXParser) =
                                  kind: p.scope_entry.kind,
                                  encl: Group,
                                  count: p.scope_entry.count + 1)
-      begin_enclosure(p, false, false)
+      begin_enclosure(p, false, false, p.tok.context.before)
    else:
       inc(p.delimiter_count)
    get_token(p)
@@ -191,7 +191,7 @@ proc handle_category_1(p: var LaTeXParser) =
 proc handle_category_2(p: var LaTeXParser) =
    # Handle end of group characters.
    if is_in_enclosure(p, Group) and p.delimiter_count == 0:
-      end_enclosure(p)
+      end_enclosure(p, p.tok.context.after)
    else:
       dec(p.delimiter_count)
    get_token(p)
@@ -237,9 +237,9 @@ proc handle_category_12(p: var LaTeXParser) =
                                  kind: p.scope_entry.kind,
                                  encl: Option,
                                  count: p.scope_entry.count + 1)
-      begin_enclosure(p, false, false)
+      begin_enclosure(p, false, false, p.tok.context.before)
    elif p.tok.token == "]" and is_in_enclosure(p, Option):
-      end_enclosure(p)
+      end_enclosure(p, p.tok.context.after)
    else:
       add_tok(p)
    get_token(p)
@@ -287,6 +287,7 @@ proc get_group_as_string(p: var LaTeXParser): string =
 
 
 proc parse_control_word(p: var LaTeXParser) =
+   var context_before = p.tok.context.before
    case p.tok.token
    of "begin":
       let env = get_group_as_string(p) # Stops at '}'
@@ -315,12 +316,14 @@ proc parse_control_word(p: var LaTeXParser) =
       if p.tok.catcode == 1:
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
                                     encl: Group, count: 1)
-         begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name))
+         begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name),
+                         context_before)
          get_token(p)
       elif p.tok.catcode == 12 and p.tok.token == "[":
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
                                     encl: Option, count: 1)
-         begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name))
+         begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name),
+                         context_before)
          get_token(p)
 
 

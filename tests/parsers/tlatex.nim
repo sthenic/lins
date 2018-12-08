@@ -121,7 +121,7 @@ run_test("Control sequence followed by a group",
    LaTeXTextSegment.new(
       """grouped text""", 1, 21, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1)
-      ]),
+      ], ("th ", " an")),
    LaTeXTextSegment.new(
       """A sentence with  another control sequence.""", 1, 0, @[], @[]),
 ])
@@ -132,7 +132,7 @@ run_test("Control sequence followed by options",
    LaTeXTextSegment.new(
       """option text in here""", 1, 27, @[], @[
          ScopeEntry.new("bar", ControlSequence, Option, 1)
-      ]),
+      ], ("th ", "a f")),
    LaTeXTextSegment.new(
       """Another sentence with a few options.""", 1, 0, @[], @[]),
 ])
@@ -143,15 +143,15 @@ run_test("Control sequence followed by options and groups",
    LaTeXTextSegment.new(
       """options here""", 1, 26, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Option, 1)
-      ]),
+      ], ("re ", "{fi")),
    LaTeXTextSegment.new(
       """first group""", 1, 40, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Group, 2)
-      ]),
+      ], ("re]", "{se")),
    LaTeXTextSegment.new(
       """second group""", 1, 53, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Group, 3)
-      ]),
+      ], ("up}", ".")),
    LaTeXTextSegment.new(
       """Text before .""", 1, 0, @[], @[]),
 ])
@@ -163,15 +163,15 @@ run_test("Nested control sequences",
       """with some""", 1, 19, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1),
          ScopeEntry.new("bar", ControlSequence, Group, 1)
-      ]),
+      ], ("me ", " ex")),
    LaTeXTextSegment.new(
       """And some  extra""", 1, 5, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1)
-      ]),
+      ], ("", " \\b")),
    LaTeXTextSegment.new(
       """added for effect""", 1, 42, @[], @[
          ScopeEntry.new("baz", ControlSequence, Group, 1)
-      ]),
+      ], ("a} ", ".")),
    LaTeXTextSegment.new(
       """ .""", 1, 36, @[], @[]),
 ])
@@ -282,7 +282,7 @@ lazy dog.
    LaTeXTextSegment.new("over the", 3, 15, @[], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("bar", ControlSequence, Group, 1)
-   ]),
+   ], ("ps ", "\nla")),
    LaTeXTextSegment.new("The quick brown fox jumps  lazy dog. ", 2, 0, @[
       (16, 3), (27, 4)
    ], @[
@@ -345,7 +345,7 @@ A simple sentence.
    LaTeXTextSegment.new("Capture group 1", 1, 15, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 1)
-   ]),
+   ], ("xt}", "%\nA")),
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
@@ -360,7 +360,7 @@ A simple sentence.
    LaTeXTextSegment.new("a few optional parameters", 1, 15, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Option, 1)
-   ]),
+   ], ("xt}", "%\nA")),
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
@@ -375,15 +375,15 @@ A simple sentence.
    LaTeXTextSegment.new("up to you to include", 1, 15, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Option, 1)
-   ]),
+   ], ("xt}", "{re")),
    LaTeXTextSegment.new("required capture group", 1, 37, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 2)
-   ]),
+   ], ("de]", "{al")),
    LaTeXTextSegment.new("also required", 1, 61, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 3)
-   ]),
+   ], ("up}", "%\nA")),
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
@@ -415,7 +415,7 @@ Row 2, column 0 & Row 2, column 1
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Group, 1),
-   ]),
+   ], ("ar}", "%\n\\")),
    LaTeXTextSegment.new("Header column 0 & Header column 1 Row 0, column 0 & Row 0, column 1 Row 1, column 0 & Row 1, column 1 Row 2, column 0 & Row 2, column 1 ",
    3, 8, @[(34, 4), (68, 5), (102, 6)], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
@@ -441,14 +441,14 @@ Row 2, column 0 & Row 2, column 1 & Row 2, column 2
 \end{tgtab}
 """, @[
    LaTeXTextSegment.new("header=Column 0 & Column 1 & Column 2, " &
-                   "numcols=3, footer=This is some footer text., " &
-                   "caption=This is the table caption. ", 2, 2,
+                        "numcols=3, footer=This is some footer text., " &
+                        "caption=This is the table caption. ", 2, 2,
    @[
       (39, 3), (50, 4), (84, 5)
    ], @[
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 1)
-   ]),
+   ], ("ab}", "{}\n")),
    LaTeXTextSegment.new(" Row 0, column 0 & Row 0, column 1 & Row 0, column 2  " &
                    "Row 1, column 0 & Row 1, column 1 & Row 1, column 2  " &
                    "Row 2, column 0 & Row 2, column 1 & Row 2, column 2 ", 6, 3,
