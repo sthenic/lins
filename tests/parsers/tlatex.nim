@@ -330,7 +330,7 @@ run_test("Environment nested in a control sequence",
       @[], @[
       ScopeEntry.new("vbox", ControlSequence, Group, 1),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
-   ]),
+   ], ("   ", "\n}")),
    LaTeXTextSegment.new("  ", 1, 6, @[(1, 4)], @[
       ScopeEntry.new("vbox", ControlSequence, Group, 1)
    ]),
@@ -420,7 +420,7 @@ Row 2, column 0 & Row 2, column 1
    3, 8, @[(34, 4), (68, 5), (102, 6)], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
-   ]),
+   ], ("}%\n", "\n\\e")),
    LaTeXTextSegment.new(" ", 7, 13, @[], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
@@ -456,7 +456,7 @@ Row 2, column 0 & Row 2, column 1 & Row 2, column 2
       (1, 7), (54, 8), (107, 9)
    ], @[
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
-   ]),
+   ], ("", "\n")),
 ])
 
 

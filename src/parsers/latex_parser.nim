@@ -293,12 +293,13 @@ proc parse_control_word(p: var LaTeXParser) =
       let env = get_group_as_string(p) # Stops at '}'
       p.scope_entry = ScopeEntry(name: env, kind: ScopeKind.Environment,
                                  encl: Enclosure.Environment)
-      begin_enclosure(p, true, contains(EXPANDED_ENVIRONMENTS, env))
+      begin_enclosure(p, true, contains(EXPANDED_ENVIRONMENTS, env),
+                      context_before)
       get_token(p)
    of "end":
       let env = get_group_as_string(p) # Stops at '}'
       if is_in_enclosure(p, Enclosure.Environment):
-         end_enclosure(p)
+         end_enclosure(p, p.tok.context.after)
          if p.scope_entry.name != env:
             raise new_exception(LaTeXParseError, "Environment name mismatch '" &
                                 env & "' closes '" & p.scope_entry.name & "'.")
