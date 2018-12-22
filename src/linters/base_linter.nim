@@ -46,12 +46,11 @@ proc inc*(x: var ViolationCount, y: ViolationCount) =
    inc(x.suggestion, y.suggestion)
 
 
-# Borrowed implementation from nim devel until these are released.
+# Borrowed implementation from Nim/devel until these are released.
 proc olen(s: string): int =
    var i = 0
-   result = 0
    while i < s.len:
-      inc result
+      inc(result)
       let L = graphemeLen(s, i)
       inc(i, L)
 
@@ -89,6 +88,50 @@ proc wrap_words*(s: string, maxLineWidth = 80,
          spaceLeft = spaceLeft - wlen
          result.add(lastSep)
          result.add(word)
+         lastSep.setLen(0)
+
+
+# Above implementation is not perfect. Improve the implementation below.
+proc wrap_words_improve*(s: string, maxLineWidth = 80,
+                         splitLongWords = true,
+                         seps: set[char] = Whitespace,
+                         newLine = "\n"): string {.noSideEffect.} =
+   ## Word wraps `s`.
+   result = newStringOfCap(s.len + s.len shr 6)
+   var spaceLeft = maxLineWidth
+   var lastSep = ""
+   # TODO: We have to search the lastSep sequence for the last newline character
+   #       to be able to correctly set how many characters are placed on the
+   #       line.
+   for word, isSep in tokenize(s, seps):
+      if isSep:
+         lastSep = word
+         spaceLeft = spaceLeft - len(word)
+         continue
+      if len(word) > spaceLeft:
+         if splitLongWords and len(word) > maxLineWidth:
+            if contains(lastSep, NewLines):
+               spaceLeft = maxLineWidth - len(lastSep)
+            result.add(lastSep & substr(word, 0, spaceLeft-1))
+            lastSep.setLen(0)
+            var w = spaceLeft
+            var wordLeft = len(word) - spaceLeft
+            while wordLeft > 0:
+               result.add(newLine)
+               var L = min(maxLineWidth, wordLeft)
+               spaceLeft = maxLineWidth - L
+               result.add(substr(word, w, w+L-1))
+               inc(w, L)
+               dec(wordLeft, L)
+         else:
+            spaceLeft = maxLineWidth - len(word)
+            result.add(newLine)
+            result.add(word)
+      else:
+         if contains(lastSep, NewLines):
+            spaceLeft = maxLineWidth - len(lastSep)
+         spaceLeft = spaceLeft - len(word)
+         result.add(lastSep & word)
          lastSep.setLen(0)
 
 
