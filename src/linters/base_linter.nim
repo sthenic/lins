@@ -51,91 +51,54 @@ proc olen(s: string): int =
    var i = 0
    while i < s.len:
       inc(result)
-      let L = graphemeLen(s, i)
+      let L = grapheme_len(s, i)
       inc(i, L)
 
 
-proc wrap_words*(s: string, maxLineWidth = 80,
-                 splitLongWords = true,
-                 seps: set[char] = Whitespace,
-                 newLine = "\n"): string {.noSideEffect.} =
-   result = newStringOfCap(s.len + s.len shr 6)
-   var spaceLeft = maxLineWidth
-   var lastSep = ""
-   for word, isSep in tokenize(s, seps):
-      let wlen = olen(word)
-      if isSep:
-         lastSep = word
-         spaceLeft = spaceLeft - wlen
-      elif wlen > spaceLeft:
-         if splitLongWords and wlen > maxLineWidth:
-            result.add(lastSep) # Bugfix
-            var i = 0
-            while i < word.len:
-               if spaceLeft <= 0:
-                  spaceLeft = maxLineWidth
-                  result.add(newLine)
-               dec(spaceLeft)
-               let L = graphemeLen(word, i)
-               for j in 0 ..< L:
-                  result.add(word[i+j])
-               inc(i, L)
-         else:
-            spaceLeft = maxLineWidth - wlen
-            result.add(newLine)
-            result.add(word)
-      else:
-         spaceLeft = spaceLeft - wlen
-         result.add(lastSep)
-         result.add(word)
-         lastSep.setLen(0)
-
-
 # Above implementation is not perfect. Improve the implementation below.
-proc wrap_words_improve*(s: string, maxLineWidth = 80,
-                         splitLongWords = true,
-                         seps: set[char] = Whitespace,
-                         newLine = "\n"): string {.noSideEffect.} =
+proc wrap_words*(s: string, max_line_width = 80, split_long_words = true,
+                 seps: set[char] = Whitespace,
+                 new_line = "\n"): string {.noSideEffect.} =
    ## Word wraps `s`.
-   result = newStringOfCap(s.len + s.len shr 6)
-   var spaceLeft = maxLineWidth
-   var lastSep = ""
-   for word, isSep in tokenize(s, seps):
+   result = new_string_of_cap(s.len + s.len shr 6)
+   var space_rem = max_line_width
+   var last_sep = ""
+   for word, is_sep in tokenize(s, seps):
       let wlen = olen(word)
-      if isSep:
+      if is_sep:
          # Process the whitespace 'word', adding newlines as needed and keeping
          # any trailing non-newline whitespace characters.
          for c in word:
             if c in NewLines:
-               add(result, newLine)
-               lastSep.setLen(0)
-               spaceLeft = maxLineWidth
+               add(result, new_line)
+               last_sep.set_len(0)
+               space_rem = max_line_width
             else:
-               add(lastSep, c)
-               dec(spaceLeft) # TODO: Treat tabs differently?
+               add(last_sep, c)
+               dec(space_rem) # TODO: Treat tabs differently?
          continue
-      elif wlen > spaceLeft:
-         if splitLongWords and wlen > maxLineWidth:
-            result.add(lastSep)
-            lastSep.setLen(0)
+      elif wlen > space_rem:
+         if split_long_words and wlen > max_line_width:
+            result.add(last_sep)
+            last_sep.set_len(0)
             var i = 0
             while i < word.len: # TODO: Is word.len correct here?
-               if spaceLeft <= 0:
-                  spaceLeft = maxLineWidth
-                  result.add(newLine)
-               dec(spaceLeft)
-               let L = graphemeLen(word, i)
+               if space_rem <= 0:
+                  space_rem = max_line_width
+                  result.add(new_line)
+               dec(space_rem)
+               let L = grapheme_len(word, i)
                for j in 0..<L:
                   result.add(word[i+j])
                inc(i, L)
          else:
-            spaceLeft = maxLineWidth - len(word)
-            result.add(newLine & lastSep & word)
-            lastSep.setLen(0)
+            space_rem = max_line_width - len(word)
+            result.add(new_line & last_sep & word)
+            last_sep.set_len(0)
       else:
-         spaceLeft = spaceLeft - len(word)
-         result.add(lastSep & word)
-         lastSep.setLen(0)
+         space_rem = space_rem - len(word)
+         result.add(last_sep & word)
+         last_sep.set_len(0)
 
 
 proc print_violation*(l: BaseLinter, v: Violation) =
