@@ -46,8 +46,8 @@ proc inc*(x: var ViolationCount, y: ViolationCount) =
    inc(x.suggestion, y.suggestion)
 
 
-# Borrowed/improved word_wrapping implementation from Nim/devel until these are
-# released.
+# Borrowed/improved word wrapping implementation from Nim/devel until these are
+# released in a compatible state (or not).
 type WordWrapState = enum
    AfterNewline
    MiddleOfLine
@@ -55,7 +55,7 @@ type WordWrapState = enum
 
 proc olen(s: string): int =
    var i = 0
-   while i < s.len:
+   while i < len(s):
       inc(result)
       let L = grapheme_len(s, i)
       inc(i, L)
@@ -65,7 +65,7 @@ proc wrap_words*(s: string, max_line_width = 80, split_long_words = true,
                  seps: set[char] = Whitespace,
                  new_line = "\n"): string {.noSideEffect.} =
    ## Word wraps `s`.
-   result = new_string_of_cap(s.len + s.len shr 6)
+   result = new_string_of_cap(len(s) + len(s) shr 6)
    var state: WordWrapState
    var space_rem = max_line_width
    var last_sep, indent = ""
@@ -100,7 +100,7 @@ proc wrap_words*(s: string, max_line_width = 80, split_long_words = true,
                last_sep.set_len(0)
 
             var i = 0
-            while i < word.len: # TODO: Is word.len correct here?
+            while i < len(word): # TODO: Is len(word) correct here?
                if space_rem <= 0:
                   space_rem = max_line_width - len(indent)
                   result.add(new_line & indent)
@@ -155,7 +155,7 @@ proc print_violation*(l: BaseLinter, v: Violation) =
                           resetStyle, &"{message[0]:<48}    ",
                           styleBright, &"{v.display_name:<20}", resetStyle)
 
-   for m in 1..<message.len:
+   for m in 1..<len(message):
       let tmp = ""
       call_styled_write_line(&"{tmp:21}{message[m]:<48}")
 
