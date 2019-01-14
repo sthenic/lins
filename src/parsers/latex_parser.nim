@@ -73,8 +73,31 @@ proc get_token*(p: var LaTeXParser) =
    get_token(p.lex, p.tok)
 
 
+proc init(s: var LaTeXTextSegment) =
+   set_len(s.scope, 0)
+   set_len(s.context.before, 0)
+   set_len(s.context.after, 0)
+   s.expand = false
+   base_parser.init(s)
+
+
+proc init(s: var ScopeEntry) =
+   set_len(s.name, 0)
+   s.encl = Enclosure.Invalid
+   s.kind = ScopeKind.Invalid
+   s.count = 0
+
+
 proc open_parser*(p: var LaTeXParser, filename: string, s: Stream) =
    init(p.tok)
+   init(p.seg)
+   init(p.last_tok)
+   init(p.scope_entry)
+   set_len(p.segs, 0)
+   set_len(p.seg_stack, 0)
+   set_len(p.scope, 0)
+   set_len(p.last_tok_stack, 0)
+   p.delimiter_count = 0
    open_lexer(p.lex, filename, s, true)
 
 

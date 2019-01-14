@@ -10,7 +10,9 @@ import ../parsers/latex_parser
 export LinterFileIOError, LinterValueError, LinterParseError, LinterDebugOptions
 export open_linter
 
+
 type LaTeXLinter* = object of BaseLinter
+   parser: LaTeXParser
 
 
 proc lint_segment(l: var LaTeXLinter, seg: LaTeXTextSegment, rules: seq[Rule]) =
@@ -57,13 +59,12 @@ proc lint_files*(l: var LaTeXLinter, file_list: seq[string], rules: seq[Rule],
 
       l.print_header(filename)
       try:
-         var p: LaTeXParser
-         open_parser(p, filename, fs)
+         open_parser(l.parser, filename, fs)
          t_start = cpu_time()
-         for seg in parse_all(p):
+         for seg in parse_all(l.parser):
             l.lint_segment(seg, rules)
          t_stop = cpu_time()
-         close_parser(p)
+         close_parser(l.parser)
       except LaTeXParseError as e:
          log.abort(LinterParseError,
                    "Parse error when processing file '$1'.", filename)

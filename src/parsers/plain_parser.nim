@@ -29,8 +29,17 @@ proc get_token*(p: var PlainParser) =
    get_token(p.lex, p.tok)
 
 
+proc init(seg: var PlainTextSegment) =
+   seg.par_idx = 0
+   base_parser.init(seg)
+
+
 proc open_parser*(p: var PlainParser, filename: string, s: Stream) =
    init(p.tok)
+   init(p.last_tok)
+   init(p.seg)
+   set_len(p.segs, 0)
+   p.par_idx = 0
    open_lexer(p.lex, filename, s)
 
 

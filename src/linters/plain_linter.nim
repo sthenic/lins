@@ -10,7 +10,9 @@ import ../parsers/plain_parser
 export LinterFileIOError, LinterValueError, LinterParseError, LinterDebugOptions
 export open_linter
 
+
 type PlainLinter* = object of BaseLinter
+   parser: PlainParser
 
 
 proc lint_segment(l: var PlainLinter, seg: PlainTextSegment, rules: seq[Rule]) =
@@ -59,13 +61,12 @@ proc lint_files*(l: var PlainLinter, file_list: seq[string], rules: seq[Rule],
 
       l.print_header(filename)
       try:
-         var p: PlainParser
-         open_parser(p, filename, fs)
+         open_parser(l.parser, filename, fs)
          t_start = cpu_time()
-         for seg in parse_all(p):
+         for seg in parse_all(l.parser):
             l.lint_segment(seg, rules)
          t_stop = cpu_time()
-         close_parser(p)
+         close_parser(l.parser)
       except PlainParseError as e:
          # Catch and reraise the exception with a type local to this module.
          # Callers are not aware of the lexing and parsing process.
