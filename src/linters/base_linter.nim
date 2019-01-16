@@ -245,7 +245,7 @@ template lint_files*(l: typed, file_list: seq[string], rules: seq[Rule],
             l.lint_segment(seg, rules)
          t_stop = cpu_time()
          close_parser(l.parser)
-      except ParseError as e:
+      except ParseError:
          # Catch and reraise the exception with a type local to this module.
          # Callers are not aware of the lexing and parsing process.
          log.abort(LinterParseError,
@@ -261,3 +261,29 @@ template lint_files*(l: typed, file_list: seq[string], rules: seq[Rule],
       inc(l.nof_files)
 
    l.print_footer(delta_analysis)
+
+
+template lint_string*(l: typed, str: string, rules: seq[Rule],
+                      line_init, col_init: int, result: untyped) =
+   var t_start, t_stop: float
+   result = true
+
+   let ss = new_string_stream(str)
+
+   l.print_header("String input")
+   try:
+      open_parser(l.parser, "stdin", ss)
+      t_start = cpu_time()
+      for seg in parse_all(l.parser):
+         l.lint_segment(seg, rules)
+      t_stop = cpu_time()
+      close_parser(l.parser)
+   except ParseError:
+      log.abort(LinterParseError,
+                "Parse error when processing input from stdin.")
+
+   if l.nof_violations_file == (0, 0, 0):
+      result = false
+      echo "No style errors found."
+
+   l.print_footer((t_stop - t_start) * 1000.0)
