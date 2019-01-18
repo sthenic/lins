@@ -19,6 +19,10 @@ type
    LinterDebugOptions* = tuple
       parser_output_filename: string
 
+   LintResult* = tuple
+      delta_analysis: float
+      has_violations: bool
+
    ViolationCount = tuple
       error: int
       warning: int
@@ -221,52 +225,53 @@ template lint_segment*(l: typed, seg: typed, rules: seq[Rule]) =
       l.print_violation(v)
 
 
-template lint_files*(l: typed, file_list: seq[string], rules: seq[Rule],
-                     line_init, col_init: int, result: untyped) =
-   var t_start, t_stop, delta_analysis: float
-   result = true
+proc handle*(x: var LintResult, y: LintResult) =
+   x.has_violations = x.has_violations or y.has_violations
+   x.delta_analysis += y.delta_analysis
 
-   delta_analysis = 0
-   for filename in file_list:
-      # Reset per-file variables.
-      l.nof_violations_file = (0, 0, 0)
-      reset(rules)
 
-      let fs = new_file_stream(filename, fmRead)
-      if is_nil(fs):
-         log.abort(LinterFileIOError,
-                   "Failed to open input file '$1' for reading.", filename)
+template lint_file*(l: typed, filename: string, rules: seq[Rule],
+                    line_init, col_init: int, result: var LintResult) =
+   var t_start, t_stop: float
+   result.has_violations = true
 
-      l.print_header(filename)
-      try:
-         open_parser(l.parser, filename, fs)
-         t_start = cpu_time()
-         for seg in parse_all(l.parser):
-            l.lint_segment(seg, rules)
-         t_stop = cpu_time()
-         close_parser(l.parser)
-      except ParseError:
-         # Catch and reraise the exception with a type local to this module.
-         # Callers are not aware of the lexing and parsing process.
-         log.abort(LinterParseError,
-                   "Parse error when processing file '$1'.", filename)
+   # Reset per-file variables.
+   l.nof_violations_file = (0, 0, 0)
+   reset(rules)
 
-      delta_analysis += (t_stop - t_start) * 1000.0
+   let fs = new_file_stream(filename, fmRead)
+   if is_nil(fs):
+      log.abort(LinterFileIOError,
+               "Failed to open input file '$1' for reading.", filename)
 
-      if l.nof_violations_file == (0, 0, 0):
-         result = false
-         echo "No style errors found."
+   l.print_header(filename)
+   try:
+      open_parser(l.parser, filename, fs)
+      t_start = cpu_time()
+      for seg in parse_all(l.parser):
+         l.lint_segment(seg, rules)
+      t_stop = cpu_time()
+      close_parser(l.parser)
+   except ParseError:
+      # Catch and reraise the exception with a type local to this module.
+      # Callers are not aware of the lexing and parsing process.
+      log.abort(LinterParseError,
+               "Parse error when processing file '$1'.", filename)
 
-      inc(l.nof_violations_total, l.nof_violations_file)
-      inc(l.nof_files)
+   result.delta_analysis = (t_stop - t_start) * 1000.0
 
-   l.print_footer(delta_analysis)
+   if l.nof_violations_file == (0, 0, 0):
+      result.has_violations = false
+      echo "No style errors found."
+
+   inc(l.nof_violations_total, l.nof_violations_file)
+   inc(l.nof_files)
 
 
 template lint_string*(l: typed, str: string, rules: seq[Rule],
-                      line_init, col_init: int, result: untyped) =
+                      line_init, col_init: int, result: var LintResult) =
    var t_start, t_stop: float
-   result = true
+   result.has_violations = true
 
    let ss = new_string_stream(str)
 
@@ -283,7 +288,7 @@ template lint_string*(l: typed, str: string, rules: seq[Rule],
                 "Parse error when processing input from stdin.")
 
    if l.nof_violations_file == (0, 0, 0):
-      result = false
+      result.has_violations = false
       echo "No style errors found."
 
-   l.print_footer((t_stop - t_start) * 1000.0)
+   result.delta_analysis = (t_stop - t_start) * 1000.0

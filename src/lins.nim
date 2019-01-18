@@ -8,8 +8,7 @@ import ospaths
 import terminal
 import streams
 
-import linters/plain_linter
-import linters/latex_linter
+import linters/meta_linter
 import rules/rules
 import rules/parser
 import utils/log
@@ -76,12 +75,9 @@ if len(cli_state.parser_output_filename) != 0:
       log.info("Parser output will be written to file '$1'.",
                cli_state.parser_output_filename)
 
-# Create linters
-var linter = PlainLinter()
+# Create meta linter
+var linter = MetaLinter()
 open_linter(linter, cli_state.minimal, cli_state.severity,
-            parser_output_stream)
-var ltxlinter = LaTeXLinter()
-open_linter(ltxlinter, cli_state.minimal, cli_state.severity,
             parser_output_stream)
 
 # Parse configuration file.
@@ -109,13 +105,13 @@ if lint_rules == @[]:
    quit(ENORULES)
 
 # Lint files
-var found_violations: bool
+var lint_result: LintResult
 if not (cli_state.files == @[]):
    # If there are any files in the list of input files, run the linter.
    try:
-      found_violations = linter.lint_files(cli_state.files, lint_rules,
-                                           cli_state.line_init,
-                                           cli_state.col_init)
+      lint_result = linter.lint_files(cli_state.files, lint_rules,
+                                      cli_state.line_init,
+                                      cli_state.col_init, Auto)
    except LinterFileIOError:
       quit(EFILE)
    except LinterParseError:
@@ -138,13 +134,13 @@ else:
       text.add(tmp & "\n")
 
    try:
-      found_violations = linter.lint_string(text, lint_rules,
-                                            cli_state.line_init,
-                                            cli_state.col_init)
+      lint_result = linter.lint_string(text, lint_rules,
+                                       cli_state.line_init,
+                                       cli_state.col_init, Auto)
    except LinterParseError:
       quit(EPARSE)
 
-if found_violations:
+if lint_result.has_violations:
    quit(EVIOL)
 else:
    quit(ESUCCESS)
