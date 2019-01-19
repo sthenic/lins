@@ -1,12 +1,8 @@
-import tables
 import streams
 import ospaths
 
 import ../utils/log
-import ../rules/rules
-import ./base_linter
-import ./plain_linter
-import ./latex_linter
+import ./linter
 
 export LinterFileIOError, LinterValueError, LinterParseError, LinterDebugOptions,
        LintResult

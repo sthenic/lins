@@ -5,11 +5,17 @@ import terminal
 import nre
 import sequtils
 import unicode
+import times
+import typetraits
 
 import ../utils/log
 import ../rules/rules
-import ../parsers/base_parser
+import ../parsers/plain_parser
+import ../parsers/latex_parser
 
+# We export strformat since format() is used in a generic proc. Callers should
+# get everything provided when importing this module.
+export strformat, rules
 
 type
    LinterFileIOError* = object of Exception
@@ -28,16 +34,20 @@ type
       warning: int
       suggestion: int
 
-   BaseLinter* = object of RootObj
+   Linter*[T] = object
       nof_violations_total*: ViolationCount
       nof_violations_file*: ViolationCount
       nof_files*: int
       minimal_mode*: bool
       severity_threshold*: Severity
       parser_output_stream*: Stream
+      parser: T
+
+   PlainLinter* = Linter[PlainParser]
+   LaTeXLinter* = Linter[LaTeXParser]
 
 
-proc open_linter*(l: var BaseLinter, minimal_mode: bool,
+proc open_linter*(l: var Linter, minimal_mode: bool,
                   severity_threshold: Severity, parser_output_stream: Stream) =
    l.minimal_mode = minimal_mode
    l.severity_threshold = severity_threshold
@@ -135,7 +145,7 @@ proc wrap_words*(s: string, max_line_width = 80, split_long_words = true,
          state = MiddleOfLine
 
 
-proc print_violation*(l: BaseLinter, v: Violation) =
+proc print_violation*(l: Linter, v: Violation) =
    let message = wrap_words(v.message, 48, true).split_lines()
 
    var severity_color: ForegroundColor = fgWhite
@@ -164,7 +174,7 @@ proc print_violation*(l: BaseLinter, v: Violation) =
       call_styled_write_line(&"{tmp:21}{message[m]:<48}")
 
 
-proc print_header*(l: BaseLinter, str: string) =
+proc print_header*(l: Linter, str: string) =
    # Suppress headers in minimal mode.
    if l.minimal_mode:
       return
@@ -172,7 +182,7 @@ proc print_header*(l: BaseLinter, str: string) =
    call_styled_write_line(styleBright, styleUnderscore, &"\n{str}", resetStyle)
 
 
-proc print_footer*(l: BaseLinter, time_ms: float) =
+proc print_footer*(l: Linter, time_ms: float) =
    # Suppress footers in minimal mode.
    if l.minimal_mode:
       return
@@ -198,7 +208,7 @@ proc print_footer*(l: BaseLinter, time_ms: float) =
    )
 
 
-template lint_segment*(l: typed, seg: typed, rules: seq[Rule]) =
+proc lint_segment*[T](l: var Linter, seg: T, rules: seq[Rule]) =
    var violations: seq[Violation] = @[]
 
    if not is_nil(l.parser_output_stream):
@@ -230,8 +240,8 @@ proc handle*(x: var LintResult, y: LintResult) =
    x.delta_analysis += y.delta_analysis
 
 
-template lint_file*(l: typed, filename: string, rules: seq[Rule],
-                    line_init, col_init: int, result: var LintResult) =
+proc lint_file*(l: var Linter, filename: string, rules: seq[Rule],
+                line_init, col_init: int): LintResult =
    var t_start, t_stop: float
    result.has_violations = true
 
@@ -268,8 +278,8 @@ template lint_file*(l: typed, filename: string, rules: seq[Rule],
    inc(l.nof_files)
 
 
-template lint_string*(l: typed, str: string, rules: seq[Rule],
-                      line_init, col_init: int, result: var LintResult) =
+proc lint_string*(l: var Linter, str: string, rules: seq[Rule],
+                  line_init, col_init: int): LintResult =
    var t_start, t_stop: float
    result.has_violations = true
 
