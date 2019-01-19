@@ -9,9 +9,9 @@ export LinterFileIOError, LinterValueError, LinterParseError, LinterDebugOptions
 
 type
    Filter* = enum
-      Auto
-      Plain
-      LaTeX
+      AUTO
+      PLAIN
+      LATEX
 
    MetaLinter* = object
       plain_linter: PlainLinter
@@ -43,12 +43,20 @@ proc lint_file(l: var MetaLinter, filename: string, rules: seq[Rule],
 proc lint_files*(l: var MetaLinter, files: seq[string], rules: seq[Rule],
                  line_init, col_init: int, filter: Filter): LintResult =
    for filename in files:
-      let (_, _, ext) = split_file(filename)
-      if ext in l.latex_filter:
-         handle(result, lint_file(l.latex_linter, filename, rules, line_init,
-                                  col_init))
-      else:
+      case filter
+      of AUTO:
+         let (_, _, ext) = split_file(filename)
+         if ext in l.latex_filter:
+            handle(result, lint_file(l.latex_linter, filename, rules, line_init,
+                                     col_init))
+         else:
+            handle(result, lint_file(l.plain_linter, filename, rules, line_init,
+                                     col_init))
+      of PLAIN:
          handle(result, lint_file(l.plain_linter, filename, rules, line_init,
+                                  col_init))
+      of LATEX:
+         handle(result, lint_file(l.latex_linter, filename, rules, line_init,
                                   col_init))
    l.plain_linter.print_footer(result.delta_analysis)
 
