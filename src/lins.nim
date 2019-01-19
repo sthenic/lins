@@ -111,7 +111,8 @@ if not (cli_state.files == @[]):
    try:
       lint_result = linter.lint_files(cli_state.files, lint_rules,
                                       cli_state.line_init,
-                                      cli_state.col_init, Auto)
+                                      cli_state.col_init,
+                                      cli_state.linter)
    except LinterFileIOError:
       quit(EFILE)
    except LinterParseError:
@@ -136,7 +137,8 @@ else:
    try:
       lint_result = linter.lint_string(text, lint_rules,
                                        cli_state.line_init,
-                                       cli_state.col_init, Auto)
+                                       cli_state.col_init,
+                                       cli_state.linter)
    except LinterParseError:
       quit(EPARSE)
 

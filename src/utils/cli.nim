@@ -6,6 +6,7 @@ import ospaths
 
 import ./log
 import ../rules/rules
+import ../linters/meta_linter
 
 type CLIValueError* = object of Exception
 
@@ -21,6 +22,7 @@ type CLIState* = object
    color_mode*: ColorMode
    severity*: Severity
    minimal*: bool
+   linter*: Filter
 
    files*: seq[string]
    rules*: seq[string]
@@ -33,8 +35,8 @@ type CLIState* = object
 
 # CLI constructor, initializes an object with default values.
 proc new(t: typedesc[CLIState]): CLIState =
-   result = CLIState(color_mode: Color, severity: SUGGESTION, line_init: 1,
-                     col_init: 1)
+   result = CLIState(color_mode: Color, severity: SUGGESTION, linter: AUTO,
+                     line_init: 1, col_init: 1)
 
 
 proc parse_cli*(): CLIState =
@@ -127,6 +129,17 @@ proc parse_cli*(): CLIState =
             except ValueError:
                log.abort(CLIValueError,
                          "Failed to convert '$1' to an integer.", val)
+         of "linter":
+            case val.to_lower_ascii()
+            of "auto":
+               result.linter = AUTO
+            of "plain":
+               result.linter = PLAIN
+            of "latex":
+               result.linter = LATEX
+            else:
+               log.abort(CLIValueError, "Option --severity expects the " &
+                         "values 'auto', 'plain' or 'latex'.")
          else:
             log.abort(CLIValueError, "Unknown option '$1'.", key)
 
