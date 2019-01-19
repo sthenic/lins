@@ -6,7 +6,6 @@ import nre
 import sequtils
 import unicode
 import times
-import typetraits
 
 import ../utils/log
 import ../rules/rules
