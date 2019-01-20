@@ -34,10 +34,15 @@ proc open_linter*(l: var MetaLinter, minimal_mode: bool,
    l.latex_filter = @[".tex", ".sty"]
 
 
+proc print_footer(l: MetaLinter, lint_result: LintResult) =
+   let minimal_mode = l.plain_linter.minimal_mode or l.latex_linter.minimal_mode
+   print_footer(lint_result, minimal_mode)
+
+
 proc lint_file(l: var MetaLinter, filename: string, rules: seq[Rule],
                line_init, col_init: int, use_filter: bool): LintResult =
    result = lint_file(l.plain_linter, filename, rules, line_init, col_init)
-   l.plain_linter.print_footer(result.delta_analysis)
+   l.print_footer(result)
 
 
 proc lint_files*(l: var MetaLinter, files: seq[string], rules: seq[Rule],
@@ -58,7 +63,7 @@ proc lint_files*(l: var MetaLinter, files: seq[string], rules: seq[Rule],
       of LATEX:
          handle(result, lint_file(l.latex_linter, filename, rules, line_init,
                                   col_init))
-   l.plain_linter.print_footer(result.delta_analysis)
+   l.print_footer(result)
 
 
 proc lint_string*(l: var MetaLinter, str: string, rules: seq[Rule],
@@ -68,4 +73,4 @@ proc lint_string*(l: var MetaLinter, str: string, rules: seq[Rule],
       result = lint_string(l.plain_linter, str, rules, line_init, col_init)
    of LaTeX:
       result = lint_string(l.latex_linter, str, rules, line_init, col_init)
-   l.plain_linter.print_footer(result.delta_analysis)
+   l.print_footer(result)

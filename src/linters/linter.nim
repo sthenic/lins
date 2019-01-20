@@ -27,6 +27,8 @@ type
    LintResult* = tuple
       delta_analysis: float
       has_violations: bool
+      nof_violations: ViolationCount
+      nof_files: int
 
    ViolationCount = tuple
       error: int
@@ -34,9 +36,6 @@ type
       suggestion: int
 
    Linter*[T] = object
-      nof_violations_total*: ViolationCount
-      nof_violations_file*: ViolationCount
-      nof_files*: int
       minimal_mode*: bool
       severity_threshold*: Severity
       parser_output_stream*: Stream
@@ -57,6 +56,12 @@ proc inc*(x: var ViolationCount, y: ViolationCount) =
    inc(x.error, y.error)
    inc(x.warning, y.warning)
    inc(x.suggestion, y.suggestion)
+
+
+proc `+`*(x, y: ViolationCount): ViolationCount =
+   result.error = x.error + y.error
+   result.warning = x.warning + y.warning
+   result.suggestion = x.suggestion + y.suggestion
 
 
 # Borrowed/improved word wrapping implementation from Nim/devel until these are
@@ -181,33 +186,34 @@ proc print_header*(l: Linter, str: string) =
    call_styled_write_line(styleBright, styleUnderscore, &"\n{str}", resetStyle)
 
 
-proc print_footer*(l: Linter, time_ms: float) =
+proc print_footer*(lint_result: LintResult, minimal_mode: bool) =
    # Suppress footers in minimal mode.
-   if l.minimal_mode:
+   if minimal_mode:
       return
 
    call_styled_write_line(styleBright, "\n\nAnalysis completed in ", fgGreen,
-                          format_float(time_ms, ffDecimal, 1), " ms",
-                          resetStyle, styleBright, " with ", resetStyle)
+                          format_float(lint_result.delta_analysis,
+                                       ffDecimal, 1),
+                          " ms", resetStyle, styleBright, " with ", resetStyle)
 
    var file_str = ""
-   if l.nof_files == 1:
+   if lint_result.nof_files == 1:
       file_str = "in 1 file."
-   elif l.nof_files > 1:
-      file_str = &"in {l.nof_files} files."
+   elif lint_result.nof_files > 1:
+      file_str = &"in {lint_result.nof_files} files."
 
    call_styled_write_line(
       styleBright, fgRed,
-      &"  {l.nof_violations_total.error} errors", resetStyle, ", ",
+      &"  {lint_result.nof_violations.error} errors", resetStyle, ", ",
       styleBright, fgYellow,
-      &"{l.nof_violations_total.warning} warnings",  resetStyle, " and ",
+      &"{lint_result.nof_violations.warning} warnings",  resetStyle, " and ",
       styleBright, fgBlue,
-      &"{l.nof_violations_total.suggestion} suggestions", resetStyle,
+      &"{lint_result.nof_violations.suggestion} suggestions", resetStyle,
       &" {file_str}"
    )
 
 
-proc lint_segment*[T](l: var Linter, seg: T, rules: seq[Rule]) =
+proc lint_segment*[T](l: var Linter, seg: T, rules: seq[Rule]): ViolationCount =
    var violations: seq[Violation] = @[]
 
    if not is_nil(l.parser_output_stream):
@@ -223,11 +229,11 @@ proc lint_segment*[T](l: var Linter, seg: T, rules: seq[Rule]) =
    for v in violations:
       case v.severity
       of ERROR:
-         inc(l.nof_violations_file.error)
+         inc(result.error)
       of WARNING:
-         inc(l.nof_violations_file.warning)
+         inc(result.warning)
       of SUGGESTION:
-         inc(l.nof_violations_file.suggestion)
+         inc(result.suggestion)
       else:
          discard
 
@@ -237,15 +243,17 @@ proc lint_segment*[T](l: var Linter, seg: T, rules: seq[Rule]) =
 proc handle*(x: var LintResult, y: LintResult) =
    x.has_violations = x.has_violations or y.has_violations
    x.delta_analysis += y.delta_analysis
+   inc(x.nof_files, y.nof_files)
+   inc(x.nof_violations, y.nof_violations)
 
 
 proc lint_file*(l: var Linter, filename: string, rules: seq[Rule],
                 line_init, col_init: int): LintResult =
    var t_start, t_stop: float
    result.has_violations = true
+   result.nof_files = 1
 
    # Reset per-file variables.
-   l.nof_violations_file = (0, 0, 0)
    reset(rules)
 
    let fs = new_file_stream(filename, fmRead)
@@ -258,7 +266,7 @@ proc lint_file*(l: var Linter, filename: string, rules: seq[Rule],
       open_parser(l.parser, filename, fs)
       t_start = cpu_time()
       for seg in parse_all(l.parser):
-         l.lint_segment(seg, rules)
+         inc(result.nof_violations, l.lint_segment(seg, rules))
       t_stop = cpu_time()
       close_parser(l.parser)
    except ParseError:
@@ -269,12 +277,9 @@ proc lint_file*(l: var Linter, filename: string, rules: seq[Rule],
 
    result.delta_analysis = (t_stop - t_start) * 1000.0
 
-   if l.nof_violations_file == (0, 0, 0):
+   if result.nof_violations == (0, 0, 0):
       result.has_violations = false
       echo "No style errors found."
-
-   inc(l.nof_violations_total, l.nof_violations_file)
-   inc(l.nof_files)
 
 
 proc lint_string*(l: var Linter, str: string, rules: seq[Rule],
@@ -289,14 +294,14 @@ proc lint_string*(l: var Linter, str: string, rules: seq[Rule],
       open_parser(l.parser, "stdin", ss)
       t_start = cpu_time()
       for seg in parse_all(l.parser):
-         l.lint_segment(seg, rules)
+         inc(result.nof_violations, l.lint_segment(seg, rules))
       t_stop = cpu_time()
       close_parser(l.parser)
    except ParseError:
       log.abort(LinterParseError,
                 "Parse error when processing input from stdin.")
 
-   if l.nof_violations_file == (0, 0, 0):
+   if result.nof_violations == (0, 0, 0):
       result.has_violations = false
       echo "No style errors found."
 
