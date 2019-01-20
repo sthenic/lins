@@ -5,11 +5,9 @@ import ../lexers/plain_lexer
 import ../utils/log
 import ./base_parser
 
-export TextSegment
+export ParseError
 
 type
-   PlainParseError* = object of ParseError
-
    PlainScopeEntry = object
       par_idx: int
 
@@ -29,8 +27,17 @@ proc get_token*(p: var PlainParser) =
    get_token(p.lex, p.tok)
 
 
+proc init(seg: var PlainTextSegment) =
+   seg.par_idx = 0
+   base_parser.init(seg)
+
+
 proc open_parser*(p: var PlainParser, filename: string, s: Stream) =
    init(p.tok)
+   init(p.last_tok)
+   init(p.seg)
+   set_len(p.segs, 0)
+   p.par_idx = 0
    open_lexer(p.lex, filename, s)
 
 
@@ -70,8 +77,7 @@ proc parse_token(p: var PlainParser) =
    else:
       # We should raise an exception if we're forced to parse a token that is
       # not one of the above. Currently, that's 'Invalid' and "EndOfFile'.
-      log.abort(PlainParseError,
-                "Parser encountered an invalid token: $1", $p.tok)
+      log.abort(ParseError, "Parser encountered an invalid token: $1", $p.tok)
 
 
 proc parse_all*(p: var PlainParser): seq[PlainTextSegment] =

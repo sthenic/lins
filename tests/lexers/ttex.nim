@@ -16,7 +16,7 @@ template run_test(title, stimuli: string; reference: seq[TeXToken],
    var lex: TeXLexer
    var tok: TeXToken
    init(tok)
-   open_lexer(lex, "test", new_string_stream(stimuli))
+   open_lexer(lex, "test", new_string_stream(stimuli), false)
    while true:
       get_token(lex, tok)
       if tok.token_type == TeXTokenType.EndOfFile:
@@ -42,6 +42,14 @@ template run_test(title, stimuli: string; reference: seq[TeXToken],
                       fgWhite, "Test '",  title, "'", #resetStyle,
                       " (missing reference data)")
       nof_failed += 1
+
+
+# We define a custom constructor to be able to provide a default value to the
+# context without intruding on the full constructor in the lexer module.
+proc new*(t: typedesc[TeXToken], token_type: TeXTokenType,
+         catcode: CategoryCode, token: string, line, col: int): TeXToken =
+   result = TeXToken(token_type: token_type, catcode: catcode, token: token,
+                     line: line, col: col, context: ("", ""))
 
 
 # Control sequences (category 0)

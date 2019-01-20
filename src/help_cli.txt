@@ -40,6 +40,12 @@ options:
                             Valid values are 'error', 'warning' and
                             'suggestion'.
 
+  --linter=LINTER           Set the linter selection mode. Valid values are:
+                              - 'auto': Choose linter based on file extensions.
+                              - 'plain': Choose the plain-text linter.
+                              - 'latex': Choose the LaTeX linter.
+                            The default value is 'auto'.
+
   --style=STYLE             Specify which style to use for linting. Styles
                             are defined in the configuration file.
 

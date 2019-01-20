@@ -13,11 +13,15 @@ type
 
    CategoryCode* = range[0 .. 15]
 
+   Context* = tuple
+      before, after: string
+
    TeXToken* = object
       token_type*: TeXTokenType
       catcode*: CategoryCode
       token*: string
       line*, col*: int
+      context*: Context
 
    State = enum
       StateN
@@ -27,9 +31,11 @@ type
    TeXLexer* = object of BaseLexer
       filename: string
       state: State
+      enable_context: bool
 
 
 const
+   CONTEXT_CHARS = 3
    CATEGORY: array[CategoryCode, set[char]] = [
       {'\\'},
       {'{'},
@@ -63,10 +69,29 @@ proc init*(t: var TeXToken) =
    t.col = 0
 
 
+proc get_context_before(l: TeXLexer): string =
+   for i in countdown(CONTEXT_CHARS, 1):
+      let c = l.buf[l.bufpos - i]
+      if c == '\0':
+         break
+      else:
+         add(result, c)
+
+
+proc get_context_after(l: TeXLexer): string =
+   for i in countup(0, CONTEXT_CHARS - 1):
+      let c = l.buf[l.bufpos + i]
+      if c == '\0':
+         break
+      else:
+         add(result, c)
+
+
 proc new*(t: typedesc[TeXToken], token_type: TeXTokenType,
-         catcode: CategoryCode, token: string, line, col: int): TeXToken =
+         catcode: CategoryCode, token: string, line, col: int,
+         context: Context): TeXToken =
    result = TeXToken(token_type: token_type, catcode: catcode, token: token,
-                     line: line, col: col)
+                     line: line, col: col, context: context)
 
 
 proc handle_crlf(l: var TeXLexer, pos: int): int =
@@ -224,6 +249,10 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
    tok.catcode = 0
    set_len(tok.token, 0)
    update_token_position(l, tok)
+   if l.enable_context:
+      set_len(tok.context.before, 0)
+      set_len(tok.context.after, 0)
+      tok.context.before = get_context_before(l)
 
    let c = l.buf[l.bufpos]
    case c:
@@ -296,11 +325,16 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
       l.state = StateM
       inc(l.bufpos)
 
+   if l.enable_context:
+      tok.context.after = get_context_after(l)
 
-proc open_lexer*(l: var TeXLexer, filename: string, s: Stream) =
+
+proc open_lexer*(l: var TeXLexer, filename: string, s: Stream,
+                 enable_context: bool) =
    lexbase.open(l, s)
    l.filename = filename
    l.state = StateN
+   l.enable_context = enable_context
 
 
 proc close_lexer*(l: var TeXLexer) =

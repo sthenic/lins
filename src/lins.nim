@@ -6,8 +6,9 @@ import tables
 import os
 import ospaths
 import terminal
+import streams
 
-import linters/plain_linter
+import linters/meta_linter
 import rules/rules
 import rules/parser
 import utils/log
@@ -61,12 +62,23 @@ elif cli_state.print_version:
 log.set_quiet_mode(cli_state.minimal)
 log.set_color_mode(cli_state.color_mode)
 
-# Create linters
-let debug_options: PlainDebugOptions = (
-   parser_output_filename: cli_state.parser_output_filename
-)
-var linter = PlainLinter.new(cli_state.minimal, cli_state.severity,
-                             debug_options)
+var parser_output_stream: FileStream
+if len(cli_state.parser_output_filename) != 0:
+   # User has asked for parser output in a separate file.
+   parser_output_stream = new_file_stream(
+      cli_state.parser_output_filename, fmWrite)
+
+   if is_nil(parser_output_stream):
+      log.error("Failed to open file '$1' for writing.",
+                cli_state.parser_output_filename)
+   else:
+      log.info("Parser output will be written to file '$1'.",
+               cli_state.parser_output_filename)
+
+# Create meta linter
+var linter = MetaLinter()
+open_linter(linter, cli_state.minimal, cli_state.severity,
+            parser_output_stream)
 
 # Parse configuration file.
 var cfg_state: CfgState
@@ -93,13 +105,14 @@ if lint_rules == @[]:
    quit(ENORULES)
 
 # Lint files
-var found_violations: bool
+var lint_result: LintResult
 if not (cli_state.files == @[]):
    # If there are any files in the list of input files, run the linter.
    try:
-      found_violations = linter.lint_files(cli_state.files, lint_rules,
-                                           cli_state.line_init,
-                                           cli_state.col_init)
+      lint_result = linter.lint_files(cli_state.files, lint_rules,
+                                      cli_state.line_init,
+                                      cli_state.col_init,
+                                      cli_state.linter)
    except LinterFileIOError:
       quit(EFILE)
    except LinterParseError:
@@ -122,13 +135,14 @@ else:
       text.add(tmp & "\n")
 
    try:
-      found_violations = linter.lint_string(text, lint_rules,
-                                            cli_state.line_init,
-                                            cli_state.col_init)
+      lint_result = linter.lint_string(text, lint_rules,
+                                       cli_state.line_init,
+                                       cli_state.col_init,
+                                       cli_state.linter)
    except LinterParseError:
       quit(EPARSE)
 
-if found_violations:
+if lint_result.has_violations:
    quit(EVIOL)
 else:
    quit(ESUCCESS)

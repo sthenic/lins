@@ -34,6 +34,19 @@ template run_test(title, stimuli: string; reference: seq[LaTeXTextSegment],
       nof_failed += 1
 
 
+proc new*(t: typedesc[LaTeXTextSegment], text: string, line, col: int,
+          linebreaks: seq[Linebreak], scope: seq[ScopeEntry],
+          context: Context = ("", ""), expand: bool = false): LaTeXTextSegment =
+   result = LaTeXTextSegment(text: text, line: line, col: col,
+                             linebreaks: linebreaks, scope: scope,
+                             expand: expand, context: context)
+
+
+proc new*(t: typedesc[ScopeEntry], name: string, kind: ScopeKind,
+          encl: Enclosure, count: int): ScopeEntry =
+   result = ScopeEntry(name: name, kind: kind, encl: encl, count: count)
+
+
 run_test("Simple sentence",
 """A simple sentence.""", @[
    LaTeXTextSegment.new("A simple sentence.", 1, 0, @[], @[])
@@ -58,6 +71,12 @@ text.""", @[
    LaTeXTextSegment.new(
       "A sentence spanning several lines of text.", 1, 3,
       @[(20, 2), (34, 3), (37, 4)], @[])
+])
+
+
+run_test("Escaped characters",
+"""\%\&\_\#\$\~""", @[
+   LaTeXTextSegment.new("%&_#$~", 1, 0, @[], @[])
 ])
 
 
@@ -93,7 +112,7 @@ run_test("Control sequence in text, expanded",
 run_test("Expanded control sequence at the beginning of the text segment",
 """\emph{Emphasized} text.""", @[
    LaTeXTextSegment.new(
-      """Emphasized text.""", 1, 6, @[], @[])
+      """Emphasized text.""", 1, 6, @[(10, 1)], @[])
 ])
 
 
@@ -102,7 +121,7 @@ run_test("Control sequence followed by a group",
    LaTeXTextSegment.new(
       """grouped text""", 1, 21, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1)
-      ]),
+      ], ("th ", " an")),
    LaTeXTextSegment.new(
       """A sentence with  another control sequence.""", 1, 0, @[], @[]),
 ])
@@ -113,7 +132,7 @@ run_test("Control sequence followed by options",
    LaTeXTextSegment.new(
       """option text in here""", 1, 27, @[], @[
          ScopeEntry.new("bar", ControlSequence, Option, 1)
-      ]),
+      ], ("th ", "a f")),
    LaTeXTextSegment.new(
       """Another sentence with a few options.""", 1, 0, @[], @[]),
 ])
@@ -124,15 +143,15 @@ run_test("Control sequence followed by options and groups",
    LaTeXTextSegment.new(
       """options here""", 1, 26, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Option, 1)
-      ]),
+      ], ("re ", "{fi")),
    LaTeXTextSegment.new(
       """first group""", 1, 40, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Group, 2)
-      ]),
+      ], ("re]", "{se")),
    LaTeXTextSegment.new(
       """second group""", 1, 53, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Group, 3)
-      ]),
+      ], ("up}", ".")),
    LaTeXTextSegment.new(
       """Text before .""", 1, 0, @[], @[]),
 ])
@@ -144,15 +163,15 @@ run_test("Nested control sequences",
       """with some""", 1, 19, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1),
          ScopeEntry.new("bar", ControlSequence, Group, 1)
-      ]),
+      ], ("me ", " ex")),
    LaTeXTextSegment.new(
       """And some  extra""", 1, 5, @[], @[
          ScopeEntry.new("foo", ControlSequence, Group, 1)
-      ]),
+      ], ("", " \\b")),
    LaTeXTextSegment.new(
       """added for effect""", 1, 42, @[], @[
          ScopeEntry.new("baz", ControlSequence, Group, 1)
-      ]),
+      ], ("a} ", ".")),
    LaTeXTextSegment.new(
       """ .""", 1, 36, @[], @[]),
 ])
@@ -172,7 +191,7 @@ run_test("Inline math",
 """A simple sentence with inline $xa_n(k)$ math.""", @[
    LaTeXTextSegment.new("xa_n(k)", 1, 31, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0)
-   ]),
+   ], ("ne ", " ma")),
    LaTeXTextSegment.new("A simple sentence with inline  math.", 1, 0, @[], @[])
 ])
 
@@ -181,7 +200,7 @@ run_test("Inline math with delimiters \\(, \\)",
 """A simple sentence with inline \(xa_n(k)\) math.""", @[
    LaTeXTextSegment.new("xa_n(k)", 1, 32, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0)
-   ]),
+   ], ("ne ", " ma")),
    LaTeXTextSegment.new("A simple sentence with inline  math.", 1, 0, @[], @[])
 ])
 
@@ -190,7 +209,7 @@ run_test("Display math with delimiter $$",
 """A simple sentence with display $$xa_n(k)$$ math.""", @[
    LaTeXTextSegment.new("xa_n(k)", 1, 33, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0)
-   ]),
+   ], ("ay ", " ma")),
    LaTeXTextSegment.new("A simple sentence with display  math.", 1, 0, @[], @[])
 ])
 
@@ -199,7 +218,7 @@ run_test("Display math with delimiters \\[, \\]",
 """A simple sentence with display \[xa_n(k)\] math.""", @[
    LaTeXTextSegment.new("xa_n(k)", 1, 33, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0)
-   ]),
+   ], ("ay ", " ma")),
    LaTeXTextSegment.new("A simple sentence with display  math.", 1, 0, @[], @[])
 ])
 
@@ -212,7 +231,6 @@ run_test("Empty environment", # Without any characters, the starting point is un
    LaTeXTextSegment.new("", 0, 0, @[], @[
       ScopeEntry.new("empty", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -221,7 +239,6 @@ run_test("Environment on one line",
    LaTeXTextSegment.new("Some words.", 1, 19, @[], @[
       ScopeEntry.new("environment", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -237,7 +254,6 @@ lines.
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -253,7 +269,6 @@ lazy dog.
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -267,13 +282,12 @@ lazy dog.
    LaTeXTextSegment.new("over the", 3, 15, @[], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("bar", ControlSequence, Group, 1)
-   ]),
+   ], ("ps ", "\nla")),
    LaTeXTextSegment.new("The quick brown fox jumps  lazy dog. ", 2, 0, @[
       (16, 3), (27, 4)
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -289,7 +303,6 @@ lazy dog.
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -303,7 +316,6 @@ The quick brown fox jumps over the lazy dog.
    ], @[
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -318,11 +330,10 @@ run_test("Environment nested in a control sequence",
       @[], @[
       ScopeEntry.new("vbox", ControlSequence, Group, 1),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
-   ]),
+   ], ("   ", "\n}")),
    LaTeXTextSegment.new("  ", 1, 6, @[(1, 4)], @[
       ScopeEntry.new("vbox", ControlSequence, Group, 1)
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -334,11 +345,10 @@ A simple sentence.
    LaTeXTextSegment.new("Capture group 1", 1, 15, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 1)
-   ]),
+   ], ("xt}", "%\nA")),
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -350,11 +360,10 @@ A simple sentence.
    LaTeXTextSegment.new("a few optional parameters", 1, 15, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Option, 1)
-   ]),
+   ], ("xt}", "%\nA")),
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -366,19 +375,18 @@ A simple sentence.
    LaTeXTextSegment.new("up to you to include", 1, 15, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Option, 1)
-   ]),
+   ], ("xt}", "{re")),
    LaTeXTextSegment.new("required capture group", 1, 37, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 2)
-   ]),
+   ], ("de]", "{al")),
    LaTeXTextSegment.new("also required", 1, 61, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 3)
-   ]),
+   ], ("up}", "%\nA")),
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -390,7 +398,6 @@ Contents of a starred environment.
    LaTeXTextSegment.new("Contents of a starred environment. ", 2, 0, @[], @[
       ScopeEntry.new("mystar*", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -408,16 +415,15 @@ Row 2, column 0 & Row 2, column 1
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Group, 1),
-   ]),
+   ], ("ar}", "%\n\\")),
    LaTeXTextSegment.new("Header column 0 & Header column 1 Row 0, column 0 & Row 0, column 1 Row 1, column 0 & Row 1, column 1 Row 2, column 0 & Row 2, column 1 ",
-   3, 8, @[(34, 4), (68, 5), (102, 6)], @[
+   3, 8, @[(15, 3), (34, 4), (68, 5), (102, 6)], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
-   ]),
+   ], ("}%\n", "\n\\e")),
    LaTeXTextSegment.new(" ", 7, 13, @[], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
 ])
 
 
@@ -435,18 +441,14 @@ Row 2, column 0 & Row 2, column 1 & Row 2, column 2
 \end{tgtab}
 """, @[
    LaTeXTextSegment.new("header=Column 0 & Column 1 & Column 2, " &
-                   "numcols=3, footer=This is some footer text., " &
-                   "caption=This is the table caption. ", 2, 2,
+                        "numcols=3, footer=This is some footer text., " &
+                        "caption=This is the table caption. ", 2, 2,
    @[
       (39, 3), (50, 4), (84, 5)
    ], @[
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 1)
-   ]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[
-      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
-      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 2)
-   ]),
+   ], ("ab}", "{}\n")),
    LaTeXTextSegment.new(" Row 0, column 0 & Row 0, column 1 & Row 0, column 2  " &
                    "Row 1, column 0 & Row 1, column 1 & Row 1, column 2  " &
                    "Row 2, column 0 & Row 2, column 1 & Row 2, column 2 ", 6, 3,
@@ -454,59 +456,79 @@ Row 2, column 0 & Row 2, column 1 & Row 2, column 2
       (1, 7), (54, 8), (107, 9)
    ], @[
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
-   ]),
-   LaTeXTextSegment.new(" ", 10, 11, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]) # Empty segment
+   ], ("", "\n")),
 ])
 
 
 run_test("Pangrams: Swedish",
 """Flygande bäckasiner söka hwila på mjuka tuvor.""", @[
    LaTeXTextSegment.new("Flygande bäckasiner söka hwila på mjuka tuvor.", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: French",
 """Ça me fait peur de fêter noël là, sur cette île bizarroïde où une mère et sa môme essaient de me tuer avec un gâteau à la cigüe brûlé.""", @[
    LaTeXTextSegment.new("Ça me fait peur de fêter noël là, sur cette île bizarroïde où une mère et sa môme essaient de me tuer avec un gâteau à la cigüe brûlé.", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: German",
 """Falsches Üben von Xylophonmusik quält jeden größeren Zwerg""", @[
    LaTeXTextSegment.new("Falsches Üben von Xylophonmusik quält jeden größeren Zwerg", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: Spanish",
 """Benjamín pidió una bebida de kiwi y fresa; Noé, sin vergüenza, la más exquisita champaña del menú.""", @[
    LaTeXTextSegment.new("Benjamín pidió una bebida de kiwi y fresa; Noé, sin vergüenza, la más exquisita champaña del menú.", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: Greek",
 """Ταχίστη αλώπηξ βαφής ψημένη γη, δρασκελίζει υπέρ νωθρού κυνός Takhístè alôpèx vaphês psèménè gè, draskelízei ypér nòthroý kynós""", @[
    LaTeXTextSegment.new("Ταχίστη αλώπηξ βαφής ψημένη γη, δρασκελίζει υπέρ νωθρού κυνός Takhístè alôpèx vaphês psèménè gè, draskelízei ypér nòthroý kynós", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: Czech",
 """Nechť již hříšné saxofony ďáblů rozezvučí síň úděsnými tóny waltzu, tanga a quickstepu.""", @[
    LaTeXTextSegment.new("Nechť již hříšné saxofony ďáblů rozezvučí síň úděsnými tóny waltzu, tanga a quickstepu.", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ])
 
 
 run_test("Pangrams: Japanese",
 """いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす（ん）""", @[
    LaTeXTextSegment.new("いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせす（ん）", 1, 0, @[], @[]),
-   LaTeXTextSegment.new("", 0, 0, @[], @[]), # Empty segment
 ],)
+
+
+run_test("Itemized list",
+"""
+\begin{itemize}
+\item[0:] A
+\item[1:] B
+\item[2:] C
+\end{itemize}
+""", @[
+   LaTeXTextSegment.new("0:", 2, 6, @[], @[
+      ScopeEntry.new("itemize", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("item", ScopeKind.ControlSequence, Enclosure.Option, 1),
+   ], ("e}\n", " A\n")),
+   LaTeXTextSegment.new("1:", 3, 6, @[], @[
+      ScopeEntry.new("itemize", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("item", ScopeKind.ControlSequence, Enclosure.Option, 1),
+   ], (" A\n", " B\n")),
+   LaTeXTextSegment.new("2:", 4, 6, @[], @[
+      ScopeEntry.new("itemize", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("item", ScopeKind.ControlSequence, Enclosure.Option, 1),
+   ], (" B\n", " C\n")),
+   LaTeXTextSegment.new("  A  B  C ", 1, 15, @[
+      (1, 2), (4, 3), (7, 4)
+   ], @[
+      ScopeEntry.new("itemize", ScopeKind.Environment, Enclosure.Environment, 0),
+   ], ("", "\n")),
+])
+
 
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")

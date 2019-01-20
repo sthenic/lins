@@ -101,18 +101,19 @@ proc create_violation*(r: Rule, pos: Position,
 proc calculate_position*(r: Rule, line, col, violation_pos: int,
                          linebreaks: seq[Linebreak]): Position =
    if len(linebreaks) == 0:
-      result = (line, 0)
+      result = (line, violation_pos)
    else:
       var i = 0
+      var p = 0
       var l = line
 
       while linebreaks[i].pos <= violation_pos:
-         l = linebreaks[i].line
-         i += 1
+         (p, l) = linebreaks[i]
+         inc(i)
          if i == len(linebreaks):
             break
 
-      result = (l, 0)
+      result = (l, violation_pos - p)
 
 
 # Constructors
