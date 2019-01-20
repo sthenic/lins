@@ -3,7 +3,7 @@ import terminal
 import strformat
 
 include ../../src/utils/log
-include ../../src/linters/base_linter
+include ../../src/linters/linter
 
 var
    nof_passed = 0
