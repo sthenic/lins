@@ -148,6 +148,35 @@ run_test("Category 7, no replacement",
    TeXToken.new(Character, 11, "b", 1, 8),
 ])
 
+run_test("Category 7, trio replacement in control word (first character)",
+"""\^^!bc""", @[
+   TeXToken.new(ControlWord, 0, "abc", 1, 0),
+])
+
+run_test("Category 7, trio replacement in control word, (second character)",
+"""\a^^"c""", @[
+   TeXToken.new(ControlWord, 0, "abc", 1, 0),
+])
+
+run_test("Category 7, trio replacement in control word, (last character)",
+"""\ab^^#""", @[
+   TeXToken.new(ControlWord, 0, "abc", 1, 0),
+])
+
+run_test("Category 7, quartet replacement in control word (first character)",
+"""\^^61bc""", @[
+   TeXToken.new(ControlWord, 0, "abc", 1, 0),
+])
+
+run_test("Category 7, quartet replacement in control word (second character)",
+"""\a^^62c""", @[
+   TeXToken.new(ControlWord, 0, "abc", 1, 0),
+])
+
+run_test("Category 7, quartet replacement in control word (last character)",
+"""\ab^^63""", @[
+   TeXToken.new(ControlWord, 0, "abc", 1, 0),
+])
 
 # 'Regular' characters (categories 1, 2, 3, 4, 6, 8, 11, 12 or 13 or 7 w/o replacement)
 run_test("Simple sentence",
