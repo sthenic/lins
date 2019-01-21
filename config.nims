@@ -10,7 +10,7 @@ task build, "Compile the application into an executable.":
 task tests, "Run the test suite":
    exec("nim lexertests")
    exec("nim parsertests")
-   exec("nim lintertests")
+   exec("nim utilstests")
    setCommand "nop"
 
 
@@ -28,8 +28,8 @@ task parsertests, "Run the parser test suite":
    setCommand "nop"
 
 
-task lintertests, "Run the linter test suite":
-   withDir("tests/linters"):
+task utilstests, "Run the linter test suite":
+   withDir("tests/utils"):
       exec("nim c -r twordwrap")
    setCommand "nop"
 
