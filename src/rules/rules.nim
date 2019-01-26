@@ -14,9 +14,18 @@ type
       WARNING
       ERROR
 
-   Scope* = enum
-      TEXT
-      PARAGRAPH
+   ScopeLogic* = enum
+      OR
+      AND
+
+   ScopeEntry* = tuple
+      name: string # Maybe a regex?
+      kind: string
+      before: string
+      after: string
+      logic: ScopeLogic
+
+   Scope* = seq[ScopeEntry]
 
    Limit* = enum
       MIN
@@ -40,6 +49,7 @@ type
       source_file*: string
       display_name*: string
       ignore_case*: bool
+      scope*: Scope
 
    RuleExistence* = ref object of Rule
       regex*: Regex
@@ -52,21 +62,18 @@ type
       regex*: Regex
       limit_val*: int
       limit_kind*: Limit
-      scope*: Scope
       nof_matches*: int
       par_prev*: int
       has_alerted*: bool
 
    RuleRepetition* = ref object of Rule
       regex*: Regex
-      scope*: Scope
       par_prev*: int
       matches*: Table[string, int]
 
    RuleConsistency* = ref object of Rule
       regex_first*: Regex
       regex_second*: Regex
-      scope*: Scope
       par_prev*: int
       first_observed*: bool
       second_observed*: bool
@@ -75,20 +82,18 @@ type
       regex_def*: Regex
       regex_decl*: Regex
       exceptions*: seq[string]
-      scope*: Scope
       definitions*: Table[string, Position]
       par_prev*: int
 
    RuleConditional* = ref object of Rule
       regex_first*: Regex
       regex_second*: Regex
-      scope*: Scope
       par_prev*: int
       first_observed*: bool
 
 
 proc create_violation*(r: Rule, pos: Position,
-                      message_args: varargs[string]): Violation =
+                       message_args: varargs[string]): Violation =
    (kind: r.kind, severity: r.severity, source_file: r.source_file,
     message: format(r.message, message_args), position: pos,
     display_name: r.display_name)
@@ -118,14 +123,14 @@ proc calculate_position*(r: Rule, line, col, violation_pos: int,
 
 # Constructors
 proc new*(t: typedesc[Rule], kind: string, severity: Severity, message: string,
-          source_file: string, display_name: string): Rule =
+          source_file: string, display_name: string, scope: Scope): Rule =
    Rule(kind: kind, severity: severity, message: message,
-        source_file: source_file, display_name: display_name)
+        source_file: source_file, display_name: display_name, scope: scope)
 
 
 proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
-          ignore_case: bool): RuleExistence =
+          ignore_case: bool, scope: Scope): RuleExistence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -136,13 +141,14 @@ proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
                         source_file: source_file,
                         display_name: display_name,
                         ignore_case: ignore_case,
+                        scope: scope,
                         regex: re(regex_flags & regex))
 
 
 proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
-          subst_table: Table[string, string],
-          ignore_case: bool): RuleSubstitution =
+          subst_table: Table[string, string], ignore_case: bool,
+          scope: Scope): RuleSubstitution =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -157,6 +163,7 @@ proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
                            source_file: source_file,
                            display_name: display_name,
                            ignore_case: ignore_case,
+                           scope: scope,
                            regex: re(regex_flags & regex),
                            subst_table: lsubst_table)
 
