@@ -10,11 +10,11 @@ export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation
 
 
 proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
-   if len(r.scope) == 0:
+   if len(r.latex.scope) == 0:
       return true
 
    var entry_match: seq[tuple[match: bool, logic: ScopeLogic]]
-   for rule_entry in r.scope:
+   for rule_entry in r.latex.scope:
       # Determine if the context is matches any user defined expressions.
       var context_match = true
       if len(rule_entry.before) > 0:

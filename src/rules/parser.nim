@@ -29,6 +29,7 @@ type
       rules: Table[string, seq[Rule]]
       styles: Table[string, seq[Rule]]
 
+# TODO: Check if we can use variant objects.
 type
    ExistenceYAML = object
       extends: string
@@ -39,7 +40,7 @@ type
       raw: seq[string]
       tokens: seq[string]
       debug: bool
-      scope: Table[string, Table[string, string]]
+      latex: Table[string, Table[string, Table[string, string]]]
 
    SubstitutionYAML = object
       extends: string
@@ -49,7 +50,7 @@ type
       nonword: bool
       swap: Table[string, string]
       debug: bool
-      scope: Table[string, Table[string, string]]
+      latex: Table[string, Table[string, Table[string, string]]]
 
    OccurrenceYAML = object
       extends: string
@@ -60,7 +61,7 @@ type
       limit_kind: string
       token: string
       debug: bool
-      scope: Table[string, Table[string, string]]
+      latex: Table[string, Table[string, Table[string, string]]]
 
    RepetitionYAML = object
       extends: string
@@ -69,7 +70,7 @@ type
       ignorecase: bool
       token: string
       debug: bool
-      scope: Table[string, Table[string, string]]
+      latex: Table[string, Table[string, Table[string, string]]]
 
    ConsistencyYAML = object
       extends: string
@@ -79,7 +80,7 @@ type
       nonword: bool
       either: Table[string, string]
       debug: bool
-      scope: Table[string, Table[string, string]]
+      latex: Table[string, Table[string, Table[string, string]]]
 
    DefinitionYAML = object
       extends: string
@@ -90,7 +91,7 @@ type
       declaration: string
       exceptions: seq[string]
       debug: bool
-      scope: Table[string, Table[string, string]]
+      latex: Table[string, Table[string, Table[string, string]]]
 
    ConditionalYAML = object
       extends: string
@@ -100,7 +101,7 @@ type
       first: string
       second: string
       debug: bool
-      scope: Table[string, Table[string, string]]
+      latex: Table[string, Table[string, Table[string, string]]]
 
    Rules = tuple
       existence: ExistenceYAML
@@ -128,20 +129,20 @@ set_default_value(ConsistencyYAML, debug, false)
 set_default_value(DefinitionYAML, debug, false)
 set_default_value(ConditionalYAML, debug, false)
 
-set_default_value(ExistenceYAML, scope,
-                  init_table[string, Table[string, string]]())
-set_default_value(SubstitutionYAML, scope,
-                  init_table[string, Table[string, string]]())
-set_default_value(OccurrenceYAML, scope,
-                  init_table[string, Table[string, string]]())
-set_default_value(RepetitionYAML, scope,
-                  init_table[string, Table[string, string]]())
-set_default_value(ConsistencyYAML, scope,
-                  init_table[string, Table[string, string]]())
-set_default_value(DefinitionYAML, scope,
-                  init_table[string, Table[string, string]]())
-set_default_value(ConditionalYAML, scope,
-                  init_table[string, Table[string, string]]())
+set_default_value(ExistenceYAML, latex,
+                  init_table[string, Table[string, Table[string, string]]]())
+set_default_value(SubstitutionYAML, latex,
+                  init_table[string, Table[string, Table[string, string]]]())
+set_default_value(OccurrenceYAML, latex,
+                  init_table[string, Table[string, Table[string, string]]]())
+set_default_value(RepetitionYAML, latex,
+                  init_table[string, Table[string, Table[string, string]]]())
+set_default_value(ConsistencyYAML, latex,
+                  init_table[string, Table[string, Table[string, string]]]())
+set_default_value(DefinitionYAML, latex,
+                  init_table[string, Table[string, Table[string, string]]]())
+set_default_value(ConditionalYAML, latex,
+                  init_table[string, Table[string, Table[string, string]]]())
 
 set_default_value(ExistenceYAML, nonword, false)
 set_default_value(ExistenceYAML, raw, @[])
@@ -226,54 +227,75 @@ template validate_common(data: typed, filename: string, message: untyped,
                                           "file '" & filename & "'")
 
 
-template validate_scope(data: typed, filename: string, scope: untyped) =
-   ## Validate scope
-   var scope: Scope
+template validate_latex_section(data: typed, filename: string, latex: untyped) =
+   ## Validate LaTeX block in rule files.
+   var latex: LaTeXRuleSection
 
-   for name, properties in data.scope:
-      var entry: ScopeEntry
-      entry.name = name
+   if has_key(data.latex, "scope"):
+      for name, properties in data.latex["scope"]:
+         var entry: LaTeXScopeEntry
+         entry.name = name
 
-      # In order to provide helpful error messages we should walk through all
-      # the properties and check the keys we come across.
-      for prop, val in properties:
-         case to_lower_ascii(prop):
-         of "kind":
-            let kind = to_lower_ascii(val)
-            case val:
-            of "environment", "control sequence":
-               entry.kind = to_lower_ascii(val)
+         # In order to provide helpful error messages we should walk through all
+         # the properties and check the keys we come across.
+         for prop, val in properties:
+            case to_lower_ascii(prop):
+            of "kind":
+               let kind = to_lower_ascii(val)
+               case val:
+               of "environment", "control sequence":
+                  entry.kind = to_lower_ascii(val)
+               else:
+                  log.warning("Unsupported scope property value '$1' defined " &
+                              "for rule in file '$2', skipping.", val, filename)
+                  raise new_exception(RuleValueError,
+                                    "Unsupported scope property value in " &
+                                    "file '" & filename & "'")
+            of "before":
+               entry.before = val
+            of "after":
+               entry.after = val
+            of "logic":
+               case to_lower_ascii(val):
+               of "and":
+                  entry.logic = AND
+               of "or":
+                  entry.logic = OR
+               else:
+                  log.warning("Unsupported scope property value '$1' defined " &
+                              "for rule in file '$2', skipping.", val, filename)
+                  raise new_exception(RuleValueError,
+                                    "Unsupported scope property value in " &
+                                    "file '" & filename & "'")
             else:
-               log.warning("Unsupported scope property value '$1' defined " &
-                           "for rule in file '$2', skipping.", val, filename)
+               log.warning("Unsupported scope property '$1' defined for rule " &
+                           "in file '$2', skipping.", prop, filename)
                raise new_exception(RuleValueError,
-                                   "Unsupported scope property value in " &
-                                   "file '" & filename & "'")
-         of "before":
-            entry.before = val
-         of "after":
-            entry.after = val
-         of "logic":
-            case to_lower_ascii(val):
-            of "and":
-               entry.logic = AND
-            of "or":
-               entry.logic = OR
-            else:
-               log.warning("Unsupported scope property value '$1' defined " &
-                           "for rule in file '$2', skipping.", val, filename)
-               raise new_exception(RuleValueError,
-                                   "Unsupported scope property value in " &
-                                   "file '" & filename & "'")
-         else:
-            log.warning("Unsupported scope property '$1' defined for rule in file " &
-                        "'$2', skipping.", prop, filename)
-            raise new_exception(RuleValueError,
-                                "Unsupported scope property in file '" &
-                                filename & "'")
+                                 "Unsupported scope property in file '" &
+                                 filename & "'")
 
-      # Check required fields.
-      add(scope, entry)
+         # Check required fields.
+         add(latex.scope, entry)
+
+
+template validate_plain_section(data: typed, filename: string, plain: untyped) =
+   ## Validate plain block in rule files.
+   var plain: PlainRuleSection
+
+   if has_key(data.plain, "scope"):
+      let scope = to_lower_ascii(data.plain["scope"])
+      case scope:
+      of "text":
+         plain.scope = TEXT
+      of "paragraph":
+         plain.scope = PARAGRAPH
+      else:
+         log.warning("Unsupported scope value '$1' defined for rule " &
+                     "in file '$2', skipping.", scope, filename)
+         raise new_exception(RuleValueError,
+                             "Unsupported scope property in file '" &
+                             filename & "'")
+
 
 
 template validate_limit(data: typed, filename: string, limit: untyped,
@@ -381,7 +403,7 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
    ## sequence of RuleExistence objects.
    validate_extension_point(data, "existence", filename)
    validate_common(data, filename, message, ignore_case, level)
-   validate_scope(data, filename, scope)
+   validate_latex_section(data, filename, latex)
 
    var word_boundary: string
    if data.nonword:
@@ -417,7 +439,7 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    result.add(RuleExistence.new(level, message, filename, display_name,
-                                token_str, ignore_case, scope))
+                                token_str, ignore_case, latex))
 
 
 proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
@@ -425,7 +447,7 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
    ## sequence of RuleSubstitution objects.
    validate_extension_point(data, "substitution", filename)
    validate_common(data, filename, message, ignore_case, level)
-   validate_scope(data, filename, scope)
+   validate_latex_section(data, filename, latex)
 
    var word_boundary: string
    if data.nonword:
@@ -447,7 +469,7 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    result.add(RuleSubstitution.new(level, message, filename, display_name,
-                                   key_str, subst_table, ignore_case, scope))
+                                   key_str, subst_table, ignore_case, latex))
 
 
 proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
@@ -455,14 +477,15 @@ proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
    ## sequence of RuleOccurrence objects.
    validate_extension_point(data, "occurrence", filename)
    validate_common(data, filename, message, ignore_case, level)
-   validate_scope(data, filename, scope)
+   validate_latex_section(data, filename, latex)
    validate_limit(data, filename, limit, limit_kind)
 
    debug_occurrence(data, filename)
 
    let display_name = get_rule_display_name(filename)
    result.add(RuleOccurrence.new(level, message, filename, display_name,
-                                 data.token, limit, limit_kind, scope, ignore_case))
+                                 data.token, limit, limit_kind, ignore_case,
+                                 latex))
 
 
 proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
@@ -470,13 +493,13 @@ proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
    ## sequence of RuleRepetition objects.
    validate_extension_point(data, "repetition", filename)
    validate_common(data, filename, message, ignore_case, level)
-   validate_scope(data, filename, scope)
+   validate_latex_section(data, filename, latex)
 
    debug_repetition(data, filename)
 
    let display_name = get_rule_display_name(filename)
    result.add(RuleRepetition.new(level, message, filename, display_name,
-                                 data.token, scope, ignore_case))
+                                 data.token, ignore_case, latex))
 
 
 proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
@@ -484,7 +507,7 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
    ## sequence of RuleConsistency objects.
    validate_extension_point(data, "consistency", filename)
    validate_common(data, filename, message, ignore_case, level)
-   validate_scope(data, filename, scope)
+   validate_latex_section(data, filename, latex)
 
    var word_boundary: tuple[l: string, r: string]
    if data.nonword:
@@ -502,7 +525,7 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
       debug_consistency_entry(data, lfirst, lsecond)
 
       result.add(RuleConsistency.new(level, message, filename, display_name,
-                                     lfirst, lsecond, scope, ignore_case))
+                                     lfirst, lsecond, ignore_case, latex))
 
 
 proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
@@ -510,7 +533,7 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
    ## sequence of RuleDefinition objects.
    validate_extension_point(data, "definition", filename)
    validate_common(data, filename, message, ignore_case, level)
-   validate_scope(data, filename, scope)
+   validate_latex_section(data, filename, latex)
    validate_nof_capture_groups(data.declaration, filename, "declaration", 1)
    validate_nof_capture_groups(data.definition, filename, "definition", 1)
 
@@ -519,7 +542,7 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
    let display_name = get_rule_display_name(filename)
    result.add(RuleDefinition.new(level, message, filename, display_name,
                                  data.definition, data.declaration,
-                                 data.exceptions, scope, ignore_case))
+                                 data.exceptions, ignore_case, latex))
 
 
 proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
@@ -527,7 +550,7 @@ proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
    ## sequence of RuleDefinition objects.
    validate_extension_point(data, "conditional", filename)
    validate_common(data, filename, message, ignore_case, level)
-   validate_scope(data, filename, scope)
+   validate_latex_section(data, filename, latex)
    validate_nof_capture_groups(data.first, filename, "first", 1)
    validate_nof_capture_groups(data.second, filename, "second", 1)
 
@@ -535,7 +558,7 @@ proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    result.add(RuleConditional.new(level, message, filename, display_name,
-                                  data.first, data.second, scope, ignore_case))
+                                  data.first, data.second, ignore_case, latex))
 
 
 proc parse_rule_file*(filename: string): seq[Rule] =
