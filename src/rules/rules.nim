@@ -26,6 +26,7 @@ type
       logic: ScopeLogic
 
    PlainScopeEntry* = enum
+      INVALID
       TEXT
       PARAGRAPH
 
