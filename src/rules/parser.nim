@@ -288,6 +288,9 @@ template validate_latex_section(data: typed, filename: string, latex: untyped) =
    # Process regular scope section searching for shorthand definitions.
    for raw_entry in data.scope:
       case to_lower_ascii(raw_entry):
+      of "text":
+         add(latex.scope, (name: "document", kind: "environment",
+                           before: "", after: "", logic: OR))
       of "title":
          add(latex.scope, (name: "section", kind: "control sequence",
                            before: "", after: "", logic: OR))
