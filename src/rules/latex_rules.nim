@@ -30,9 +30,18 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
       var matched = false
       for scope_entry in seg.scope:
          if rule_entry.name == scope_entry.name:
+            # TODO: Let rule_entry.kind have the same type as scope_entry.kind
+            #       so we can do the check right away.
+            matched = (rule_entry.kind == "environment" and
+                       scope_entry.kind == ScopeKind.Environment) or
+                      (rule_entry.kind == "control sequence" and
+                       scope_entry.kind == ScopeKind.ControlSequence) or
+                      (rule_entry.kind == "math" and
+                       scope_entry.kind == ScopeKind.Math)
+         if matched:
             add(entry_match, (context_match, rule_entry.logic))
-            matched = true
             break
+
       if not matched:
          add(entry_match, (false, rule_entry.logic))
 

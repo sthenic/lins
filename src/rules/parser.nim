@@ -291,6 +291,13 @@ template validate_latex_section(data: typed, filename: string, latex: untyped) =
       of "text":
          add(latex.scope, (name: "document", kind: "environment",
                            before: "", after: "", logic: OR))
+      of "math":
+         add(latex.scope, (name: "", kind: "math", before: "", after: "",
+                           logic: OR))
+         add(latex.scope, (name: "equation", kind: "environment",
+                           before: "", after: "", logic: OR))
+         add(latex.scope, (name: "equation*", kind: "environment",
+                           before: "", after: "", logic: OR))
       of "title":
          add(latex.scope, (name: "section", kind: "control sequence",
                            before: "", after: "", logic: OR))
