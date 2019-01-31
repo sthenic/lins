@@ -2,6 +2,7 @@ import strutils
 import terminal
 import macros
 
+import ./wordwrap
 
 type ColorMode* = enum
    Color, NoColor
@@ -83,8 +84,11 @@ template info*(args: varargs[typed]) =
 
 template info*(msg: string, args: varargs[string]) =
    if not quiet_mode:
+      let msg_split = wrap_words(format(msg, args), 80, true).split_lines()
       call_styled_write_line(styleBright, INFO_COLOR, "INFO:    ",
-                             resetStyle, format(msg, args))
+                             resetStyle, msg_split[0])
+      for m in 1..<len(msg_split):
+         call_styled_write_line("         " & msg_split[m])
 
 
 template warning*(args: varargs[typed]) =
@@ -95,8 +99,11 @@ template warning*(args: varargs[typed]) =
 
 template warning*(msg: string, args: varargs[string]) =
    if not quiet_mode:
+      let msg_split = wrap_words(format(msg, args), 80, true).split_lines()
       call_styled_write_line(styleBright, WARNING_COLOR, "WARNING: ",
-                             resetStyle, format(msg, args))
+                             resetStyle, msg_split[0])
+      for m in 1..<len(msg_split):
+         call_styled_write_line("         " & msg_split[m])
 
 
 template error*(args: varargs[typed]) =
@@ -107,8 +114,12 @@ template error*(args: varargs[typed]) =
 
 template error*(msg: string, args: varargs[string]) =
    if not quiet_mode:
+      let msg_split = wrap_words(format(msg, args), 80, true).split_lines()
       call_styled_write_line(styleBright, ERROR_COLOR, "ERROR:   ",
-                             resetStyle, format(msg, args))
+                             resetStyle, msg_split[0])
+      for m in 1..<len(msg_split):
+         call_styled_write_line("         " & msg_split[m])
+
 
 
 template debug*(args: varargs[typed]) =

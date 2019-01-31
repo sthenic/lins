@@ -14,9 +14,28 @@ type
       WARNING
       ERROR
 
-   Scope* = enum
+   ScopeLogic* = enum
+      OR
+      AND
+      NOT
+
+   LaTeXScopeEntry* = tuple
+      name: string # Maybe a regex?
+      kind: string
+      before: string
+      after: string
+      logic: ScopeLogic
+
+   PlainScopeEntry* = enum
+      INVALID
       TEXT
       PARAGRAPH
+
+   LaTeXRuleSection* = tuple
+      scope: seq[LaTeXScopeEntry]
+
+   PlainRuleSection* = tuple
+      scope: PlainScopeEntry
 
    Limit* = enum
       MIN
@@ -40,6 +59,8 @@ type
       source_file*: string
       display_name*: string
       ignore_case*: bool
+      latex*: LaTeXRuleSection
+      plain*: PlainRuleSection
 
    RuleExistence* = ref object of Rule
       regex*: Regex
@@ -52,21 +73,18 @@ type
       regex*: Regex
       limit_val*: int
       limit_kind*: Limit
-      scope*: Scope
       nof_matches*: int
       par_prev*: int
       has_alerted*: bool
 
    RuleRepetition* = ref object of Rule
       regex*: Regex
-      scope*: Scope
       par_prev*: int
       matches*: Table[string, int]
 
    RuleConsistency* = ref object of Rule
       regex_first*: Regex
       regex_second*: Regex
-      scope*: Scope
       par_prev*: int
       first_observed*: bool
       second_observed*: bool
@@ -75,20 +93,18 @@ type
       regex_def*: Regex
       regex_decl*: Regex
       exceptions*: seq[string]
-      scope*: Scope
       definitions*: Table[string, Position]
       par_prev*: int
 
    RuleConditional* = ref object of Rule
       regex_first*: Regex
       regex_second*: Regex
-      scope*: Scope
       par_prev*: int
       first_observed*: bool
 
 
 proc create_violation*(r: Rule, pos: Position,
-                      message_args: varargs[string]): Violation =
+                       message_args: varargs[string]): Violation =
    (kind: r.kind, severity: r.severity, source_file: r.source_file,
     message: format(r.message, message_args), position: pos,
     display_name: r.display_name)
@@ -118,14 +134,17 @@ proc calculate_position*(r: Rule, line, col, violation_pos: int,
 
 # Constructors
 proc new*(t: typedesc[Rule], kind: string, severity: Severity, message: string,
-          source_file: string, display_name: string): Rule =
+          source_file: string, display_name: string, plain: PlainRuleSection,
+           latex: LaTeXRuleSection): Rule =
    Rule(kind: kind, severity: severity, message: message,
-        source_file: source_file, display_name: display_name)
+        source_file: source_file, display_name: display_name, plain: plain,
+        latex: latex)
 
 
 proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
-          ignore_case: bool): RuleExistence =
+          ignore_case: bool, plain: PlainRuleSection,
+          latex: LaTeXRuleSection): RuleExistence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -136,13 +155,15 @@ proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
                         source_file: source_file,
                         display_name: display_name,
                         ignore_case: ignore_case,
-                        regex: re(regex_flags & regex))
+                        regex: re(regex_flags & regex),
+                        plain: plain,
+                        latex: latex)
 
 
 proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
-          subst_table: Table[string, string],
-          ignore_case: bool): RuleSubstitution =
+          subst_table: Table[string, string], ignore_case: bool,
+          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleSubstitution =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -158,13 +179,15 @@ proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
                            display_name: display_name,
                            ignore_case: ignore_case,
                            regex: re(regex_flags & regex),
-                           subst_table: lsubst_table)
+                           subst_table: lsubst_table,
+                           plain: plain,
+                           latex: latex)
 
 
 proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
           source_file: string,  display_name: string, regex: string,
-          limit_val: int, limit_kind: Limit, scope: Scope,
-          ignore_case: bool): RuleOccurrence =
+          limit_val: int, limit_kind: Limit, ignore_case: bool,
+          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleOccurrence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -178,12 +201,14 @@ proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
                          regex: re(regex_flags & regex),
                          limit_val: limit_val,
                          limit_kind: limit_kind,
-                         scope: scope)
+                         plain: plain,
+                         latex: latex)
 
 
 proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
           source_file: string,  display_name: string, regex: string,
-          scope: Scope, ignore_case: bool): RuleRepetition =
+          ignore_case: bool, plain: PlainRuleSection,
+          latex: LaTeXRuleSection): RuleRepetition =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -195,14 +220,15 @@ proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
                          display_name: display_name,
                          ignore_case: ignore_case,
                          regex: re(regex_flags & regex),
-                         scope: scope,
+                         plain: plain,
+                         latex: latex,
                          matches: init_table[string, int]())
 
 
 proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
           source_file: string, display_name: string, regex_first: string,
-          regex_second: string, scope: Scope,
-          ignore_case: bool): RuleConsistency =
+          regex_second: string, ignore_case: bool,
+          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleConsistency =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -215,7 +241,8 @@ proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
                          ignore_case: ignore_case,
                          regex_first: re(regex_flags & regex_first),
                          regex_second: re(regex_flags & regex_second),
-                         scope: scope)
+                         plain: plain,
+                         latex: latex)
 
 
 # Regexes should be auto-filled on an above level. Drafts are:
@@ -223,8 +250,8 @@ proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
 #   regex_decl = r'\b([A-Z]{3,5})\b'
 proc new*(t: typedesc[RuleDefinition], severity: Severity, message: string,
           source_file: string,  display_name: string, regex_def: string,
-          regex_decl: string, exceptions: seq[string], scope: Scope,
-          ignore_case: bool): RuleDefinition =
+          regex_decl: string, exceptions: seq[string], ignore_case: bool,
+          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleDefinition =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -238,14 +265,15 @@ proc new*(t: typedesc[RuleDefinition], severity: Severity, message: string,
                          regex_def: re(regex_flags & regex_def),
                          regex_decl: re(regex_flags & regex_decl),
                          exceptions: exceptions,
-                         scope: scope,
-                         definitions: init_table[string, Position]())
+                         definitions: init_table[string, Position](),
+                         plain: plain,
+                         latex: latex)
 
 
 proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
           source_file: string,  display_name: string, regex_first: string,
-          regex_second: string, scope: Scope,
-          ignore_case: bool): RuleConditional =
+          regex_second: string, ignore_case: bool,
+          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleConditional =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -258,7 +286,8 @@ proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
                           ignore_case: ignore_case,
                           regex_first: re(regex_flags & regex_first),
                           regex_second: re(regex_flags & regex_second),
-                          scope: scope)
+                          plain: plain,
+                          latex: latex)
 
 
 method reset*(r: Rule) {.base.} =
@@ -361,7 +390,7 @@ method enforce*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
          result.add(r.create_violation(sentence_pos))
          break
    # Check against the specified minimum limit. This is only supported in
-   # the sentence scope.
+   # the sentence scope. TODO: Remove since we don't have that any more?
    if (not r.has_alerted and
        (r.limit_kind == MIN) and (r.nof_matches < r.limit_val)):
       let sentence_pos = (seg.line, seg.col)

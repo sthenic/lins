@@ -21,7 +21,10 @@ Lins is released under the [MIT license](https://opensource.org/licenses/MIT).
 
 * [Nim's standard library](https://github.com/nim-lang/Nim)
 * [NimYAML](https://github.com/flyx/NimYAML)
-* [PCRE](http://pcre.sourceforge.net)
+* Regular expression support is provided by the
+  [PCRE](http://pcre.sourceforge.net) library package, which is open source
+  software, written by Philip Hazel, and copyright by the University of
+  Cambridge, England.
 
 ## Author
 Lins is maintained by [Marcus Eriksson](mailto:marcus.jr.eriksson@gmail.com).

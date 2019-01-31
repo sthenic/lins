@@ -5,7 +5,7 @@ import ../lexers/tex_lexer
 import ../utils/log
 import ./base_parser
 
-export ParseError
+export ParseError, TextSegment
 
 type
    Enclosure* {.pure.} = enum

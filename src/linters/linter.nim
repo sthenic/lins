@@ -8,13 +8,14 @@ import times
 
 import ../utils/log
 import ../utils/wordwrap
-import ../rules/rules
+import ../rules/latex_rules
+import ../rules/plain_rules
 import ../parsers/plain_parser
 import ../parsers/latex_parser
 
 # We export strformat since format() is used in a generic proc. Callers should
 # get everything provided when importing this module.
-export strformat, rules
+export strformat, Severity, Rule
 
 type
    LinterFileIOError* = object of Exception
