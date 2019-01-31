@@ -267,6 +267,8 @@ template validate_latex_section(data: typed, filename: string, latex: untyped) =
                entry.logic = AND
             of "or":
                entry.logic = OR
+            of "not":
+               entry.logic = NOT
             else:
                log.warning("Unsupported scope property value '$1' defined " &
                            "for rule in file '$2', skipping.", val, filename)

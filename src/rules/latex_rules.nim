@@ -39,6 +39,7 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
    # Calculate if the rule should be enforced or not.
    var enforce_and = false
    var enforce_or = false
+   var enforce_not = false
    var first_and = true
    for match, logic in items(entry_match):
       case logic:
@@ -47,7 +48,10 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
       of AND:
          enforce_and = (enforce_and or first_and) and match
          first_and = false
-   result = enforce_or or enforce_and
+      of NOT:
+         enforce_not = enforce_not or match
+
+   result = (enforce_or or enforce_and) and not enforce_not
 
 
 method enforce*(r: RuleExistence, seg: LaTeXTextSegment): seq[Violation] =

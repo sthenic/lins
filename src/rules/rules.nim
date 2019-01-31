@@ -17,6 +17,7 @@ type
    ScopeLogic* = enum
       OR
       AND
+      NOT
 
    LaTeXScopeEntry* = tuple
       name: string # Maybe a regex?
