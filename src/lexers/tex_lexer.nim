@@ -243,6 +243,17 @@ proc handle_category_7(l: var TeXLexer, tok: var TeXToken) =
    l.bufpos = pos
 
 
+proc handle_category_14(l: var TeXLexer, tok: var TeXToken) =
+   # Comment character. Ultimately we should write a function to handle
+   # special comments which may pass information to the upper layers, e.g.
+   # the parser. Right now, throw away everything until the next newline.
+   while l.buf[l.bufpos] notin {lexbase.EndOfFile, '\L', '\c'}:
+      inc(l.bufpos)
+   l.bufpos = handle_crlf(l, l.bufpos)
+   l.state = StateN
+   get_token(l, tok)
+
+
 proc get_token*(l: var TeXLexer, tok: var TeXToken) =
    # Initialize the token
    tok.token_type = Invalid
@@ -297,14 +308,7 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
          l.state = StateS
          inc(l.bufpos)
    of CATEGORY[14]:
-      # Comment character. Ultimately we should write a function to handle
-      # special comments which may pass information to the upper layers, e.g.
-      # the parser. Right now, throw away everything until the next newline.
-      while l.buf[l.bufpos] notin {lexbase.EndOfFile, '\L', '\c'}:
-         inc(l.bufpos)
-      l.bufpos = handle_crlf(l, l.bufpos)
-      l.state = StateN
-      get_token(l, tok)
+      handle_category_14(l, tok)
    of CATEGORY[15]:
       # Invalid character (TeX would print an error, should we do the same?).
       # Ignore the character for now.
