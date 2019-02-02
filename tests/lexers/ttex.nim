@@ -352,7 +352,7 @@ run_test("Space character in state N",
 
 run_test("Comment string",
 """
-1st line % a comment string, will be discarded
+1st line % a comment string
 2nd line""", @[
    TeXToken.new(Character, 12, "1", 1, 0),
    TeXToken.new(Character, 11, "s", 1, 1),
@@ -363,6 +363,7 @@ run_test("Comment string",
    TeXToken.new(Character, 11, "n", 1, 6),
    TeXToken.new(Character, 11, "e", 1, 7),
    TeXToken.new(Character, 10, " ", 1, 8),
+   TeXToken.new(Comment, 0, "a comment string", 1, 11),
 
    TeXToken.new(Character, 12, "2", 2, 0),
    TeXToken.new(Character, 11, "n", 2, 1),
@@ -406,38 +407,18 @@ b""", @[
    TeXToken.new(Character, 11, "b", 3, 0),
 ])
 
-run_test("Comment string with keyword",
+run_test("Multiple comment strings",
 """
 a% TODO: Look at this later
-b""", @[
+% lins-disable
+b
+% lins-enable""", @[
    TeXToken.new(Character, 11, "a", 1, 0),
-   TeXToken.new(Comment, 0, "TODO", 1, 3),
-   TeXToken.new(Character, 11, "b", 2, 0),
-])
-
-run_test("Comment string with hyphenated keyword",
-"""
-a
-% lins-enable
-b""", @[
-   TeXToken.new(Character, 11, "a", 1, 0),
-   TeXToken.new(Character, 10, " ", 1, 1),
-   TeXToken.new(Comment, 0, "lins-enable", 2, 2),
+   TeXToken.new(Comment, 0, "TODO: Look at this later", 1, 3),
+   TeXToken.new(Comment, 0, "lins-disable", 2, 2),
    TeXToken.new(Character, 11, "b", 3, 0),
-])
-
-run_test("Comment string with multiple keywords",
-"""
-a
-%lins-disable TODO: Important stuff FIXME: Right now! XXX: Marks the spot
-b""", @[
-   TeXToken.new(Character, 11, "a", 1, 0),
-   TeXToken.new(Character, 10, " ", 1, 1),
-   TeXToken.new(Comment, 0, "lins-disable", 2, 1),
-   TeXToken.new(Comment, 0, "TODO", 2, 14),
-   TeXToken.new(Comment, 0, "FIXME", 2, 36),
-   TeXToken.new(Comment, 0, "XXX", 2, 54),
-   TeXToken.new(Character, 11, "b", 3, 0),
+   TeXToken.new(Character, 10, " ", 3, 1),
+   TeXToken.new(Comment, 0, "lins-enable", 4, 2),
 ])
 
 # Invalid characters (category 15)

@@ -37,14 +37,6 @@ type
 
 const
    CONTEXT_CHARS = 3
-   COMMENT_KEYWORDS: array[0..4, string] = [
-      "TODO",
-      "FIXME",
-      "XXX",
-      "lins-enable",
-      "lins-disable"
-   ]
-   COMMENT_TOKEN_CHARS: set[char] = {'A' .. 'Z', 'a' .. 'z', '-'}
    CATEGORY: array[CategoryCode, set[char]] = [
       {'\\'},
       {'{'},
@@ -252,36 +244,29 @@ proc handle_category_7(l: var TeXLexer, tok: var TeXToken) =
    l.bufpos = pos
 
 
-proc get_word_in_comment(l: var TeXLexer): tuple[str: string, pos: int] =
-   # Skip until a comment token character is found, break on EOF/newline.
-   while l.buf[l.bufpos] notin COMMENT_TOKEN_CHARS +
-                               {lexbase.EndOfFile, '\L', '\c'}:
-      inc(l.bufpos)
-   result.pos = l.bufpos
-   while l.buf[l.bufpos] in COMMENT_TOKEN_CHARS:
-      add(result.str, l.buf[l.bufpos])
-      inc(l.bufpos)
-
-
 proc handle_category_14(l: var TeXLexer, tok: var TeXToken) =
-   # Skip over the comment character.
+   # Skip over the comment character and initial whitespace, making sure to
+   # break on EOF/newline. After that: update the token's position.
    inc(l.bufpos)
+   while l.buf[l.bufpos] in {' ', '\t'} and
+         l.buf[l.bufpos] notin {lexbase.EndOfFile, '\L', '\c'}:
+      inc(l.bufpos)
+   update_token_position(l, tok)
+
+   var str = ""
    while l.buf[l.bufpos] notin {lexbase.EndOfFile, '\L', '\c'}:
-      let (str, pos) = get_word_in_comment(l)
-      if contains(COMMENT_KEYWORDS, str):
-         # We have found a valid comment token. Prepare the token, back the
-         # buffer up one character and insert a comment token to trigger a call
-         # to this function again.
-         tok.token = str
-         tok.token_type = Comment
-         tok.col = get_col_number(l, pos)
-         tok.line = l.lineNumber
-         dec(l.bufpos)
-         l.buf[l.bufpos] = '%'
-         return
+      add(str, l.buf[l.bufpos])
+      inc(l.bufpos)
    l.bufpos = handle_crlf(l, l.bufpos)
    l.state = StateN
-   get_token(l, tok)
+
+   # If the comment contained any characters, we return those as one single
+   # 'Comment' token. Otherwise, we recursively call get_token().
+   if len(str) > 0:
+      tok.token = str
+      tok.token_type = Comment
+   else:
+      get_token(l, tok)
 
 
 proc get_token*(l: var TeXLexer, tok: var TeXToken) =
