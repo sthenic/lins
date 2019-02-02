@@ -42,7 +42,7 @@ type
 
    LaTeXTextSegment* = object of TextSegment
       scope*: seq[ScopeEntry]
-      expand*: bool
+      expand: bool
       context*: Context
 
 

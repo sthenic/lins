@@ -245,7 +245,7 @@ proc handle_category_7(l: var TeXLexer, tok: var TeXToken) =
 
 
 proc handle_category_14(l: var TeXLexer, tok: var TeXToken) =
-   # Skip over the comment character and initial whitespace, making sure to
+   # Skip over the comment character and leading whitespace, making sure to
    # break on EOF/newline. After that: update the token's position.
    inc(l.bufpos)
    while l.buf[l.bufpos] in {' ', '\t'} and
