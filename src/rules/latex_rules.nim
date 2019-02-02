@@ -10,10 +10,12 @@ export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation
 
 
 proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
-   for scope_entry in seg.scope:
-      if scope_entry.kind == ScopeKind.Comment:
-         return false
    if len(r.latex.scope) == 0:
+      # If a rule has no scope defined we return true except for segments with
+      # the comment scope.
+      for scope_entry in seg.scope:
+         if scope_entry.kind == ScopeKind.Comment:
+            return false
       return true
 
    var entry_match: seq[tuple[match: bool, logic: ScopeLogic]]
@@ -25,24 +27,17 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
                                           re(rule_entry.before)))
       if len(rule_entry.after) > 0:
          context_match = context_match and
-                           is_some(nre.find(seg.context.after,
+                         is_some(nre.find(seg.context.after,
                                           re(rule_entry.after)))
 
       # Determine if the rule entry matches any scope entry of the current
       # segment.
       var matched = false
       for scope_entry in seg.scope:
-         if rule_entry.name == scope_entry.name:
-            # TODO: Let rule_entry.kind have the same type as scope_entry.kind
-            #       so we can do the check right away.
-            matched = (rule_entry.kind == "environment" and
-                       scope_entry.kind == ScopeKind.Environment) or
-                      (rule_entry.kind == "control sequence" and
-                       scope_entry.kind == ScopeKind.ControlSequence) or
-                      (rule_entry.kind == "math" and
-                       scope_entry.kind == ScopeKind.Math)
-         if matched:
+         if rule_entry.name == scope_entry.name and
+            rule_entry.kind == scope_entry.kind:
             add(entry_match, (context_match, rule_entry.logic))
+            matched = true
             break
 
       if not matched:

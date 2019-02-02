@@ -4,6 +4,10 @@ import tables
 
 import ../utils/log
 import ../parsers/base_parser
+import ../parsers/plain_parser
+import ../parsers/latex_parser
+
+export ScopeKind
 
 type
    EnforceError* = object of Exception
@@ -21,7 +25,7 @@ type
 
    LaTeXScopeEntry* = tuple
       name: string # Maybe a regex?
-      kind: string
+      kind: ScopeKind
       before: string
       after: string
       logic: ScopeLogic

@@ -249,10 +249,13 @@ template validate_latex_section(data: typed, filename: string, latex: untyped) =
          of "name":
             entry.name = val
          of "kind":
-            let kind = to_lower_ascii(val)
-            case val:
-            of "environment", "control sequence":
-               entry.kind = to_lower_ascii(val)
+            case to_lower_ascii(val):
+            of "environment":
+               entry.kind = ScopeKind.Environment
+            of "control sequence":
+               entry.kind = ScopeKind.ControlSequence
+            of "comment":
+               entry.kind = ScopeKind.Comment
             else:
                log.warning("Unsupported scope property value '$1' defined " &
                            "for rule in file '$2', skipping.", val, filename)
@@ -289,22 +292,26 @@ template validate_latex_section(data: typed, filename: string, latex: untyped) =
    for raw_entry in data.scope:
       case to_lower_ascii(raw_entry):
       of "text":
-         add(latex.scope, (name: "document", kind: "environment",
+         add(latex.scope, (name: "document", kind: ScopeKind.Environment,
+                           before: "", after: "", logic: OR))
+      of "comment":
+         add(latex.scope, (name: "", kind: ScopeKind.Comment,
                            before: "", after: "", logic: OR))
       of "math":
-         add(latex.scope, (name: "", kind: "math", before: "", after: "",
-                           logic: OR))
-         add(latex.scope, (name: "equation", kind: "environment",
+         add(latex.scope, (name: "", kind: ScopeKind.Math, before: "",
+                           after: "", logic: OR))
+         add(latex.scope, (name: "equation", kind: ScopeKind.Environment,
                            before: "", after: "", logic: OR))
-         add(latex.scope, (name: "equation*", kind: "environment",
+         add(latex.scope, (name: "equation*", kind: ScopeKind.Environment,
                            before: "", after: "", logic: OR))
       of "title":
-         add(latex.scope, (name: "section", kind: "control sequence",
+         add(latex.scope, (name: "section", kind: ScopeKind.ControlSequence,
                            before: "", after: "", logic: OR))
-         add(latex.scope, (name: "subsection", kind: "control sequence",
+         add(latex.scope, (name: "subsection", kind: ScopeKind.ControlSequence,
                            before: "", after: "", logic: OR))
-         add(latex.scope, (name: "subsubsection", kind: "control sequence",
-                           before: "", after: "", logic: OR))
+         add(latex.scope, (name: "subsubsection",
+                           kind: ScopeKind.ControlSequence, before: "",
+                           after: "", logic: OR))
       else:
          discard
 
@@ -398,7 +405,7 @@ template debug_latex_section(latex: LaTeXRuleSection) =
    for entry in latex.scope:
       log.debug_always("LaTeX scope entry:")
       log.debug_always("  name: '$1'", entry.name)
-      log.debug_always("  kind: '$1'", entry.kind)
+      log.debug_always("  kind: '$1'", $entry.kind)
       log.debug_always("  before: '$1'", entry.before)
       log.debug_always("  after: '$1'", entry.after)
       log.debug_always("  logic: $1", $entry.logic)
