@@ -36,10 +36,12 @@ template run_test(title, stimuli: string; reference: seq[LaTeXTextSegment],
 
 proc new*(t: typedesc[LaTeXTextSegment], text: string, line, col: int,
           linebreaks: seq[Linebreak], scope: seq[ScopeEntry],
-          context: Context = ("", ""), expand: bool = false): LaTeXTextSegment =
+          context: Context = ("", ""), do_lint: bool = true,
+          expand: bool = false): LaTeXTextSegment =
    result = LaTeXTextSegment(text: text, line: line, col: col,
                              linebreaks: linebreaks, scope: scope,
-                             expand: expand, context: context)
+                             expand: expand, context: context,
+                             do_lint: do_lint)
 
 
 proc new*(t: typedesc[ScopeEntry], name: string, kind: ScopeKind,

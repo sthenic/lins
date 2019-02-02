@@ -67,7 +67,7 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
 
 
 method enforce*(r: RuleExistence, seg: LaTeXTextSegment): seq[Violation] =
-   if not scope_filter(r, seg):
+   if not seg.do_lint or not scope_filter(r, seg):
       return
 
    # Call the base enforcement function
@@ -75,7 +75,7 @@ method enforce*(r: RuleExistence, seg: LaTeXTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleSubstitution, seg: LaTeXTextSegment): seq[Violation] =
-   if not scope_filter(r, seg):
+   if not seg.do_lint or not scope_filter(r, seg):
       return
 
    # Call the base enforcement function
@@ -83,7 +83,7 @@ method enforce*(r: RuleSubstitution, seg: LaTeXTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleOccurrence, seg: LaTeXTextSegment): seq[Violation] =
-   if not scope_filter(r, seg):
+   if not seg.do_lint or not scope_filter(r, seg):
       return
 
    # Call the base enforcement function
@@ -91,7 +91,7 @@ method enforce*(r: RuleOccurrence, seg: LaTeXTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleRepetition, seg: LaTeXTextSegment): seq[Violation] =
-   if not scope_filter(r, seg):
+   if not seg.do_lint or not scope_filter(r, seg):
       return
 
    # Call the base enforcement function
@@ -99,7 +99,7 @@ method enforce*(r: RuleRepetition, seg: LaTeXTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleConsistency, seg: LaTeXTextSegment): seq[Violation] =
-   if not scope_filter(r, seg):
+   if not seg.do_lint or not scope_filter(r, seg):
       return
 
    # Call the base enforcement function
@@ -107,7 +107,7 @@ method enforce*(r: RuleConsistency, seg: LaTeXTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleDefinition, seg: LaTeXTextSegment): seq[Violation] =
-   if not scope_filter(r, seg):
+   if not seg.do_lint or not scope_filter(r, seg):
       return
 
    # Call the base enforcement function
@@ -115,7 +115,7 @@ method enforce*(r: RuleDefinition, seg: LaTeXTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleConditional, seg: LaTeXTextSegment): seq[Violation] =
-   if not scope_filter(r, seg):
+   if not seg.do_lint or not scope_filter(r, seg):
       return
 
    # Call the base enforcement function

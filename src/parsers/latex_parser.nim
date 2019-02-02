@@ -40,11 +40,13 @@ type
       last_tok: TeXToken
       last_tok_stack: seq[TeXToken]
       delimiter_count: int # Delimiter count
+      is_enabled: bool
 
    LaTeXTextSegment* = object of TextSegment
       scope*: seq[ScopeEntry]
       expand: bool
       context*: Context
+      do_lint*: bool # TODO: Think of a better name? Maybe 'valid'?
 
 
 const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$', '~'}
@@ -78,6 +80,7 @@ proc init(s: var LaTeXTextSegment) =
    set_len(s.context.before, 0)
    set_len(s.context.after, 0)
    s.expand = false
+   s.do_lint = true
    base_parser.init(s)
 
 
@@ -98,6 +101,7 @@ proc open_parser*(p: var LaTeXParser, filename: string, s: Stream) =
    set_len(p.scope, 0)
    set_len(p.last_tok_stack, 0)
    p.delimiter_count = 0
+   p.is_enabled = true
    open_lexer(p.lex, filename, s, true)
 
 
@@ -116,8 +120,9 @@ proc add_tok(p: var LaTeXParser) =
    p.last_tok = p.tok
 
 
-proc add_seg(p: var LaTeXParser, seg: LaTeXTextSegment) =
+proc add_seg(p: var LaTeXParser, seg: var LaTeXTextSegment) =
    ## Add a segment to the sequence of completed segments.
+   seg.do_lint = p.is_enabled
    if len(seg.text.strip()) != 0:
       # We skip adding segments with length zero or consisting entirely of
       # whitespace.
@@ -161,7 +166,7 @@ proc expand_segment(p: var LaTeXParser, inner: LaTeXTextSegment) =
 
 proc end_enclosure(p: var LaTeXParser, context_after: string = "") =
    p.seg.context.after = context_after
-   let inner = p.seg
+   var inner = p.seg
    p.seg = pop(p.seg_stack)
    p.last_tok = pop(p.last_tok_stack)
    if inner.expand:
@@ -181,7 +186,7 @@ proc handle_par(p: var LaTeXParser) =
    # completed text segments. However, if this segment should be expanded we
    # add the partial result to the outer segment and push the outer segment
    # back onto the stack.
-   let inner = p.seg
+   var inner = p.seg
    if inner.expand and len(p.seg_stack) != 0:
       p.seg = pop(p.seg_stack)
       expand_segment(p, inner)
@@ -383,11 +388,9 @@ proc parse_control_symbol(p: var LaTeXParser) =
 
 proc parse_comment(p: var LaTeXParser) =
    if starts_with(p.tok.token, "lins-enable"):
-      # TODO: Enable linting
-      discard
+      p.is_enabled = true
    elif starts_with(p.tok.token, "lins-disable"):
-      # TODO: Disable linting
-      discard
+      p.is_enabled = false
    else:
       var seg = LaTeXTextSegment()
       seg.text = p.tok.token
