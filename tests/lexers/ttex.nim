@@ -406,6 +406,40 @@ b""", @[
    TeXToken.new(Character, 11, "b", 3, 0),
 ])
 
+run_test("Comment string with keyword",
+"""
+a% TODO: Look at this later
+b""", @[
+   TeXToken.new(Character, 11, "a", 1, 0),
+   TeXToken.new(Comment, 0, "TODO", 1, 3),
+   TeXToken.new(Character, 11, "b", 2, 0),
+])
+
+run_test("Comment string with hyphenated keyword",
+"""
+a
+% lins-enable
+b""", @[
+   TeXToken.new(Character, 11, "a", 1, 0),
+   TeXToken.new(Character, 10, " ", 1, 1),
+   TeXToken.new(Comment, 0, "lins-enable", 2, 2),
+   TeXToken.new(Character, 11, "b", 3, 0),
+])
+
+run_test("Comment string with multiple keywords",
+"""
+a
+%lins-disable TODO: Important stuff FIXME: Right now! XXX: Marks the spot
+b""", @[
+   TeXToken.new(Character, 11, "a", 1, 0),
+   TeXToken.new(Character, 10, " ", 1, 1),
+   TeXToken.new(Comment, 0, "lins-disable", 2, 1),
+   TeXToken.new(Comment, 0, "TODO", 2, 14),
+   TeXToken.new(Comment, 0, "FIXME", 2, 36),
+   TeXToken.new(Comment, 0, "XXX", 2, 54),
+   TeXToken.new(Character, 11, "b", 3, 0),
+])
+
 # Invalid characters (category 15)
 
 run_test("Invalid character, removed", # Should we raise an exception?
