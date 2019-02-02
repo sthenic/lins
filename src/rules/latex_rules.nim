@@ -10,6 +10,9 @@ export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation
 
 
 proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
+   for scope_entry in seg.scope:
+      if scope_entry.kind == ScopeKind.Comment:
+         return false
    if len(r.latex.scope) == 0:
       return true
 

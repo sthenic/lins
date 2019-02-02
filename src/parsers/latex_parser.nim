@@ -21,6 +21,7 @@ type
       ControlSequence
       Environment
       Math
+      Comment
 
    ScopeEntry* = object
       name*: string
@@ -380,12 +381,31 @@ proc parse_control_symbol(p: var LaTeXParser) =
    get_token(p)
 
 
+proc parse_comment(p: var LaTeXParser) =
+   if starts_with(p.tok.token, "lins-enable"):
+      # TODO: Enable linting
+      discard
+   elif starts_with(p.tok.token, "lins-disable"):
+      # TODO: Disable linting
+      discard
+   else:
+      var seg = LaTeXTextSegment()
+      seg.text = p.tok.token
+      seg.col = p.tok.col
+      seg.line = p.tok.line
+      seg.scope = @[ScopeEntry(kind: ScopeKind.Comment)]
+      add_seg(p, seg)
+
+   get_token(p)
+
+
 proc parse_token(p: var LaTeXParser) =
    ## Eats tokens from the input stream until an end condition is reached.
    case p.tok.token_type
    of Character: parse_character(p)
    of ControlWord: parse_control_word(p)
    of ControlSymbol: parse_control_symbol(p)
+   of Comment: parse_comment(p)
    else:
       # We should raise an exception if we're forced to parse a token that is
       # not one of the above. Currently, that's 'Invalid' and "EndOfFile'.
