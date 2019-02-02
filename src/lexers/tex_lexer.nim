@@ -10,6 +10,7 @@ type
       ControlWord
       ControlSymbol
       Character
+      Comment
 
    CategoryCode* = range[0 .. 15]
 
@@ -36,6 +37,14 @@ type
 
 const
    CONTEXT_CHARS = 3
+   COMMENT_KEYWORDS: array[0..4, string] = [
+      "TODO",
+      "FIXME",
+      "XXX",
+      "lins-enable",
+      "lins-disable"
+   ]
+   COMMENT_TOKEN_CHARS: set[char] = {'A' .. 'Z', 'a' .. 'z', '-'}
    CATEGORY: array[CategoryCode, set[char]] = [
       {'\\'},
       {'{'},
@@ -106,7 +115,7 @@ proc handle_crlf(l: var TeXLexer, pos: int): int =
 
 
 template update_token_position(l: TeXLexer, tok: var TeXToken) =
-   tok.col = getColNumber(l, l.bufpos)
+   tok.col = get_col_number(l, l.bufpos)
    tok.line = l.lineNumber
 
 
@@ -243,12 +252,33 @@ proc handle_category_7(l: var TeXLexer, tok: var TeXToken) =
    l.bufpos = pos
 
 
-proc handle_category_14(l: var TeXLexer, tok: var TeXToken) =
-   # Comment character. Ultimately we should write a function to handle
-   # special comments which may pass information to the upper layers, e.g.
-   # the parser. Right now, throw away everything until the next newline.
-   while l.buf[l.bufpos] notin {lexbase.EndOfFile, '\L', '\c'}:
+proc get_word_in_comment(l: var TeXLexer): tuple[str: string, pos: int] =
+   # Skip until a comment token character is found, break on EOF/newline.
+   while l.buf[l.bufpos] notin COMMENT_TOKEN_CHARS +
+                               {lexbase.EndOfFile, '\L', '\c'}:
       inc(l.bufpos)
+   result.pos = l.bufpos
+   while l.buf[l.bufpos] in COMMENT_TOKEN_CHARS:
+      add(result.str, l.buf[l.bufpos])
+      inc(l.bufpos)
+
+
+proc handle_category_14(l: var TeXLexer, tok: var TeXToken) =
+   # Skip over the comment character.
+   inc(l.bufpos)
+   while l.buf[l.bufpos] notin {lexbase.EndOfFile, '\L', '\c'}:
+      let (str, pos) = get_word_in_comment(l)
+      if contains(COMMENT_KEYWORDS, str):
+         # We have found a valid comment token. Prepare the token, back the
+         # buffer up one character and insert a comment token to trigger a call
+         # to this function again.
+         tok.token = str
+         tok.token_type = Comment
+         tok.col = get_col_number(l, pos)
+         tok.line = l.lineNumber
+         dec(l.bufpos)
+         l.buf[l.bufpos] = '%'
+         return
    l.bufpos = handle_crlf(l, l.bufpos)
    l.state = StateN
    get_token(l, tok)
