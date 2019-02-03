@@ -1,11 +1,11 @@
 import streams
 import ospaths
 
-import ../utils/log
 import ./linter
+import ../utils/log
 
-export LinterFileIOError, LinterValueError, LinterParseError, LinterDebugOptions,
-       LintResult
+export LinterFileIOError, LinterValueError, LinterParseError,
+       LinterDebugOptions, LintResult
 
 type
    Filter* = enum
