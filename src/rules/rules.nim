@@ -23,6 +23,11 @@ type
       AND
       NOT
 
+   LinterKind* = enum
+      ANY
+      PLAIN
+      LATEX
+
    LaTeXScopeEntry* = tuple
       name: string # Maybe a regex?
       kind: ScopeKind
@@ -65,6 +70,7 @@ type
       ignore_case*: bool
       latex*: LaTeXRuleSection
       plain*: PlainRuleSection
+      linter_kind*: LinterKind
 
    RuleExistence* = ref object of Rule
       regex*: Regex
@@ -139,16 +145,16 @@ proc calculate_position*(r: Rule, line, col, violation_pos: int,
 # Constructors
 proc new*(t: typedesc[Rule], kind: string, severity: Severity, message: string,
           source_file: string, display_name: string, plain: PlainRuleSection,
-           latex: LaTeXRuleSection): Rule =
+           latex: LaTeXRuleSection, linter_kind: LinterKind): Rule =
    Rule(kind: kind, severity: severity, message: message,
         source_file: source_file, display_name: display_name, plain: plain,
-        latex: latex)
+        latex: latex, linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
           ignore_case: bool, plain: PlainRuleSection,
-          latex: LaTeXRuleSection): RuleExistence =
+          latex: LaTeXRuleSection, linter_kind: LinterKind): RuleExistence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -161,13 +167,15 @@ proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
                         ignore_case: ignore_case,
                         regex: re(regex_flags & regex),
                         plain: plain,
-                        latex: latex)
+                        latex: latex,
+                        linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
           subst_table: Table[string, string], ignore_case: bool,
-          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleSubstitution =
+          plain: PlainRuleSection, latex: LaTeXRuleSection,
+          linter_kind: LinterKind): RuleSubstitution =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -185,13 +193,15 @@ proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
                            regex: re(regex_flags & regex),
                            subst_table: lsubst_table,
                            plain: plain,
-                           latex: latex)
+                           latex: latex,
+                           linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
           source_file: string,  display_name: string, regex: string,
           limit_val: int, limit_kind: Limit, ignore_case: bool,
-          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleOccurrence =
+          plain: PlainRuleSection, latex: LaTeXRuleSection,
+          linter_kind: LinterKind): RuleOccurrence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -206,13 +216,14 @@ proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
                          limit_val: limit_val,
                          limit_kind: limit_kind,
                          plain: plain,
-                         latex: latex)
+                         latex: latex,
+                         linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
           source_file: string,  display_name: string, regex: string,
           ignore_case: bool, plain: PlainRuleSection,
-          latex: LaTeXRuleSection): RuleRepetition =
+          latex: LaTeXRuleSection, linter_kind: LinterKind): RuleRepetition =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -232,7 +243,8 @@ proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
 proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
           source_file: string, display_name: string, regex_first: string,
           regex_second: string, ignore_case: bool,
-          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleConsistency =
+          plain: PlainRuleSection, latex: LaTeXRuleSection,
+          linter_kind: LinterKind): RuleConsistency =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -246,16 +258,18 @@ proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
                          regex_first: re(regex_flags & regex_first),
                          regex_second: re(regex_flags & regex_second),
                          plain: plain,
-                         latex: latex)
+                         latex: latex,
+                         linter_kind: linter_kind)
 
 
 # Regexes should be auto-filled on an above level. Drafts are:
 #   regex_def = r'(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)'
 #   regex_decl = r'\b([A-Z]{3,5})\b'
-proc new*(t: typedesc[RuleDefinition], severity: Severity, message: string,
-          source_file: string,  display_name: string, regex_def: string,
-          regex_decl: string, exceptions: seq[string], ignore_case: bool,
-          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleDefinition =
+proc new*(t: typedesc[RuleDefinition], severity: Severity,
+          message: string, source_file: string, display_name: string,
+          regex_def: string, regex_decl: string, exceptions: seq[string],
+          ignore_case: bool, plain: PlainRuleSection, latex: LaTeXRuleSection,
+          linter_kind: LinterKind): RuleDefinition =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -271,13 +285,15 @@ proc new*(t: typedesc[RuleDefinition], severity: Severity, message: string,
                          exceptions: exceptions,
                          definitions: init_table[string, Position](),
                          plain: plain,
-                         latex: latex)
+                         latex: latex,
+                         linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
           source_file: string,  display_name: string, regex_first: string,
           regex_second: string, ignore_case: bool,
-          plain: PlainRuleSection, latex: LaTeXRuleSection): RuleConditional =
+          plain: PlainRuleSection, latex: LaTeXRuleSection,
+          linter_kind: LinterKind): RuleConditional =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -291,7 +307,8 @@ proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
                           regex_first: re(regex_flags & regex_first),
                           regex_second: re(regex_flags & regex_second),
                           plain: plain,
-                          latex: latex)
+                          latex: latex,
+                          linter_kind: linter_kind)
 
 
 method reset*(r: Rule) {.base.} =

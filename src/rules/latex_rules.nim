@@ -43,7 +43,7 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
       if not matched:
          add(entry_match, (false, rule_entry.logic))
 
-   # Calculate if the rule should be enforced or not.
+   # Calculate whether the rule should be enforced or not.
    var enforce_and = false
    var enforce_or = false
    var enforce_not = false
@@ -61,57 +61,56 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
    result = (enforce_or or enforce_and) and not enforce_not
 
 
+proc lint_filter(r: Rule, seg: LaTeXTextSegment): bool =
+   ## Returns true if the seg should be linted with the rule object r.
+   result = seg.do_lint and scope_filter(r, seg) and
+            (r.linter_kind == ANY or r.linter_kind == LATEX)
+
+
 method enforce*(r: RuleExistence, seg: LaTeXTextSegment): seq[Violation] =
-   if not seg.do_lint or not scope_filter(r, seg):
+   if not lint_filter(r, seg):
       return
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
 
 method enforce*(r: RuleSubstitution, seg: LaTeXTextSegment): seq[Violation] =
-   if not seg.do_lint or not scope_filter(r, seg):
+   if not lint_filter(r, seg):
       return
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
 
 method enforce*(r: RuleOccurrence, seg: LaTeXTextSegment): seq[Violation] =
-   if not seg.do_lint or not scope_filter(r, seg):
+   if not lint_filter(r, seg):
       return
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
 
 method enforce*(r: RuleRepetition, seg: LaTeXTextSegment): seq[Violation] =
-   if not seg.do_lint or not scope_filter(r, seg):
+   if not lint_filter(r, seg):
       return
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
 
 method enforce*(r: RuleConsistency, seg: LaTeXTextSegment): seq[Violation] =
-   if not seg.do_lint or not scope_filter(r, seg):
+   if not lint_filter(r, seg):
       return
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
 
 method enforce*(r: RuleDefinition, seg: LaTeXTextSegment): seq[Violation] =
-   if not seg.do_lint or not scope_filter(r, seg):
+   if not lint_filter(r, seg):
       return
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
 
 method enforce*(r: RuleConditional, seg: LaTeXTextSegment): seq[Violation] =
-   if not seg.do_lint or not scope_filter(r, seg):
+   if not lint_filter(r, seg):
       return
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))

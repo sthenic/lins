@@ -8,7 +8,29 @@ import ../parsers/plain_parser
 
 export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation
 
+
+proc lint_filter(r: Rule, seg: PlainTextSegment): bool =
+   result = (r.linter_kind == ANY) or (r.linter_kind == PLAIN)
+
+
+method enforce*(r: RuleExistence, seg: PlainTextSegment): seq[Violation] =
+   if not lint_filter(r, seg):
+      return
+
+   result = proc_call(enforce(r, TextSegment(seg)))
+
+
+method enforce*(r: RuleSubstitution, seg: PlainTextSegment): seq[Violation] =
+   if not lint_filter(r, seg):
+      return
+
+   result = proc_call(enforce(r, TextSegment(seg)))
+
+
 method enforce*(r: RuleOccurrence, seg: PlainTextSegment): seq[Violation] =
+   if not lint_filter(r, seg):
+      return
+
    # Reset the match counter and alert status depending on the scope.
    case r.plain.scope
    of PARAGRAPH:
@@ -18,7 +40,6 @@ method enforce*(r: RuleOccurrence, seg: PlainTextSegment): seq[Violation] =
    else:
       discard
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.
@@ -26,6 +47,9 @@ method enforce*(r: RuleOccurrence, seg: PlainTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleRepetition, seg: PlainTextSegment): seq[Violation] =
+   if not lint_filter(r, seg):
+      return
+
    case r.plain.scope
    of PARAGRAPH:
       if not (r.par_prev == seg.par_idx):
@@ -33,7 +57,6 @@ method enforce*(r: RuleRepetition, seg: PlainTextSegment): seq[Violation] =
    else:
       discard
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.
@@ -41,6 +64,9 @@ method enforce*(r: RuleRepetition, seg: PlainTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleConsistency, seg: PlainTextSegment): seq[Violation] =
+   if not lint_filter(r, seg):
+      return
+
    # Reset the match counter and alert status depending on the scope.
    case r.plain.scope
    of PARAGRAPH:
@@ -49,7 +75,6 @@ method enforce*(r: RuleConsistency, seg: PlainTextSegment): seq[Violation] =
    else:
       discard
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.
@@ -57,6 +82,9 @@ method enforce*(r: RuleConsistency, seg: PlainTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleDefinition, seg: PlainTextSegment): seq[Violation] =
+   if not lint_filter(r, seg):
+      return
+
    # Reset the match counter and alert status depending on the scope.
    case r.plain.scope
    of PARAGRAPH:
@@ -65,7 +93,6 @@ method enforce*(r: RuleDefinition, seg: PlainTextSegment): seq[Violation] =
    else:
       discard
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.
@@ -73,6 +100,9 @@ method enforce*(r: RuleDefinition, seg: PlainTextSegment): seq[Violation] =
 
 
 method enforce*(r: RuleConditional, seg: PlainTextSegment): seq[Violation] =
+   if not lint_filter(r, seg):
+      return
+
    # Reset the match counter and alert status depending on the scope.
    case r.plain.scope
    of PARAGRAPH:
@@ -81,7 +111,6 @@ method enforce*(r: RuleConditional, seg: PlainTextSegment): seq[Violation] =
    else:
       discard
 
-   # Call the base enforcement function
    result = proc_call(enforce(r, TextSegment(seg)))
 
    # Remember the paragraph.

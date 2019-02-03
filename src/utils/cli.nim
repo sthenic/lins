@@ -132,11 +132,11 @@ proc parse_cli*(): CLIState =
          of "linter":
             case val.to_lower_ascii()
             of "auto":
-               result.linter = AUTO
+               result.linter = Filter.AUTO
             of "plain":
-               result.linter = PLAIN
+               result.linter = Filter.PLAIN
             of "latex":
-               result.linter = LATEX
+               result.linter = Filter.LATEX
             else:
                log.abort(CLIValueError, "Option --severity expects the " &
                          "values 'auto', 'plain' or 'latex'.")
