@@ -68,8 +68,8 @@ type
       source_file*: string
       display_name*: string
       ignore_case*: bool
-      latex*: LaTeXRuleSection
-      plain*: PlainRuleSection
+      latex_section*: LaTeXRuleSection
+      plain_section*: PlainRuleSection
       linter_kind*: LinterKind
 
    RuleExistence* = ref object of Rule
@@ -144,17 +144,19 @@ proc calculate_position*(r: Rule, line, col, violation_pos: int,
 
 # Constructors
 proc new*(t: typedesc[Rule], kind: string, severity: Severity, message: string,
-          source_file: string, display_name: string, plain: PlainRuleSection,
-           latex: LaTeXRuleSection, linter_kind: LinterKind): Rule =
+          source_file: string, display_name: string, plain_section: PlainRuleSection,
+           latex_section: LaTeXRuleSection, linter_kind: LinterKind): Rule =
    Rule(kind: kind, severity: severity, message: message,
-        source_file: source_file, display_name: display_name, plain: plain,
-        latex: latex, linter_kind: linter_kind)
+        source_file: source_file, display_name: display_name,
+        plain_section: plain_section, latex_section: latex_section,
+        linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
-          ignore_case: bool, plain: PlainRuleSection,
-          latex: LaTeXRuleSection, linter_kind: LinterKind): RuleExistence =
+          ignore_case: bool, plain_section: PlainRuleSection,
+          latex_section: LaTeXRuleSection,
+          linter_kind: LinterKind): RuleExistence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -166,15 +168,15 @@ proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
                         display_name: display_name,
                         ignore_case: ignore_case,
                         regex: re(regex_flags & regex),
-                        plain: plain,
-                        latex: latex,
+                        plain_section: plain_section,
+                        latex_section: latex_section,
                         linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
           subst_table: Table[string, string], ignore_case: bool,
-          plain: PlainRuleSection, latex: LaTeXRuleSection,
+          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
           linter_kind: LinterKind): RuleSubstitution =
    var regex_flags = ""
    if ignore_case:
@@ -192,15 +194,15 @@ proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
                            ignore_case: ignore_case,
                            regex: re(regex_flags & regex),
                            subst_table: lsubst_table,
-                           plain: plain,
-                           latex: latex,
+                           plain_section: plain_section,
+                           latex_section: latex_section,
                            linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
           source_file: string,  display_name: string, regex: string,
           limit_val: int, limit_kind: Limit, ignore_case: bool,
-          plain: PlainRuleSection, latex: LaTeXRuleSection,
+          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
           linter_kind: LinterKind): RuleOccurrence =
    var regex_flags = ""
    if ignore_case:
@@ -215,15 +217,16 @@ proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
                          regex: re(regex_flags & regex),
                          limit_val: limit_val,
                          limit_kind: limit_kind,
-                         plain: plain,
-                         latex: latex,
+                         plain_section: plain_section,
+                         latex_section: latex_section,
                          linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
           source_file: string,  display_name: string, regex: string,
-          ignore_case: bool, plain: PlainRuleSection,
-          latex: LaTeXRuleSection, linter_kind: LinterKind): RuleRepetition =
+          ignore_case: bool, plain_section: PlainRuleSection,
+          latex_section: LaTeXRuleSection,
+          linter_kind: LinterKind): RuleRepetition =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -235,15 +238,15 @@ proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
                          display_name: display_name,
                          ignore_case: ignore_case,
                          regex: re(regex_flags & regex),
-                         plain: plain,
-                         latex: latex,
+                         plain_section: plain_section,
+                         latex_section: latex_section,
                          matches: init_table[string, int]())
 
 
 proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
           source_file: string, display_name: string, regex_first: string,
           regex_second: string, ignore_case: bool,
-          plain: PlainRuleSection, latex: LaTeXRuleSection,
+          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
           linter_kind: LinterKind): RuleConsistency =
    var regex_flags = ""
    if ignore_case:
@@ -257,8 +260,8 @@ proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
                          ignore_case: ignore_case,
                          regex_first: re(regex_flags & regex_first),
                          regex_second: re(regex_flags & regex_second),
-                         plain: plain,
-                         latex: latex,
+                         plain_section: plain_section,
+                         latex_section: latex_section,
                          linter_kind: linter_kind)
 
 
@@ -268,7 +271,8 @@ proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
 proc new*(t: typedesc[RuleDefinition], severity: Severity,
           message: string, source_file: string, display_name: string,
           regex_def: string, regex_decl: string, exceptions: seq[string],
-          ignore_case: bool, plain: PlainRuleSection, latex: LaTeXRuleSection,
+          ignore_case: bool, plain_section: PlainRuleSection,
+          latex_section: LaTeXRuleSection,
           linter_kind: LinterKind): RuleDefinition =
    var regex_flags = ""
    if ignore_case:
@@ -284,15 +288,15 @@ proc new*(t: typedesc[RuleDefinition], severity: Severity,
                          regex_decl: re(regex_flags & regex_decl),
                          exceptions: exceptions,
                          definitions: init_table[string, Position](),
-                         plain: plain,
-                         latex: latex,
+                         plain_section: plain_section,
+                         latex_section: latex_section,
                          linter_kind: linter_kind)
 
 
 proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
           source_file: string,  display_name: string, regex_first: string,
           regex_second: string, ignore_case: bool,
-          plain: PlainRuleSection, latex: LaTeXRuleSection,
+          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
           linter_kind: LinterKind): RuleConditional =
    var regex_flags = ""
    if ignore_case:
@@ -306,8 +310,8 @@ proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
                           ignore_case: ignore_case,
                           regex_first: re(regex_flags & regex_first),
                           regex_second: re(regex_flags & regex_second),
-                          plain: plain,
-                          latex: latex,
+                          plain_section: plain_section,
+                          latex_section: latex_section,
                           linter_kind: linter_kind)
 
 

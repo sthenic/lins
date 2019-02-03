@@ -10,7 +10,7 @@ export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation
 
 
 proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
-   if len(r.latex.scope) == 0:
+   if len(r.latex_section.scope) == 0:
       # If a rule has no scope defined we return true except for segments with
       # the comment scope.
       for scope_entry in seg.scope:
@@ -19,7 +19,7 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
       return true
 
    var entry_match: seq[tuple[match: bool, logic: ScopeLogic]]
-   for rule_entry in r.latex.scope:
+   for rule_entry in r.latex_section.scope:
       # Determine if the context is matches any user defined expressions.
       var context_match = true
       if len(rule_entry.before) > 0:

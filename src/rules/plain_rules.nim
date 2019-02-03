@@ -32,7 +32,7 @@ method enforce*(r: RuleOccurrence, seg: PlainTextSegment): seq[Violation] =
       return
 
    # Reset the match counter and alert status depending on the scope.
-   case r.plain.scope
+   case r.plain_section.scope
    of PARAGRAPH:
       if not (r.par_prev == seg.par_idx): # TODO: Check not strictly necessary any more.
          r.nof_matches = 0
@@ -50,7 +50,7 @@ method enforce*(r: RuleRepetition, seg: PlainTextSegment): seq[Violation] =
    if not lint_filter(r, seg):
       return
 
-   case r.plain.scope
+   case r.plain_section.scope
    of PARAGRAPH:
       if not (r.par_prev == seg.par_idx):
          r.matches.clear()
@@ -68,7 +68,7 @@ method enforce*(r: RuleConsistency, seg: PlainTextSegment): seq[Violation] =
       return
 
    # Reset the match counter and alert status depending on the scope.
-   case r.plain.scope
+   case r.plain_section.scope
    of PARAGRAPH:
       if not (r.par_prev == seg.par_idx):
          r.first_observed = false
@@ -86,7 +86,7 @@ method enforce*(r: RuleDefinition, seg: PlainTextSegment): seq[Violation] =
       return
 
    # Reset the match counter and alert status depending on the scope.
-   case r.plain.scope
+   case r.plain_section.scope
    of PARAGRAPH:
       if not (r.par_prev == seg.par_idx):
          r.definitions.clear()
@@ -104,7 +104,7 @@ method enforce*(r: RuleConditional, seg: PlainTextSegment): seq[Violation] =
       return
 
    # Reset the match counter and alert status depending on the scope.
-   case r.plain.scope
+   case r.plain_section.scope
    of PARAGRAPH:
       if not (r.par_prev == seg.par_idx):
          r.first_observed = false
