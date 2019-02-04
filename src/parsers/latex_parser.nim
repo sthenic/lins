@@ -28,6 +28,7 @@ type
       kind*: ScopeKind
       encl*: Enclosure
       count*: int
+      delimiter_count*: int
 
    LaTeXParser* = object
       lex: TeXLexer
@@ -70,6 +71,11 @@ proc is_in_enclosure(p: LaTeXParser, encl: Enclosure): bool =
    return not is_empty(p.scope) and p.scope[^1].encl == encl
 
 
+proc is_matching_delimiter(p: LaTeXParser): bool =
+   return not is_empty(p.scope) and
+          p.scope[^1].delimiter_count == p.delimiter_count
+
+
 proc get_token*(p: var LaTeXParser) =
    ## Get the next token from the lexer and store it in the `tok` member.
    get_token(p.lex, p.tok)
@@ -89,6 +95,7 @@ proc init(s: var ScopeEntry) =
    s.encl = Enclosure.Invalid
    s.kind = ScopeKind.Invalid
    s.count = 0
+   s.delimiter_count = 0
 
 
 proc open_parser*(p: var LaTeXParser, filename: string, s: Stream) =
@@ -206,25 +213,28 @@ proc clear_scope(p: var LaTeXParser) =
 
 proc handle_category_1(p: var LaTeXParser) =
    # Beginning of group character. If the current scope entry is empty, this
-   # group does not belong to any object.  Additionally, we keep track of the
-   # delimiter count within the segment.
+   # group does not belong to any object and we continue with just incrementing
+   # the delimiter count. However, if the scope entry is not empty, we update
+   # the entry and begin another enclosure since this is a group that belongs
+   # to a control word.
+   inc(p.delimiter_count)
    if not is_empty(p.scope_entry):
       p.scope_entry = ScopeEntry(name: p.scope_entry.name,
                                  kind: p.scope_entry.kind,
                                  encl: Group,
-                                 count: p.scope_entry.count + 1)
+                                 count: p.scope_entry.count + 1,
+                                 delimiter_count: p.delimiter_count)
       begin_enclosure(p, false, false, p.tok.context.before)
-   else:
-      inc(p.delimiter_count)
    get_token(p)
 
 
 proc handle_category_2(p: var LaTeXParser) =
-   # Handle end of group characters.
-   if is_in_enclosure(p, Group) and p.delimiter_count == 0:
+   # Handle end of group characters. If we're in a group enclosure and the
+   # delimiter count is equal to that of the closest scope entry, we end the
+   # current enclosure. The delimiter count is always decremented.
+   if is_in_enclosure(p, Group) and is_matching_delimiter(p):
       end_enclosure(p, p.tok.context.after)
-   else:
-      dec(p.delimiter_count)
+   dec(p.delimiter_count)
    get_token(p)
 
 
@@ -347,8 +357,10 @@ proc parse_control_word(p: var LaTeXParser) =
       var name = p.tok.token
       get_token(p)
       if p.tok.catcode == 1:
+         inc(p.delimiter_count)
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
-                                    encl: Group, count: 1)
+                                    encl: Group, count: 1,
+                                    delimiter_count: p.delimiter_count)
          begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name),
                          context_before)
          get_token(p)
