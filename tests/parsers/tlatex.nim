@@ -115,7 +115,7 @@ run_test("Control sequence in text, expanded",
 run_test("Expanded control sequence at the beginning of the text segment",
 """\emph{Emphasized} text.""", @[
    LaTeXTextSegment.new(
-      """Emphasized text.""", 1, 6, @[(10, 1)], @[])
+      """Emphasized text.""", 1, 6, @[], @[])
 ])
 
 
@@ -454,14 +454,14 @@ Row 2, column 0 & Row 2, column 1
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Group, 1, 1),
    ], ("ar}", "%\n\\")),
    LaTeXTextSegment.new("Header column 0 & Header column 1 Row 0, column 0 & Row 0, column 1 Row 1, column 0 & Row 1, column 1 Row 2, column 0 & Row 2, column 1 ",
-   3, 8, @[(15, 3), (34, 4), (68, 5), (102, 6)], @[
+   3, 8, @[(34, 4), (68, 5), (102, 6)], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
    ], ("}%\n", "\n\\e")),
    LaTeXTextSegment.new(" ", 7, 13, @[], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-])
+], true)
 
 
 run_test("Complex environment",

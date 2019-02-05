@@ -120,7 +120,7 @@ proc add_tok(p: var LaTeXParser) =
    if len(p.seg.text) == 0:
       p.seg.line = p.tok.line
       p.seg.col = p.tok.col
-   elif p.tok.line > p.last_tok.line:
+   elif is_valid(p.last_tok) and p.tok.line > p.last_tok.line:
       add(p.seg.linebreaks, (len(p.seg.text), p.tok.line))
 
    add(p.seg.text, p.tok.token)

@@ -70,6 +70,10 @@ proc init*(t: var TeXToken) =
    t.col = 0
 
 
+proc is_valid*(t: TeXToken): bool =
+   return t.token_type != Invalid
+
+
 proc get_context_before(l: TeXLexer): string =
    for i in countdown(CONTEXT_CHARS, 1):
       let c = l.buf[l.bufpos - i]
