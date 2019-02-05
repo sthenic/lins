@@ -350,7 +350,7 @@ proc parse_control_word(p: var LaTeXParser) =
       else:
          log.abort(ParseError, "Environment '" & env &
                    "' ended without matching begin statement.")
-   of "par":
+   of "par", "cr":
       handle_par(p)
       get_token(p)
    else:
@@ -376,6 +376,8 @@ proc parse_control_symbol(p: var LaTeXParser) =
    # TODO: Fix this indexing business?
    if p.tok.token[0] in ESCAPED_CHARACTERS:
       add_tok(p)
+   elif p.tok.token == "\\":
+      handle_par(p)
    elif p.tok.token == "[":
       # In LaTeX, '\[' is equivalent to plain TeX's '$$' which means that they
       # may be interchanged to begin and end displayed math sections. However,

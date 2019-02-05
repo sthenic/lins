@@ -453,15 +453,30 @@ Row 2, column 0 & Row 2, column 1
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Group, 1, 1),
    ], ("ar}", "%\n\\")),
-   LaTeXTextSegment.new("Header column 0 & Header column 1 Row 0, column 0 & Row 0, column 1 Row 1, column 0 & Row 1, column 1 Row 2, column 0 & Row 2, column 1 ",
-   3, 8, @[(34, 4), (68, 5), (102, 6)], @[
+   LaTeXTextSegment.new("Header column 0 & Header column 1 ",
+   3, 8, @[], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
-   ], ("}%\n", "\n\\e")),
+   ], ("}%\n", "")), # TODO: Check this, after scope shouldn't be empty.
+   LaTeXTextSegment.new("Row 0, column 0 & Row 0, column 1 ",
+   4, 0, @[], @[
+      ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ], ("", "")),
+   LaTeXTextSegment.new("Row 1, column 0 & Row 1, column 1 ",
+   5, 0, @[], @[
+      ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ], ("", "")),
+   LaTeXTextSegment.new("Row 2, column 0 & Row 2, column 1 ",
+   6, 0, @[], @[
+      ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0)
+   ], ("", "\n\\e")),
    LaTeXTextSegment.new(" ", 7, 13, @[], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
    ]),
-], true)
+])
 
 
 run_test("Complex environment",
@@ -486,14 +501,41 @@ Row 2, column 0 & Row 2, column 1 & Row 2, column 2
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 1, 1)
    ], ("ab}", "{}\n")),
-   LaTeXTextSegment.new(" Row 0, column 0 & Row 0, column 1 & Row 0, column 2  " &
-                   "Row 1, column 0 & Row 1, column 1 & Row 1, column 2  " &
-                   "Row 2, column 0 & Row 2, column 1 & Row 2, column 2 ", 6, 3,
-   @[
-      (1, 7), (54, 8), (107, 9)
-   ], @[
+   LaTeXTextSegment.new(" Row 0, column 0 & Row 0, column 1 & Row 0, column 2 ",
+   6, 3, @[(1, 7)], @[
+      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
+   ], ("", "")),
+   LaTeXTextSegment.new(" Row 1, column 0 & Row 1, column 1 & Row 1, column 2 ",
+   7, 54, @[(1, 8)], @[
+      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
+   ], ("", "")),
+   LaTeXTextSegment.new(" Row 2, column 0 & Row 2, column 1 & Row 2, column 2 ",
+   8, 54, @[(1, 9)], @[
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
    ], ("", "\n")),
+])
+
+
+run_test("Segment break on \\cr, (halign case)",
+"""
+\halign{%
+Cell 0: #\hskip 10pt& Cell 1: #\cr
+Hello & there! \cr
+General & Kenobi! \cr
+}
+""", @[
+   LaTeXTextSegment.new("Cell 0: #10pt& Cell 1: #",
+   2, 0, @[], @[
+      ScopeEntry.new("halign", ScopeKind.ControlSequence, Enclosure.Group, 1, 1),
+   ], ("", "")),
+   LaTeXTextSegment.new("Hello & there! ",
+   3, 0, @[], @[
+      ScopeEntry.new("halign", ScopeKind.ControlSequence, Enclosure.Group, 1, 1),
+   ], ("", "")),
+   LaTeXTextSegment.new("General & Kenobi! ",
+   4, 0, @[], @[
+      ScopeEntry.new("halign", ScopeKind.ControlSequence, Enclosure.Group, 1, 1),
+   ], ("", "")),
 ])
 
 
