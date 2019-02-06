@@ -155,17 +155,19 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool,
    add(p.last_tok_stack, p.last_tok)
    # Push the current scope entry to the scope.
    add(p.scope, p.scope_entry)
-   # Initialize a new text segment w/ the current scope.
-   p.seg = LaTeXTextSegment()
+   # Reinitialize the text segment w/ the current scope.
+   init(p.seg)
    p.seg.scope = p.scope
    p.seg.expand = expand
    # TODO: Add to constructor a few lines above?
    p.seg.context.before = context_before
-   # Initialize a new scope entry unless we're told to keep it. This only
+   # Reinitialize the last token.
+   init(p.last_tok)
+   # Reinitialize the scope entry unless we're told to keep it. This only
    # happens when an environment is entered since there may be options and
    # capture groups following the \begin{env} statement.
    if not keep_scope:
-      p.scope_entry = ScopeEntry()
+      init(p.scope_entry)
 
 
 proc is_on_different_lines(x, y: LaTeXTextSegment): bool =
@@ -202,15 +204,16 @@ proc end_enclosure(p: var LaTeXParser, context_after: string = "") =
    p.seg.context.after = context_after
    var inner = p.seg
    p.seg = pop(p.seg_stack)
-   p.last_tok = pop(p.last_tok_stack)
    if inner.expand:
       # Pop the text segment stack and expand the inner segment into the outer
-      # segment.
+      # segment. The last token should remain.
       expand_segment(p, inner)
+      discard pop(p.last_tok_stack)
    else:
       # Otherwise, the segment is not to be expanded so we just add the segment
-      # to the list of completed segments.
+      # to the list of completed segments. We restore last_tok from the stack.
       add_seg(p, inner)
+      p.last_tok = pop(p.last_tok_stack)
    # Restore the scope entry.
    p.scope_entry = pop(p.scope)
 
