@@ -51,7 +51,19 @@ type
 
 
 const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$', '~'}
-const EXPANDED_CONTROL_WORDS: seq[string] = @["emph", "textbf", "texttt"]
+const EXPANDED_CONTROL_WORDS: seq[string] = @[
+   "textrm",
+   "textsf",
+   "texttt",
+   "textnormal",
+   "textbf",
+   "textmd",
+   "textit",
+   "textsl",
+   "textsc",
+   "textup",
+   "emph"
+]
 const EXPANDED_ENVIRONMENTS: seq[string] = @[]
 
 # Forward declarations
