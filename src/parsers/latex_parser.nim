@@ -168,16 +168,31 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool,
       p.scope_entry = ScopeEntry()
 
 
+proc is_on_different_lines(x, y: LaTeXTextSegment): bool =
+   ## Check if the segment ``y`` starts on a different line from wherever ``x``
+   ## has reached.
+   if len(x.linebreaks) != 0:
+      result = y.line > x.linebreaks[^1].line
+   else:
+      result = y.line > x.line
+
+
 proc expand_segment(p: var LaTeXParser, inner: LaTeXTextSegment) =
    # The inner segment should be 'expanded' and thus added to the outer text
    # segment. All the linebreaks of the inner segment gets added to the
    # outer with modified positions (their coordinates are absolute). If the
    # outer segment has length zero, we also pass on the segment starting
-   # position.
+   # position. Otherwise, we have to check if the inner segment starts at a
+   # different line from the last recorded line in the outer segment. In that
+   # case, we add a linebreak pointing at the first character of the inner
+   # segment.
    let outer_len = len(p.seg.text)
    if outer_len == 0:
       p.seg.line = inner.line
       p.seg.col = inner.col
+   elif is_on_different_lines(p.seg, inner):
+      add(p.seg.linebreaks, (outer_len, inner.line))
+
    for lb in inner.linebreaks:
       add(p.seg.linebreaks, (outer_len + lb.pos, lb.line))
    add(p.seg.text, inner.text)
