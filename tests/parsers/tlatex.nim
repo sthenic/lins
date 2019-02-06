@@ -119,6 +119,35 @@ run_test("Expanded control sequence at the beginning of the text segment",
 ])
 
 
+run_test("Expanded control sequence immediately on new line in outer segment",
+"""\foo{
+   \emph{Emphasized text}}""", @[
+   LaTeXTextSegment.new(
+      """ Emphasized text""", 1, 5, @[(1, 2)], @[
+         ScopeEntry.new("foo", ControlSequence, Group, 1, 1)
+      ])
+])
+
+
+run_test("Multiple expanded control sequences, (+linebreak redundancy check)",
+"""\foo{
+   \emph{This is some emphasized text}
+   Yet more text here
+   \textsc{Matlab}
+   Will it ever end?
+   \textbf{A linebreak
+   within an expanded segment}
+   Finally, it ends!
+}""", @[
+   LaTeXTextSegment.new(
+      " This is some emphasized text Yet more text here Matlab Will it ever " &
+      "end? A linebreak within an expanded segment Finally, it ends! ",
+      1, 5, @[(1, 2), (30, 3), (49, 4), (56, 5), (74, 6), (86, 7), (113, 8)], @[
+         ScopeEntry.new("foo", ControlSequence, Group, 1, 1)
+      ])
+])
+
+
 run_test("Control sequence followed by a group",
 """A sentence with \foo{grouped text} another control sequence.""", @[
    LaTeXTextSegment.new(
