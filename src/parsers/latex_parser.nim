@@ -71,6 +71,10 @@ proc parse_character(p: var LaTeXParser)
 proc parse_token(p: var LaTeXParser)
 
 
+proc attach_line(tok: TeXToken, str: string): string =
+   result = "(l." & $tok.line & ") " & str
+
+
 proc is_empty[T](s: seq[T]): bool =
    return s == @[]
 
@@ -275,8 +279,8 @@ proc handle_category_3(p: var LaTeXParser) =
       get_token(p)
       if p.tok.catcode != 3:
          # Error condition.
-         log.abort(ParseError, "Display math section ended without two " &
-                   "characters of catcode 3, e.g. '$$'.")
+         log.abort(ParseError, attach_line(p.tok, "Display math section " &
+                   "ended without two characters of catcode 3, e.g. '$$'."))
       end_enclosure(p, p.tok.context.after)
       get_token(p)
    elif is_in_enclosure(p, Enclosure.Math):
@@ -348,8 +352,8 @@ proc get_group_as_string(p: var LaTeXParser): string =
          elif p.tok.catcode == 2:
             dec(count)
          elif p.tok.token_type == EndOfFile:
-            log.abort(ParseError, "Unexpected end of file when parsing " &
-                      "capture group.")
+            log.abort(ParseError, attach_line(p.tok, "Unexpected end of " &
+                      "file when parsing capture group."))
          else:
             add(result, p.tok.token)
          if count == 0:
@@ -373,13 +377,14 @@ proc parse_control_word(p: var LaTeXParser) =
       if is_in_enclosure(p, Enclosure.Environment):
          end_enclosure(p, p.tok.context.after)
          if p.scope_entry.name != env:
-            log.abort(ParseError, "Environment name mismatch '" &
-                      env & "' closes '" & p.scope_entry.name & "'.")
+            log.abort(ParseError, attach_line(p.tok, "Environment name " &
+                      "mismatch '" & env & "' closes '" & p.scope_entry.name &
+                      "'."))
          clear_scope(p)
          get_token(p) # Scan over '}'
       else:
-         log.abort(ParseError, "Environment '" & env &
-                   "' ended without matching begin statement.")
+         log.abort(ParseError, attach_line(p.tok, "Environment '" & env &
+                   "' ended without matching begin statement."))
    of "par", "cr":
       handle_par(p)
       get_token(p)
@@ -456,7 +461,8 @@ proc parse_token(p: var LaTeXParser) =
    else:
       # We should raise an exception if we're forced to parse a token that is
       # not one of the above. Currently, that's 'Invalid' and "EndOfFile'.
-      log.abort(ParseError, "Parser encountered an invalid token: " & $p.tok)
+      log.abort(ParseError, attach_line(p.tok, "Parser encountered an " &
+                "invalid token: " & $p.tok))
 
 
 proc parse_all*(p: var LaTeXParser): seq[LaTeXTextSegment] =
