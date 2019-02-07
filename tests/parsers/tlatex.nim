@@ -289,6 +289,57 @@ run_test("Display math with delimiters \\[, \\]",
 ])
 
 
+run_test("Option enclosure not allowed in math (equation)",
+"""
+\begin{equation}
+   \frac{x_k^2 + y_k^2}{2},\quad x, y \in [0.5, 1)
+\end{equation}""", @[
+   LaTeXTextSegment.new("x_k^2 + y_k^2", 2, 9, @[], @[
+      ScopeEntry.new("equation", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 1, 1),
+   ], ("   ", "{2}")),
+   LaTeXTextSegment.new("2", 2, 24, @[], @[
+      ScopeEntry.new("equation", ScopeKind.Environment, Enclosure.Environment, 0),
+      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1),
+   ], ("^2}", ",\\q")),
+   LaTeXTextSegment.new(" ,x, y [0.5, 1) ", 1, 16, @[(1, 2)], @[
+      ScopeEntry.new("equation", ScopeKind.Environment, Enclosure.Environment, 0),
+   ], ("", "")),
+])
+
+
+run_test("Option enclosure not allowed in math (display math)",
+"""$$\frac{x_k^2 + y_k^2}{2},\quad x, y \in [0.5, 1)$$""", @[
+   LaTeXTextSegment.new("x_k^2 + y_k^2", 1, 8, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0),
+      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 1, 1),
+   ], ("", "{2}")),
+   LaTeXTextSegment.new("2", 1, 23, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0),
+      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1),
+   ], ("^2}", ",\\q")),
+   LaTeXTextSegment.new(",x, y [0.5, 1)", 1, 25, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0),
+   ], ("", "")),
+])
+
+
+run_test("Option enclosure not allowed in math (inline math)",
+"""$\frac{x_k^2 + y_k^2}{2},\quad x, y \in [0.5, 1)$""", @[
+   LaTeXTextSegment.new("x_k^2 + y_k^2", 1, 7, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0),
+      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 1, 1),
+   ], ("", "{2}")),
+   LaTeXTextSegment.new("2", 1, 22, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0),
+      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1),
+   ], ("^2}", ",\\q")),
+   LaTeXTextSegment.new(",x, y [0.5, 1)", 1, 24, @[], @[
+      ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0),
+   ], ("", "")),
+])
+
+
 # Environments
 
 

@@ -65,6 +65,7 @@ const EXPANDED_CONTROL_WORDS: seq[string] = @[
    "emph"
 ]
 const EXPANDED_ENVIRONMENTS: seq[string] = @[]
+const MATH_ENVIRONMENTS: seq[string] = @["equation", "equation*"]
 
 # Forward declarations
 proc parse_character(p: var LaTeXParser)
@@ -85,6 +86,18 @@ proc is_empty(s: ScopeEntry): bool =
 
 proc is_in_enclosure(p: LaTeXParser, encl: Enclosure): bool =
    return not is_empty(p.scope) and p.scope[^1].encl == encl
+
+
+proc is_in_math_scope(seg: LaTeXTextSegment): bool =
+   ## Checks if ``seg`` is in any math scope.
+   # This includes the pure TeX modes denoted by ScopeKind.Math and any
+   # environment in MATH_ENVIRONMENTS.
+   for entry in seg.scope:
+      if (entry.kind == ScopeKind.Math) or
+         (entry.kind == ScopeKind.Environment and
+          entry.encl == Enclosure.Environment and
+          entry.name in MATH_ENVIRONMENTS):
+         return true
 
 
 proc is_matching_delimiter(p: LaTeXParser): bool =
@@ -241,10 +254,6 @@ proc handle_par(p: var LaTeXParser) =
    p.seg = LaTeXTextSegment(scope: inner.scope, expand: inner.expand)
 
 
-proc clear_scope(p: var LaTeXParser) =
-   p.scope_entry = ScopeEntry()
-
-
 proc handle_category_1(p: var LaTeXParser) =
    # Beginning of group character. If the current scope entry is empty, this
    # group does not belong to any object and we continue with just incrementing
@@ -308,7 +317,8 @@ proc handle_category_3(p: var LaTeXParser) =
 
 proc handle_category_12(p: var LaTeXParser) =
    # Handle 'other' characters.
-   if p.tok.token == "[" and not is_empty(p.scope_entry):
+   if p.tok.token == "[" and not is_empty(p.scope_entry) and
+      not is_in_math_scope(p.seg):
       p.scope_entry = ScopeEntry(name: p.scope_entry.name,
                                  kind: p.scope_entry.kind,
                                  encl: Option,
@@ -333,7 +343,7 @@ proc parse_character(p: var LaTeXParser) =
    of 12:
       handle_category_12(p)
    else:
-      clear_scope(p)
+      init(p.scope_entry)
       add_tok(p)
       get_token(p)
 
@@ -380,7 +390,7 @@ proc parse_control_word(p: var LaTeXParser) =
             log.abort(ParseError, attach_line(p.tok, "Environment name " &
                       "mismatch '" & env & "' closes '" & p.scope_entry.name &
                       "'."))
-         clear_scope(p)
+         init(p.scope_entry)
          get_token(p) # Scan over '}'
       else:
          log.abort(ParseError, attach_line(p.tok, "Environment '" & env &
@@ -399,7 +409,12 @@ proc parse_control_word(p: var LaTeXParser) =
          begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name),
                          context_before)
          get_token(p)
-      elif p.tok.catcode == 12 and p.tok.token == "[":
+      elif p.tok.catcode == 12 and p.tok.token == "[" and
+           not is_in_math_scope(p.seg):
+         # We don't allow option enclosures in math scopes since it is far more
+         # likely that the characters '[' and ']' are used not to indicate
+         # options but as range specifiers. For example, "x \in [0.5, 1)" would
+         # cause parse errors later on if we don't do this.
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
                                     encl: Option, count: 1)
          begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name),
