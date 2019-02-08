@@ -520,6 +520,88 @@ run_test("Non-ASCII characters: Emojis",
    TeXToken.new(Character, 12, "\x87", 1, 7),
 ])
 
+# Context
+
+run_test("Context for control word",
+"""abc \foo def""", @[
+   TeXToken.new(Character, 11, "a", 1, 0),
+   TeXToken.new(Character, 11, "b", 1, 1),
+   TeXToken.new(Character, 11, "c", 1, 2),
+   TeXToken.new(Character, 10, " ", 1, 3),
+   TeXToken.new(ControlWord, 0, "foo", 1, 4, ("bc ", "")),
+   TeXToken.new(Character, 11, "d", 1, 9),
+   TeXToken.new(Character, 11, "e", 1, 10),
+   TeXToken.new(Character, 11, "f", 1, 11),
+])
+
+
+run_test("Context for control symbols",
+"""abc \$ def""", @[
+   TeXToken.new(Character, 11, "a", 1, 0),
+   TeXToken.new(Character, 11, "b", 1, 1),
+   TeXToken.new(Character, 11, "c", 1, 2),
+   TeXToken.new(Character, 10, " ", 1, 3),
+   TeXToken.new(ControlSymbol, 0, "$", 1, 4, ("bc ", " de")),
+   TeXToken.new(Character, 10, " ", 1, 6),
+   TeXToken.new(Character, 11, "d", 1, 7),
+   TeXToken.new(Character, 11, "e", 1, 8),
+   TeXToken.new(Character, 11, "f", 1, 9),
+])
+
+
+run_test("Context for category 3 characters (math)",
+"""abc $ def""", @[
+   TeXToken.new(Character, 11, "a", 1, 0),
+   TeXToken.new(Character, 11, "b", 1, 1),
+   TeXToken.new(Character, 11, "c", 1, 2),
+   TeXToken.new(Character, 10, " ", 1, 3),
+   TeXToken.new(Character, 3, "$", 1, 4, ("bc ", " de")),
+   TeXToken.new(Character, 10, " ", 1, 5),
+   TeXToken.new(Character, 11, "d", 1, 6),
+   TeXToken.new(Character, 11, "e", 1, 7),
+   TeXToken.new(Character, 11, "f", 1, 8),
+])
+
+
+run_test("Context for group delimiters: '{' and '}'",
+"""abc {} def""", @[
+   TeXToken.new(Character, 11, "a", 1, 0),
+   TeXToken.new(Character, 11, "b", 1, 1),
+   TeXToken.new(Character, 11, "c", 1, 2),
+   TeXToken.new(Character, 10, " ", 1, 3),
+   TeXToken.new(Character, 1, "{", 1, 4, ("bc ", "")),
+   TeXToken.new(Character, 2, "}", 1, 5, ("", " de")),
+   TeXToken.new(Character, 10, " ", 1, 6),
+   TeXToken.new(Character, 11, "d", 1, 7),
+   TeXToken.new(Character, 11, "e", 1, 8),
+   TeXToken.new(Character, 11, "f", 1, 9),
+])
+
+
+run_test("Context for 'option' delimiters: '[' and ']'",
+"""abc [] def""", @[
+   TeXToken.new(Character, 11, "a", 1, 0),
+   TeXToken.new(Character, 11, "b", 1, 1),
+   TeXToken.new(Character, 11, "c", 1, 2),
+   TeXToken.new(Character, 10, " ", 1, 3),
+   TeXToken.new(Character, 12, "[", 1, 4, ("bc ", "")),
+   TeXToken.new(Character, 12, "]", 1, 5, ("", " de")),
+   TeXToken.new(Character, 10, " ", 1, 6),
+   TeXToken.new(Character, 11, "d", 1, 7),
+   TeXToken.new(Character, 11, "e", 1, 8),
+   TeXToken.new(Character, 11, "f", 1, 9),
+])
+
+
+run_test("Context at buffer endpoints",
+"""ab\[cd""", @[
+   TeXToken.new(Character, 11, "a", 1, 0),
+   TeXToken.new(Character, 11, "b", 1, 1),
+   TeXToken.new(ControlSymbol, 0, "[", 1, 2, ("ab", "cd")),
+   TeXToken.new(Character, 11, "c", 1, 4),
+   TeXToken.new(Character, 11, "d", 1, 5),
+])
+
 
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
