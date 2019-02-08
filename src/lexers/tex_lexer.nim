@@ -32,7 +32,6 @@ type
    TeXLexer* = object of BaseLexer
       filename: string
       state: State
-      enable_context: bool
 
 
 const
@@ -74,29 +73,24 @@ proc is_valid*(t: TeXToken): bool =
    return t.token_type != Invalid
 
 
-proc get_context_before(l: TeXLexer): string =
+# TODO: This is a naive implementation that doesn't take unicode characters
+# into account.
+proc get_context_before(l: TeXLexer, pos: int): string =
    for i in countdown(CONTEXT_CHARS, 1):
-      let c = l.buf[l.bufpos - i]
+      let c = l.buf[pos - i]
       if c == '\0':
-         break
+         continue
       else:
          add(result, c)
 
 
-proc get_context_after(l: TeXLexer): string =
-   for i in countup(0, CONTEXT_CHARS - 1):
-      let c = l.buf[l.bufpos + i]
+proc get_context_after(l: TeXLexer, pos: int): string =
+   for i in countup(1, CONTEXT_CHARS):
+      let c = l.buf[pos + i]
       if c == '\0':
          break
       else:
          add(result, c)
-
-
-proc new*(t: typedesc[TeXToken], token_type: TeXTokenType,
-         catcode: CategoryCode, token: string, line, col: int,
-         context: Context): TeXToken =
-   result = TeXToken(token_type: token_type, catcode: catcode, token: token,
-                     line: line, col: col, context: context)
 
 
 proc handle_crlf(l: var TeXLexer, pos: int): int =
@@ -220,8 +214,10 @@ proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
          state = l.state
       else:
          # For any other character, we construct a control symbol and move to
-         # state M.
+         # state M. We have to attach the trailing context to these tokens too
+         # since they are often used as environment delimiters.
          tok.token_type = ControlSymbol
+         tok.context.after = get_context_after(l, pos)
          add(tok.token, buf[pos])
          inc(pos)
          state = StateM
@@ -279,16 +275,16 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
    tok.catcode = 0
    set_len(tok.token, 0)
    update_token_position(l, tok)
-   if l.enable_context:
-      set_len(tok.context.before, 0)
-      set_len(tok.context.after, 0)
-      tok.context.before = get_context_before(l)
+   set_len(tok.context.before, 0)
+   set_len(tok.context.after, 0)
 
    let c = l.buf[l.bufpos]
    case c
    of lexbase.EndOfFile:
       tok.token_type = EndOfFile
    of CATEGORY[0]:
+      # Grab the context before tokens of category code 0.
+      tok.context.before = get_context_before(l, l.bufpos)
       handle_category_0(l, tok)
    of CATEGORY[5]:
       let prev_state = l.state
@@ -339,18 +335,27 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
       tok.catcode = get_category_code(c)
       tok.token = $c
       l.state = StateM
+
+      # Category 12 is implied for the characters '[' and ']'. This is the only
+      # point where we have to venture into the LaTeX domain and offer context
+      # to the characters '[' and ']'. These characters don't mean anything
+      # special in plain TeX but is commonly used for option enclosures in
+      # LaTeX. We could make the lexer agnostic to this but that would mean
+      # attaching context to every token which is a relatively expensive
+      # operation, especially if the context consists of 10-20 characters or
+      # more. This is a trade-off worth making.
+      if tok.catcode in [1, 3] or tok.token == "[":
+         tok.context.before = get_context_before(l, l.bufpos)
+      if tok.catcode in [2, 3] or tok.token == "]":
+         tok.context.after = get_context_after(l, l.bufpos)
+
       inc(l.bufpos)
 
-   if l.enable_context:
-      tok.context.after = get_context_after(l)
 
-
-proc open_lexer*(l: var TeXLexer, filename: string, s: Stream,
-                 enable_context: bool) =
+proc open_lexer*(l: var TeXLexer, filename: string, s: Stream) =
    lexbase.open(l, s)
    l.filename = filename
    l.state = StateN
-   l.enable_context = enable_context
 
 
 proc close_lexer*(l: var TeXLexer) =

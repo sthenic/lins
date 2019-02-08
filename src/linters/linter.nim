@@ -189,7 +189,7 @@ proc lint_file*(l: var Linter, filename: string, rules: seq[Rule],
       # Catch and reraise the exception with a type local to this module.
       # Callers are not aware of the lexing and parsing process.
       log.abort(LinterParseError,
-               "Parse error when processing file '$1'.", filename)
+                "Parse error when processing file '$1'.", filename)
 
    result.delta_analysis = (t_stop - t_start) * 1000.0
 

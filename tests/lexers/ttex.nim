@@ -16,7 +16,7 @@ template run_test(title, stimuli: string; reference: seq[TeXToken],
    var lex: TeXLexer
    var tok: TeXToken
    init(tok)
-   open_lexer(lex, "test", new_string_stream(stimuli), false)
+   open_lexer(lex, "test", new_string_stream(stimuli))
    while true:
       get_token(lex, tok)
       if tok.token_type == TeXTokenType.EndOfFile:
@@ -47,9 +47,10 @@ template run_test(title, stimuli: string; reference: seq[TeXToken],
 # We define a custom constructor to be able to provide a default value to the
 # context without intruding on the full constructor in the lexer module.
 proc new*(t: typedesc[TeXToken], token_type: TeXTokenType,
-         catcode: CategoryCode, token: string, line, col: int): TeXToken =
+         catcode: CategoryCode, token: string, line, col: int,
+         context: Context = ("", "")): TeXToken =
    result = TeXToken(token_type: token_type, catcode: catcode, token: token,
-                     line: line, col: col, context: ("", ""))
+                     line: line, col: col, context: context)
 
 
 # Control sequences (category 0)
@@ -99,7 +100,7 @@ run_test("Ignore space after control space",
 
 run_test("Don't ignore space after control symbol",
 """\&   bar""", @[
-   TeXToken.new(ControlSymbol, 0, "&", 1, 0),
+   TeXToken.new(ControlSymbol, 0, "&", 1, 0, ("", "   ")),
    TeXToken.new(Character, 10, " ", 1, 2),
    TeXToken.new(Character, 11, "b", 1, 5),
    TeXToken.new(Character, 11, "a", 1, 6),
@@ -197,9 +198,9 @@ run_test("Simple sentence",
 run_test("Characters appended from state M",
 """a{}$&#^_Az(~""", @[
    TeXToken.new(Character, 11, "a", 1, 0),
-   TeXToken.new(Character, 1, "{", 1, 1),
-   TeXToken.new(Character, 2, "}", 1, 2),
-   TeXToken.new(Character, 3, "$", 1, 3),
+   TeXToken.new(Character, 1, "{", 1, 1, ("a", "")),
+   TeXToken.new(Character, 2, "}", 1, 2, ("", "$&#")),
+   TeXToken.new(Character, 3, "$", 1, 3, ("a{}", "&#^")),
    TeXToken.new(Character, 4, "&", 1, 4),
    TeXToken.new(Character, 6, "#", 1, 5),
    TeXToken.new(Character, 7, "^", 1, 6),
@@ -214,9 +215,9 @@ run_test("Characters appended from state N",
 "{\n}\n$\n&\n#\n^\n_\nA\nz\n(\n~", @[
    TeXToken.new(Character, 1, "{", 1, 0),
    TeXToken.new(Character, 10, " ", 1, 1),
-   TeXToken.new(Character, 2, "}", 2, 0),
+   TeXToken.new(Character, 2, "}", 2, 0, ("", "\n$\n")),
    TeXToken.new(Character, 10, " ", 2, 1),
-   TeXToken.new(Character, 3, "$", 3, 0),
+   TeXToken.new(Character, 3, "$", 3, 0, ("\n}\n", "\n&\n")),
    TeXToken.new(Character, 10, " ", 3, 1),
    TeXToken.new(Character, 4, "&", 4, 0),
    TeXToken.new(Character, 10, " ", 4, 1),
@@ -250,17 +251,17 @@ a (
 a ~""", @[
    TeXToken.new(Character, 11, "a", 1, 0),
    TeXToken.new(Character, 10, " ", 1, 1),
-   TeXToken.new(Character, 1, "{", 1, 2),
+   TeXToken.new(Character, 1, "{", 1, 2, ("a ", "")),
    TeXToken.new(Character, 10, " ", 1, 3),
 
    TeXToken.new(Character, 11, "a", 2, 0),
    TeXToken.new(Character, 10, " ", 2, 1),
-   TeXToken.new(Character, 2, "}", 2, 2),
+   TeXToken.new(Character, 2, "}", 2, 2, ("", "\na ")),
    TeXToken.new(Character, 10, " ", 2, 3),
 
    TeXToken.new(Character, 11, "a", 3, 0),
    TeXToken.new(Character, 10, " ", 3, 1),
-   TeXToken.new(Character, 3, "$", 3, 2),
+   TeXToken.new(Character, 3, "$", 3, 2, ("\na ", "\na ")),
    TeXToken.new(Character, 10, " ", 3, 3),
 
    TeXToken.new(Character, 11, "a", 4, 0),

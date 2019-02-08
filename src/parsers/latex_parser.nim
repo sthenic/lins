@@ -138,7 +138,7 @@ proc open_parser*(p: var LaTeXParser, filename: string, s: Stream) =
    set_len(p.last_tok_stack, 0)
    p.delimiter_count = 0
    p.is_enabled = true
-   open_lexer(p.lex, filename, s, true)
+   open_lexer(p.lex, filename, s)
 
 
 proc close_parser*(p: var LaTeXParser) =

@@ -313,7 +313,7 @@ run_test("Option enclosure not allowed in math (display math)",
    LaTeXTextSegment.new("x_k^2 + y_k^2", 1, 8, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0),
       ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 1, 1),
-   ], ("", "{2}")),
+   ], ("$$", "{2}")),
    LaTeXTextSegment.new("2", 1, 23, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0),
       ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1),
@@ -329,7 +329,7 @@ run_test("Option enclosure not allowed in math (inline math)",
    LaTeXTextSegment.new("x_k^2 + y_k^2", 1, 7, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0),
       ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 1, 1),
-   ], ("", "{2}")),
+   ], ("$", "{2}")),
    LaTeXTextSegment.new("2", 1, 22, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0),
       ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1),
