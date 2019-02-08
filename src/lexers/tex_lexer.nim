@@ -285,7 +285,7 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
       tok.context.before = get_context_before(l)
 
    let c = l.buf[l.bufpos]
-   case c:
+   case c
    of lexbase.EndOfFile:
       tok.token_type = EndOfFile
    of CATEGORY[0]:
@@ -333,17 +333,10 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
       # Ignore the character for now.
       inc(l.bufpos)
       get_token(l, tok)
-   of CATEGORY[1] + CATEGORY[2] + CATEGORY[3] + CATEGORY[4] + CATEGORY[6] +
-      CATEGORY[8] + CATEGORY[11] + CATEGORY[13]:
-      tok.token_type = Character
-      tok.catcode = get_category_code(c)
-      tok.token = $c
-      l.state = StateM
-      inc(l.bufpos)
    else:
       # A character of category 12, i.e. the class of 'other' characters.
       tok.token_type = Character
-      tok.catcode = 12
+      tok.catcode = get_category_code(c)
       tok.token = $c
       l.state = StateM
       inc(l.bufpos)
