@@ -3,5 +3,14 @@ message: "Label '$1' has no prefix."
 ignorecase: true
 nonword: true
 level: warning
-raw:
-  - \\label{\w+(?!:)\w+}
+linter:
+  - latex
+latex:
+  - name: label
+    kind: control sequence
+  - name: ref
+    kind: control sequence
+  - name: eqref
+    kind: control sequence
+tokens:
+  - ^\w*+(?!:)

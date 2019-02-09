@@ -1,7 +1,16 @@
 extends: existence
-message: "Unknown label prefix in '$1'."
+message: "Unknown label prefix '$1'."
 ignorecase: true
 nonword: true
 level: error
+linter:
+  - latex
+latex:
+  - name: label
+    kind: control sequence
+  - name: ref
+    kind: control sequence
+  - name: eqref
+    kind: control sequence
 tokens:
-  - (?<=\\label{)(?!(fig|tab|eq|sec|ch|itm|lst|alg|app):\w+)(.*?)(?=})
+  - ^(?!fig:|tab:|eq:|sec:|ch:|itm:|lst:|alg:|app:)\w+

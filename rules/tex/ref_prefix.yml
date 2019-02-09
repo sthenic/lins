@@ -1,0 +1,12 @@
+extends: existence
+message: "Unknown \\ref label prefix '$1'."
+ignorecase: true
+nonword: true
+level: error
+linter:
+  - latex
+latex:
+  - name: ref
+    kind: control sequence
+tokens:
+  - ^(?!fig:|tab:|sec:|ch:|itm:|lst:|alg:|app:)\w+

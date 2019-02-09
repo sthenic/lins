@@ -1,0 +1,13 @@
+extends: existence
+message: "'$1' left in text."
+ignorecase: false
+nonword: true
+level: warning
+linter:
+  - latex
+scope:
+  - comment
+tokens:
+  - TODO
+  - FIXME
+  - XXX

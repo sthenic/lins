@@ -1,0 +1,12 @@
+extends: existence
+message: "Use \\eqref to reference equations."
+ignorecase: true
+nonword: true
+level: error
+linter:
+  - latex
+latex:
+  - name: ref
+    kind: control sequence
+tokens:
+  - ^eq:\w+

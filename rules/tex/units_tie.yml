@@ -3,9 +3,17 @@ message: "Use a tie '~' between the value and the unit, i.e. '$1~...'."
 ignorecase: false
 nonword: true
 level: error
+linter:
+  - latex
 tokens:
-  - (\d+)(?=(?!~)\s*[munpf]?(\$.*\$)?s\b)
-  - (\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?B\b)
-  - (\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?SPS\b)
-  - (\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?bit\b)
-  - (\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?Hz\b)
+  - \b(\d+)(?=(?!~)\s*[munpf]?(\$.*\$)?s\b)
+  - \b(\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?B\b)
+  - \b(\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?S(PS|/s)\b)
+  - \b(\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?bits?\b)
+  - \b(\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?Hz\b)
+  - \b(\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?samples\b)
+  - \b(\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?cycles\b)
+  - \b(\d+)(?=(?!~)\s*[munpfkMGPT]?(\$.*\$)?V(pp)?\b)
+  - \b(\d+)(?=(?!~)\s*[munpfkMGPT]?(\$.*\$)?A\b)
+  - \b(\d+)(?=(?!~)\s*[munpfkMGPT]?(\$.*\$)?W\b)
+  - \b(\d+)(?=(?!~)\s*[kMGPT]?(\$.*\$)?dB(FS)?\b)

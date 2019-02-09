@@ -1,0 +1,12 @@
+extends: existence
+message: "Unknown \\eqref label prefix '$1'."
+ignorecase: true
+nonword: true
+level: error
+linter:
+  - latex
+latex:
+  - name: eqref
+    kind: control sequence
+tokens:
+  - ^(?!eq:)\w+

@@ -1,7 +1,0 @@
-extends: existence
-message: "Remove '$1'."
-ignorecase: true
-nonword: true
-level: error
-raw:
-  - (?<!^)(equations?|eqs?.)(?=[\s~]*\\eqref)

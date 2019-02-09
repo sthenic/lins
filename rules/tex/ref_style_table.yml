@@ -1,0 +1,13 @@
+extends: existence
+message: "Use 'Table' or 'Tables'."
+ignorecase: true
+nonword: true
+level: error
+linter:
+  - latex
+latex:
+  - name: ref
+    kind: control sequence
+    before: (?<!Table|Tables)~$
+tokens:
+  - 'tab:'

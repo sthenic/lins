@@ -1,0 +1,13 @@
+extends: existence
+message: "Use 'Section' or 'Sections'."
+ignorecase: true
+nonword: true
+level: error
+linter:
+  - latex
+latex:
+  - name: ref
+    kind: control sequence
+    before: (?<!Section|Sections)~$
+tokens:
+  - 'sec:'

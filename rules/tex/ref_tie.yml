@@ -1,10 +1,16 @@
 extends: existence
-message: "Use a tie '~' between the reference label and \\ref, i.e. '$1~\\ref{...}'."
-ignorecase: false
+message: "Use a tie '~' between the reference label and \\ref or \\eqref."
+ignorecase: true
 nonword: true
 level: error
+linter:
+  - latex
+latex:
+  - name: eqref
+    kind: control sequence
+    before: (?<!~)$
+  - name: ref
+    kind: control sequence
+    before: (?<!~)$
 tokens:
-  - Figs?\.(?!~)(?=\s*\\ref)
-  - Tables?(?!~)(?=\s*\\ref)
-  - Sections?(?!~)(?=\s*\\ref)
-  - Equations?(?!~)(?=\s*\\eqref)
+  - .+
