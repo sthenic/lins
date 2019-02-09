@@ -3,5 +3,6 @@ build/*.deb
 .vscode/
 *.code-workspace
 *.txt
+*.tex
 !help_cli.txt
 lins
