@@ -29,6 +29,7 @@ type
       encl*: Enclosure
       count*: int
       delimiter_count*: int
+      context*: Context
 
    LaTeXParser* = object
       lex: TeXLexer
@@ -46,7 +47,6 @@ type
    LaTeXTextSegment* = object of TextSegment
       scope*: seq[ScopeEntry]
       expand: bool
-      context*: Context
       do_lint*: bool # TODO: Think of a better name? Maybe 'valid'?
 
 
@@ -112,8 +112,6 @@ proc get_token*(p: var LaTeXParser) =
 
 proc init(s: var LaTeXTextSegment) =
    set_len(s.scope, 0)
-   set_len(s.context.before, 0)
-   set_len(s.context.after, 0)
    s.expand = false
    s.do_lint = true
    base_parser.init(s)
@@ -123,6 +121,8 @@ proc init(s: var ScopeEntry) =
    set_len(s.name, 0)
    s.encl = Enclosure.Invalid
    s.kind = ScopeKind.Invalid
+   set_len(s.context.before, 0)
+   set_len(s.context.after, 0)
    s.count = 0
    s.delimiter_count = 0
 
@@ -166,18 +166,17 @@ proc add_seg(p: var LaTeXParser, seg: var LaTeXTextSegment) =
 
 
 proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool,
-                     context_before: string = "") =
+                     context_before: string) =
    # Push the current text segment to the stack.
    add(p.seg_stack, p.seg)
    add(p.last_tok_stack, p.last_tok)
    # Push the current scope entry to the scope.
+   p.scope_entry.context.before = context_before
    add(p.scope, p.scope_entry)
    # Reinitialize the text segment w/ the current scope.
    init(p.seg)
    p.seg.scope = p.scope
    p.seg.expand = expand
-   # TODO: Add to constructor a few lines above?
-   p.seg.context.before = context_before
    # Reinitialize the last token.
    init(p.last_tok)
    # Reinitialize the scope entry unless we're told to keep it. This only
@@ -217,8 +216,7 @@ proc expand_segment(p: var LaTeXParser, inner: LaTeXTextSegment) =
    add(p.seg.text, inner.text)
 
 
-proc end_enclosure(p: var LaTeXParser, context_after: string = "") =
-   p.seg.context.after = context_after
+proc end_enclosure(p: var LaTeXParser, context_after: string) =
    var inner = p.seg
    p.seg = pop(p.seg_stack)
    if inner.expand:

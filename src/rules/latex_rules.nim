@@ -20,22 +20,19 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
 
    var entry_match: seq[tuple[match: bool, logic: ScopeLogic]]
    for rule_entry in r.latex_section.scope:
-      # Determine if the context is matches any user defined expressions.
-      var context_match = true
-      if len(rule_entry.before) > 0:
-         context_match = is_some(nre.find(seg.context.before,
-                                          re(rule_entry.before)))
-      if len(rule_entry.after) > 0:
-         context_match = context_match and
-                         is_some(nre.find(seg.context.after,
-                                          re(rule_entry.after)))
-
       # Determine if the rule entry matches any scope entry of the current
       # segment.
       var matched = false
       for scope_entry in seg.scope:
          if rule_entry.name == scope_entry.name and
             rule_entry.kind == scope_entry.kind:
+            # Determine if the context is matches any user defined expressions.
+            var context_match = true
+            if len(rule_entry.before) > 0:
+               context_match = is_some(nre.find(scope_entry.context.before,
+                                                re(rule_entry.before)))
+            # TODO: Check for trailing context match once that's fully
+            #       implemented.
             add(entry_match, (context_match, rule_entry.logic))
             matched = true
             break
