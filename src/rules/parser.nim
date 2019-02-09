@@ -277,8 +277,6 @@ template validate_latex_section(data: typed, filename: string,
                raise new_exception(RuleValueError, "")
          of "before":
             entry.before = val
-         of "after":
-            entry.after = val
          of "logic":
             case to_lower_ascii(val):
             of "and":
@@ -309,29 +307,29 @@ template validate_latex_section(data: typed, filename: string,
       of "text":
          add(latex_section.scope, (name: "document",
                                    kind: ScopeKind.Environment,
-                                   before: "", after: "", logic: OR))
+                                   before: "", logic: OR))
       of "comment":
          add(latex_section.scope, (name: "", kind: ScopeKind.Comment,
-                                   before: "", after: "", logic: OR))
+                                   before: "", logic: OR))
       of "math":
          add(latex_section.scope, (name: "", kind: ScopeKind.Math,
-                                   before: "", after: "", logic: OR))
+                                   before: "", logic: OR))
          add(latex_section.scope, (name: "equation",
                                    kind: ScopeKind.Environment,
-                                   before: "", after: "", logic: OR))
+                                   before: "", logic: OR))
          add(latex_section.scope, (name: "equation*",
                                    kind: ScopeKind.Environment,
-                                   before: "", after: "", logic: OR))
+                                   before: "", logic: OR))
       of "title":
          add(latex_section.scope, (name: "section",
                                    kind: ScopeKind.ControlSequence,
-                                   before: "", after: "", logic: OR))
+                                   before: "", logic: OR))
          add(latex_section.scope, (name: "subsection",
                                    kind: ScopeKind.ControlSequence,
-                                   before: "", after: "", logic: OR))
+                                   before: "", logic: OR))
          add(latex_section.scope, (name: "subsubsection",
                                    kind: ScopeKind.ControlSequence,
-                                   before: "", after: "", logic: OR))
+                                   before: "", logic: OR))
       else:
          discard
 
@@ -443,7 +441,6 @@ template debug_latex_section(latex_section: LaTeXRuleSection) =
       log.debug_always("  name: '$1'", entry.name)
       log.debug_always("  kind: '$1'", $entry.kind)
       log.debug_always("  before: '$1'", entry.before)
-      log.debug_always("  after: '$1'", entry.after)
       log.debug_always("  logic: $1", $entry.logic)
 
 

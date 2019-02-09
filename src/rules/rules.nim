@@ -32,7 +32,6 @@ type
       name: string # Maybe a regex?
       kind: ScopeKind
       before: string
-      after: string
       logic: ScopeLogic
 
    PlainScopeEntry* = enum
