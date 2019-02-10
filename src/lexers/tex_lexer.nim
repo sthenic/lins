@@ -32,10 +32,10 @@ type
    TeXLexer* = object of BaseLexer
       filename: string
       state: State
+      nof_context_chars: int
 
 
 const
-   CONTEXT_CHARS = 3
    CATEGORY: array[CategoryCode, set[char]] = [
       {'\\'},
       {'{'},
@@ -76,7 +76,7 @@ proc is_valid*(t: TeXToken): bool =
 # TODO: This is a naive implementation that doesn't take unicode characters
 # into account.
 proc get_context_before(l: TeXLexer, pos: int): string =
-   for i in countdown(CONTEXT_CHARS, 1):
+   for i in countdown(l.nof_context_chars, 1):
       let c = l.buf[pos - i]
       if c == '\0':
          continue
@@ -85,7 +85,7 @@ proc get_context_before(l: TeXLexer, pos: int): string =
 
 
 proc get_context_after(l: TeXLexer, pos: int): string =
-   for i in countup(1, CONTEXT_CHARS):
+   for i in countup(1, l.nof_context_chars):
       let c = l.buf[pos + i]
       if c == '\0':
          break
@@ -352,10 +352,12 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
       inc(l.bufpos)
 
 
-proc open_lexer*(l: var TeXLexer, filename: string, s: Stream) =
+proc open_lexer*(l: var TeXLexer, filename: string, nof_context_chars: int,
+                 s: Stream) =
    lexbase.open(l, s)
    l.filename = filename
    l.state = StateN
+   l.nof_context_chars = nof_context_chars
 
 
 proc close_lexer*(l: var TeXLexer) =

@@ -50,6 +50,7 @@ type
       do_lint*: bool # TODO: Think of a better name? Maybe 'valid'?
 
 
+const NOF_CONTEXT_CHARS = 15
 const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$', '~'}
 const EXPANDED_CONTROL_WORDS: seq[string] = @[
    "textrm",
@@ -138,7 +139,7 @@ proc open_parser*(p: var LaTeXParser, filename: string, s: Stream) =
    set_len(p.last_tok_stack, 0)
    p.delimiter_count = 0
    p.is_enabled = true
-   open_lexer(p.lex, filename, s)
+   open_lexer(p.lex, filename, NOF_CONTEXT_CHARS, s)
 
 
 proc close_parser*(p: var LaTeXParser) =

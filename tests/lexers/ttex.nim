@@ -9,6 +9,7 @@ var
    nof_passed = 0
    nof_failed = 0
 
+const NOF_CONTEXT_CHARS = 3
 
 template run_test(title, stimuli: string; reference: seq[TeXToken],
                   debug: bool = false) =
@@ -16,7 +17,7 @@ template run_test(title, stimuli: string; reference: seq[TeXToken],
    var lex: TeXLexer
    var tok: TeXToken
    init(tok)
-   open_lexer(lex, "test", new_string_stream(stimuli))
+   open_lexer(lex, "test", NOF_CONTEXT_CHARS, new_string_stream(stimuli))
    while true:
       get_token(lex, tok)
       if tok.token_type == TeXTokenType.EndOfFile:
