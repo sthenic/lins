@@ -6,3 +6,5 @@ build/*.deb
 *.tex
 !help_cli.txt
 lins
+rules/*
+!rules/tex/
