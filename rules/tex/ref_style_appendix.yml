@@ -1,0 +1,13 @@
+extends: existence
+message: "Use 'Appendix'."
+ignorecase: true
+nonword: true
+level: error
+linter:
+  - latex
+latex:
+  - name: ref
+    kind: control sequence
+    before: (?<!Appendix)~$
+tokens:
+  - 'app:'
