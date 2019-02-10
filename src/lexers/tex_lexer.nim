@@ -76,12 +76,16 @@ proc is_valid*(t: TeXToken): bool =
 # TODO: This is a naive implementation that doesn't take unicode characters
 # into account.
 proc get_context_before(l: TeXLexer, pos: int): string =
-   for i in countdown(l.nof_context_chars, 1):
+   var tmp = ""
+   for i in countup(1, l.nof_context_chars):
       let c = l.buf[pos - i]
       if c == '\0':
-         continue
+         break
       else:
-         add(result, c)
+         add(tmp, c)
+
+   for i in countdown(high(tmp), 0):
+      add(result, tmp[i])
 
 
 proc get_context_after(l: TeXLexer, pos: int): string =
