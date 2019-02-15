@@ -8,6 +8,6 @@ linter:
 latex:
   - name: ref
     kind: control sequence
-    before: (?<!Appendix)~$
+    before: (?<!Appendix|Appendices)~$
 tokens:
   - 'app:'
