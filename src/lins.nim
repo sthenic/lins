@@ -19,7 +19,9 @@ import utils/cli
 const VERSION_STR = static_read("../VERSION").strip()
 
 # Exit codes: negative values are errors.
-const EVIOL = 1
+const ELINTERROR = 3
+const ELINTWARNING = 2
+const ELINTSUGGESTION = 1
 const ESUCCESS = 0
 const EINVAL = -1
 const ENORULES = -2
@@ -142,7 +144,11 @@ else:
    except LinterParseError:
       quit(EPARSE)
 
-if lint_result.has_violations:
-   quit(EVIOL)
+if lint_result.nof_violations.error > 0:
+   quit(ELINTERROR)
+elif lint_result.nof_violations.warning > 0:
+   quit(ELINTWARNING)
+elif lint_result.nof_violations.suggestion > 0:
+   quit(ELINTSUGGESTION)
 else:
    quit(ESUCCESS)
