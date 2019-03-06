@@ -1,0 +1,8 @@
+extends: existence
+message: "Hyphen at the end of the line."
+ignorecase: true
+level: error
+linter:
+  - latex
+tokens:
+  - \w+- (?!,|or|and)\w+
