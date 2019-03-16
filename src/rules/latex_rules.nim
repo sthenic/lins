@@ -55,7 +55,9 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
       of NOT:
          enforce_not = enforce_not or match
 
-   result = (enforce_or or enforce_and) and not enforce_not
+   # TODO: Was previously 'and not' instead of 'or not'. Do we need both and a
+   #       way of separating them in the rule file?
+   result = enforce_or or enforce_and or not enforce_not
 
 
 proc lint_filter(r: Rule, seg: LaTeXTextSegment): bool =
