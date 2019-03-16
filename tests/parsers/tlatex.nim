@@ -414,7 +414,7 @@ run_test("Environment with nested control sequence, expanded",
 """
 \begin{tabular}%
 The quick brown
-fox jumps \texttt{over the}
+fox jumps \emph{over the}
 lazy dog.
 \end{tabular}""", @[
    LaTeXTextSegment.new("The quick brown fox jumps over the lazy dog. ", 2, 0, @[
