@@ -33,6 +33,7 @@ type
       filename: string
       state: State
       nof_context_chars: int
+      context_carry: string
 
 
 const
@@ -76,6 +77,10 @@ proc is_valid*(t: TeXToken): bool =
 # TODO: This is a naive implementation that doesn't take unicode characters
 # into account.
 proc get_context_before(l: TeXLexer, pos: int): string =
+   # If the buffer has been reset we need to get the context from the carry.
+   if pos == 0:
+      return l.context_carry
+
    var tmp = ""
    for i in countup(1, l.nof_context_chars):
       let c = l.buf[pos - i]
@@ -98,7 +103,9 @@ proc get_context_after(l: TeXLexer, pos: int): string =
 
 
 proc handle_crlf(l: var TeXLexer, pos: int): int =
-   # Refill buffer at end-of-line characters.
+   # Refill buffer at end-of-line characters. Store the context in case the
+   # buffer is refilled completely, i.e. result is 0 leaving this proc.
+   l.context_carry = get_context_before(l, l.bufpos)
    case l.buf[l.bufpos]
    of '\c':
       result = lexbase.handleCR(l, pos)
@@ -362,6 +369,7 @@ proc open_lexer*(l: var TeXLexer, filename: string, nof_context_chars: int,
    l.filename = filename
    l.state = StateN
    l.nof_context_chars = nof_context_chars
+   set_len(l.context_carry, 0)
 
 
 proc close_lexer*(l: var TeXLexer) =
