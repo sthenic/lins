@@ -55,7 +55,6 @@ const ESCAPED_CHARACTERS: set[char] = {'%', '&', '_', '#', '$', '~'}
 const EXPANDED_CONTROL_WORDS: seq[string] = @[
    "textrm",
    "textsf",
-   "texttt",
    "textnormal",
    "textbf",
    "textmd",
