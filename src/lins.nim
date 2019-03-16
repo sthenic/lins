@@ -86,8 +86,7 @@ open_linter(linter, cli_state.minimal, cli_state.severity,
 var cfg_state: CfgState
 try:
    cfg_state = parse_cfg_file()
-except CfgFileNotFoundError, CfgParseError,
-       CfgPathError:
+except CfgFileNotFoundError, CfgParseError, CfgPathError:
    discard
 
 # Print available styles and the set of active rule files, then exit.

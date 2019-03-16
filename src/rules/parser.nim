@@ -817,6 +817,8 @@ proc build_databases(cfg_state: CfgState): Database =
 proc get_rules*(cfg_state: CfgState, cli_state: CLIState): seq[Rule] =
    ## Return a sequence of rules given the current configuration and CLI state.
    if cli_state.no_cfg:
+      # TODO: Is this ok? You can't combine options --no-cfg with --rule-dir
+      #       in order to overwrite the current configuration.
       return @[]
 
    # Build rule database and retrieve the name of the default style.
