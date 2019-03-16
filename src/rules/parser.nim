@@ -696,12 +696,17 @@ proc parse_rule_file*(filename: string): seq[Rule] =
    # Open the stream
    fs = new_file_stream(filename)
    if is_nil(fs):
-      log.warning("Rule file '1' is not a valid path, skipping.", filename)
+      log.warning("Rule file '$1' is not a valid path, skipping.", filename)
       raise new_exception(RulePathError, "Rule file '" & filename &
                                          "' is not a valid path, skipping.")
 
    for f in data.fields:
       try:
+         # Work around NimYAML crashing when an empty file is loaded.
+         if len(read_file(filename)) == 0:
+            log.warning("Rule file '$1' is empty, skipping.", filename)
+            raise new_exception(RuleParseError, "Rule file '" & filename &
+                                "' is empty, skipping.")
          load(fs, f)
          result = parse_rule(f, filename)
          success = true
