@@ -9,10 +9,20 @@ import ../parsers/latex_parser
 export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation
 
 
+proc is_only_not(r: Rule): bool =
+   ## Returns ``true`` if the rule only defines scope entries with the 'NOT'
+   ## logic.
+   result = true
+   for rule_entry in r.latex_section.scope:
+      if rule_entry.logic != NOT:
+         return false
+
+
 proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
    if len(r.latex_section.scope) == 0:
       # If a rule has no scope defined we return true except for segments with
-      # the comment scope.
+      # the comment scope. You have to explicity state in the rule file that
+      # the comment scope should be accepted.
       for scope_entry in seg.scope:
          if scope_entry.kind == ScopeKind.Comment:
             return false
@@ -55,9 +65,7 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
       of NOT:
          enforce_not = enforce_not or match
 
-   # TODO: Was previously 'and not' instead of 'or not'. Do we need both and a
-   #       way of separating them in the rule file?
-   result = (enforce_or or enforce_and) and not enforce_not
+   result = (enforce_or or enforce_and or is_only_not(r)) and not enforce_not
 
 
 proc lint_filter(r: Rule, seg: LaTeXTextSegment): bool =
