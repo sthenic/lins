@@ -18,15 +18,19 @@ proc is_only_not(r: Rule): bool =
          return false
 
 
+proc is_comment(seg: LaTeXTextSegment): bool =
+   for scope_entry in seg.scope:
+      if scope_entry.kind == ScopeKind.Comment:
+         return true
+
+
 proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
+   let is_comment = is_comment(seg)
    if len(r.latex_section.scope) == 0:
       # If a rule has no scope defined we return true except for segments with
       # the comment scope. You have to explicity state in the rule file that
       # the comment scope should be accepted.
-      for scope_entry in seg.scope:
-         if scope_entry.kind == ScopeKind.Comment:
-            return false
-      return true
+      return not is_comment
 
    var entry_match: seq[tuple[match: bool, logic: ScopeLogic]]
    for rule_entry in r.latex_section.scope:
@@ -65,7 +69,8 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
       of NOT:
          enforce_not = enforce_not or match
 
-   result = (enforce_or or enforce_and or is_only_not(r)) and not enforce_not
+   result = (enforce_or or enforce_and or
+             (is_only_not(r) and not is_comment)) and not enforce_not
 
 
 proc lint_filter(r: Rule, seg: LaTeXTextSegment): bool =
