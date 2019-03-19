@@ -21,7 +21,19 @@ options:
                             in the input data. Default value: 1. See also the
                             'line' option.
 
+  --line=LINE               Specify the line of the first character in the input
+                            data. Default value: 1. See also the 'col' option.
+
+  --linter=LINTER           Set the linter selection mode. Valid values are:
+                              - 'auto': Choose linter based on file extensions.
+                              - 'plain': Choose the plain-text linter.
+                              - 'latex': Choose the LaTeX linter.
+                            The default value is 'auto'.
+
   --list                    List available styles and current rule set.
+
+  --minimal                 Enable minimal output mode. All output except the
+                            violation information is suppressed.
 
   --no-cfg                  Don't look for a configuration file.
 
@@ -31,8 +43,11 @@ options:
   --no-default              Don't use a default style (if defined in the
                             configuration file).
 
-  --minimal                 Enable minimal output mode. All output except the
-                            violation information is suppressed.
+  --rule=RULE               Specify a rule set by name. The rule set will have
+                            to be defined in the configuration file.
+
+  --rule-dir=RULE_DIR       Specify a root directory to traverse in search of
+                            rule files.
 
   --severity=SEVERITY       Set the severity threshold. Only violations reaching
                             this level are printed. For example, 'warning' would
@@ -40,23 +55,18 @@ options:
                             Valid values are 'error', 'warning' and
                             'suggestion'.
 
-  --linter=LINTER           Set the linter selection mode. Valid values are:
-                              - 'auto': Choose linter based on file extensions.
-                              - 'plain': Choose the plain-text linter.
-                              - 'latex': Choose the LaTeX linter.
-                            The default value is 'auto'.
+  --severity-exit           Enable exit status depending on the highest severity
+                            level of any rule violation.
+                              - ELINTERROR: 3
+                              - ELINTWARNING: 2
+                              - ELINGSUGGESTION: 1
+                              - ESUCCESS: 0
+                            Without this option, only values 0, 3 and negative
+                            values are possible. Warnings and suggestions will
+                            exit with status 0.
 
   --style=STYLE             Specify which style to use for linting. Styles
                             are defined in the configuration file.
-
-  --line=LINE               Specify the line of the first character in the input
-                            data. Default value: 1. See also the 'col' option.
-
-  --rule=RULE               Specify a rule set by name. The rule set will have
-                            to be defined in the configuration file.
-
-  --rule-dir=RULE_DIR       Specify a root directory to traverse in search of
-                            rule files.
 
 debug options:
   --parser-output=FILENAME  Write the output from the parser to the specified

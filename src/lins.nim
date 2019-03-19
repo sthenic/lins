@@ -143,11 +143,17 @@ else:
    except LinterParseError:
       quit(EPARSE)
 
-if lint_result.nof_violations.error > 0:
-   quit(ELINTERROR)
-elif lint_result.nof_violations.warning > 0:
-   quit(ELINTWARNING)
-elif lint_result.nof_violations.suggestion > 0:
-   quit(ELINTSUGGESTION)
+if cli_state.severity_exit:
+   if lint_result.nof_violations.error > 0:
+      quit(ELINTERROR)
+   elif lint_result.nof_violations.warning > 0:
+      quit(ELINTWARNING)
+   elif lint_result.nof_violations.suggestion > 0:
+      quit(ELINTSUGGESTION)
+   else:
+      quit(ESUCCESS)
 else:
-   quit(ESUCCESS)
+   if lint_result.nof_violations.error > 0:
+      quit(ELINTERROR)
+   else:
+      quit(ESUCCESS)

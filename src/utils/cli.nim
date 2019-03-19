@@ -19,6 +19,7 @@ type CLIState* = object
    print_list*: bool
    no_cfg*: bool
    no_default*: bool
+   severity_exit*: bool
    color_mode*: ColorMode
    severity*: Severity
    minimal*: bool
@@ -72,6 +73,8 @@ proc parse_cli*(): CLIState =
             result.no_default = true
          of "no-cfg":
             result.no_cfg = true
+         of "severity-exit":
+            result.severity_exit = true
          of "rule":
             if val == "":
                log.abort(CLIValueError, "Option --rule expects a value.")
