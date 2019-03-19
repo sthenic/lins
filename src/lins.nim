@@ -60,6 +60,9 @@ elif cli_state.print_version:
    echo VERSION_STR
    quit(ESUCCESS)
 
+# Output the version if the CLI parsing went well.
+log.info("Lins v" & VERSION_STR)
+
 # Propagate CLI state to other modules.
 log.set_quiet_mode(cli_state.minimal)
 log.set_color_mode(cli_state.color_mode)
