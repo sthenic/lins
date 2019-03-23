@@ -711,7 +711,7 @@ proc parse_rule_file*(filename: string): seq[Rule] =
          result = parse_rule(f, filename)
          success = true
          break
-      except YamlConstructionError:
+      except YamlConstructionError, YamlParserError:
          fs.set_position(0)
 
    fs.close()
