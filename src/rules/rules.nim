@@ -70,6 +70,7 @@ type
       latex_section*: LaTeXRuleSection
       plain_section*: PlainRuleSection
       linter_kind*: LinterKind
+      exceptions*: Regex
 
    RuleExistence* = ref object of Rule
       regex*: Regex
@@ -101,7 +102,6 @@ type
    RuleDefinition* = ref object of Rule
       regex_def*: Regex
       regex_decl*: Regex
-      exceptions*: seq[string]
       definitions*: Table[string, Position]
       par_prev*: int
 
@@ -144,18 +144,19 @@ proc calculate_position*(r: Rule, line, col, violation_pos: int,
 # Constructors
 proc new*(t: typedesc[Rule], kind: string, severity: Severity, message: string,
           source_file: string, display_name: string, plain_section: PlainRuleSection,
-           latex_section: LaTeXRuleSection, linter_kind: LinterKind): Rule =
+          latex_section: LaTeXRuleSection, linter_kind: LinterKind,
+          regex_exceptions: string): Rule =
    Rule(kind: kind, severity: severity, message: message,
         source_file: source_file, display_name: display_name,
         plain_section: plain_section, latex_section: latex_section,
-        linter_kind: linter_kind)
+        linter_kind: linter_kind, exceptions: re(regex_exceptions))
 
 
 proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
           ignore_case: bool, plain_section: PlainRuleSection,
           latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind): RuleExistence =
+          linter_kind: LinterKind, regex_exceptions: string): RuleExistence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -169,14 +170,15 @@ proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
                         regex: re(regex_flags & regex),
                         plain_section: plain_section,
                         latex_section: latex_section,
-                        linter_kind: linter_kind)
+                        linter_kind: linter_kind,
+                        exceptions: re(regex_exceptions))
 
 
 proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
           source_file: string, display_name: string, regex: string,
           subst_table: Table[string, string], ignore_case: bool,
           plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind): RuleSubstitution =
+          linter_kind: LinterKind, regex_exceptions: string): RuleSubstitution =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -195,14 +197,15 @@ proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
                            subst_table: lsubst_table,
                            plain_section: plain_section,
                            latex_section: latex_section,
-                           linter_kind: linter_kind)
+                           linter_kind: linter_kind,
+                           exceptions: re(regex_exceptions))
 
 
 proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
           source_file: string,  display_name: string, regex: string,
           limit_val: int, limit_kind: Limit, ignore_case: bool,
           plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind): RuleOccurrence =
+          linter_kind: LinterKind, regex_exceptions: string): RuleOccurrence =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -218,14 +221,15 @@ proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
                          limit_kind: limit_kind,
                          plain_section: plain_section,
                          latex_section: latex_section,
-                         linter_kind: linter_kind)
+                         linter_kind: linter_kind,
+                         exceptions: re(regex_exceptions))
 
 
 proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
           source_file: string,  display_name: string, regex: string,
           ignore_case: bool, plain_section: PlainRuleSection,
           latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind): RuleRepetition =
+          linter_kind: LinterKind, regex_exceptions: string): RuleRepetition =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -239,14 +243,15 @@ proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
                          regex: re(regex_flags & regex),
                          plain_section: plain_section,
                          latex_section: latex_section,
-                         matches: init_table[string, int]())
+                         matches: init_table[string, int](),
+                         exceptions: re(regex_exceptions))
 
 
 proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
           source_file: string, display_name: string, regex_first: string,
           regex_second: string, ignore_case: bool,
           plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind): RuleConsistency =
+          linter_kind: LinterKind, regex_exceptions: string): RuleConsistency =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -261,7 +266,8 @@ proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
                          regex_second: re(regex_flags & regex_second),
                          plain_section: plain_section,
                          latex_section: latex_section,
-                         linter_kind: linter_kind)
+                         linter_kind: linter_kind,
+                         exceptions: re(regex_exceptions))
 
 
 # Regexes should be auto-filled on an above level. Drafts are:
@@ -269,10 +275,9 @@ proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
 #   regex_decl = r'\b([A-Z]{3,5})\b'
 proc new*(t: typedesc[RuleDefinition], severity: Severity,
           message: string, source_file: string, display_name: string,
-          regex_def: string, regex_decl: string, exceptions: seq[string],
-          ignore_case: bool, plain_section: PlainRuleSection,
-          latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind): RuleDefinition =
+          regex_def: string, regex_decl: string, ignore_case: bool,
+          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
+          linter_kind: LinterKind, regex_exceptions: string): RuleDefinition =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -285,18 +290,18 @@ proc new*(t: typedesc[RuleDefinition], severity: Severity,
                          ignore_case: ignore_case,
                          regex_def: re(regex_flags & regex_def),
                          regex_decl: re(regex_flags & regex_decl),
-                         exceptions: exceptions,
                          definitions: init_table[string, Position](),
                          plain_section: plain_section,
                          latex_section: latex_section,
-                         linter_kind: linter_kind)
+                         linter_kind: linter_kind,
+                         exceptions: re(regex_exceptions))
 
 
 proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
           source_file: string,  display_name: string, regex_first: string,
           regex_second: string, ignore_case: bool,
           plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind): RuleConditional =
+          linter_kind: LinterKind, regex_exceptions: string): RuleConditional =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -311,7 +316,8 @@ proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
                           regex_second: re(regex_flags & regex_second),
                           plain_section: plain_section,
                           latex_section: latex_section,
-                          linter_kind: linter_kind)
+                          linter_kind: linter_kind,
+                          exceptions: re(regex_exceptions))
 
 
 method reset*(r: Rule) {.base.} =
@@ -348,6 +354,10 @@ proc reset*(s: seq[Rule]) =
    for r in s: reset(r)
 
 
+proc is_exception(str: string, regex: Regex): bool =
+   result = len(regex.pattern) > 0 and contains(str, regex)
+
+
 # Base implementations of enforcement methods. Input segment type is the base
 # 'TextSegment' as defined by the base parser module.
 method enforce*(r: Rule, seg: TextSegment): seq[Violation] {.base.} =
@@ -357,15 +367,18 @@ method enforce*(r: Rule, seg: TextSegment): seq[Violation] {.base.} =
 
 method enforce*(r: RuleExistence, seg: TextSegment): seq[Violation] =
    for m in nre.find_iter(seg.text, r.regex):
+      if is_exception($m, r.exceptions):
+         continue
       let violation_pos = r.calculate_position(seg.line, seg.col,
                                                m.match_bounds.a + 1,
                                                seg.linebreaks)
-
       result.add(r.create_violation(violation_pos, $m))
 
 
 method enforce*(r: RuleSubstitution, seg: TextSegment): seq[Violation] =
    for m in nre.find_iter(seg.text, r.regex):
+      if is_exception($m, r.exceptions):
+         continue
       let mpos = m.match_bounds.a
       let violation_pos = r.calculate_position(seg.line, seg.col, mpos + 1,
                                                seg.linebreaks)
@@ -382,9 +395,8 @@ method enforce*(r: RuleSubstitution, seg: TextSegment): seq[Violation] =
       # keys then maybe an array of tuples can be used. Also, if there is any
       # ambiguity in the keys, i.e. two keys would match at the current
       # position, it is undefined which substitution will be recommended.
-      var
-         subst = ""
-         m_str = $m
+      var subst = ""
+      var m_str = $m
       if r.ignore_case:
          m_str = to_lower_ascii(m_str)
       for key, value in pairs(r.subst_table):
@@ -402,6 +414,8 @@ method enforce*(r: RuleSubstitution, seg: TextSegment): seq[Violation] =
 
 method enforce*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
    for m in nre.find_iter(seg.text, r.regex):
+      if is_exception($m, r.exceptions):
+         continue
       # Count the match (pre-incrementation).
       r.nof_matches += 1
 
@@ -423,6 +437,8 @@ method enforce*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
 
 method enforce*(r: RuleRepetition, seg: TextSegment): seq[Violation] =
    for m in nre.find_iter(seg.text, r.regex):
+      if is_exception($m, r.exceptions):
+         continue
       var tmp: string
       if r.ignore_case:
          tmp = to_lower_ascii($m)
@@ -514,11 +530,10 @@ method enforce*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
    # to double-check the position of the declaration in relation to the
    # definition. We skip any declarations in the exception list.
    for m_decl in nre.find_iter(seg.text, r.regex_decl):
+      if is_exception($m_decl, r.exceptions):
+         continue
       try:
          let decl = m_decl.captures[0]
-         if decl in r.exceptions:
-            continue
-
          let (line_decl, col_decl) =
             r.calculate_position(seg.line, seg.col,
                                  m_decl.capture_bounds[0].get.a + 1,
