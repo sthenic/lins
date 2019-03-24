@@ -12,7 +12,7 @@ The project's documentation is available [here](https://sthenic.gitlab.io/lins).
 Releases follow [semantic versioning](https://semver.org/) to determine how the version number is incremented. If the specification is ever broken by a release, this will be documented in the changelog.
 
 ## Reporting a bug
-If you discover a bug or what you believe is unintended behavior, please submit an issue on the [issue board](https://gitlab.com/sthenic/lins_nim/issues). A minimal working example and a short description of the context is appreciated and goes a long way towards being able to fix the problem quickly.
+If you discover a bug or what you believe is unintended behavior, please submit an issue on the [issue board](https://gitlab.com/sthenic/lins/issues). A minimal working example and a short description of the context is appreciated and goes a long way towards being able to fix the problem quickly.
 
 ## License
 Lins is free software released under the [MIT license](https://opensource.org/licenses/MIT).
