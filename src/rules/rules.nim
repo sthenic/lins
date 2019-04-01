@@ -33,6 +33,7 @@ type
       kind: ScopeKind
       before: string
       logic: ScopeLogic
+      descend: bool
 
    PlainScopeEntry* = enum
       INVALID

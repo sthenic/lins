@@ -37,9 +37,16 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
       # Determine if the rule entry matches any scope entry of the current
       # segment.
       var matched = false
-      for scope_entry in seg.scope:
+      for i, scope_entry in seg.scope:
          if rule_entry.name == scope_entry.name and
             rule_entry.kind == scope_entry.kind:
+            # Check to see if the rule scope entry should descend, i.e. if the
+            # matching scope entry is _not_ the last element, and descending is
+            # not allowed, we continue. This allows nesting of scopes which
+            # shouldn't descend.
+            if not rule_entry.descend and i < high(seg.scope):
+               continue
+
             # Determine if the context is matches any user defined expressions.
             var context_match = true
             if len(rule_entry.before) > 0:

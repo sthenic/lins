@@ -280,6 +280,7 @@ template validate_latex_section(data: typed, filename: string,
    # Process LaTeX section.
    for raw_entry in data.latex:
       var entry: LaTeXScopeEntry
+      entry.descend = true
       # In order to provide helpful error messages we should walk through all
       # the properties and check the keys we come across.
       for prop, val in pairs(raw_entry):
@@ -312,6 +313,12 @@ template validate_latex_section(data: typed, filename: string,
                log.warning("Unsupported scope property value '$1' defined " &
                            "for rule in file '$2', skipping.", val, filename)
                raise new_exception(RuleValueError, "")
+         of "descend":
+            try:
+               entry.descend = parse_bool(val)
+            except ValueError:
+               log.warning("Invalid value '$1'.", val)
+               raise new_exception(RuleValueError, "")
          else:
             log.warning("Unsupported scope property '$1' defined for rule " &
                         "in file '$2', skipping.", prop, filename)
@@ -330,29 +337,29 @@ template validate_latex_section(data: typed, filename: string,
       of "text":
          add(latex_section.scope, (name: "document",
                                    kind: ScopeKind.Environment,
-                                   before: "", logic: OR))
+                                   before: "", logic: OR, descend: true))
       of "comment":
          add(latex_section.scope, (name: "", kind: ScopeKind.Comment,
-                                   before: "", logic: OR))
+                                   before: "", logic: OR, descend: true))
       of "math":
          add(latex_section.scope, (name: "", kind: ScopeKind.Math,
-                                   before: "", logic: OR))
+                                   before: "", logic: OR, descend: true))
          add(latex_section.scope, (name: "equation",
                                    kind: ScopeKind.Environment,
-                                   before: "", logic: OR))
+                                   before: "", logic: OR, descend: true))
          add(latex_section.scope, (name: "equation*",
                                    kind: ScopeKind.Environment,
-                                   before: "", logic: OR))
+                                   before: "", logic: OR, descend: true))
       of "title":
          add(latex_section.scope, (name: "section",
                                    kind: ScopeKind.ControlSequence,
-                                   before: "", logic: OR))
+                                   before: "", logic: OR, descend: true))
          add(latex_section.scope, (name: "subsection",
                                    kind: ScopeKind.ControlSequence,
-                                   before: "", logic: OR))
+                                   before: "", logic: OR, descend: true))
          add(latex_section.scope, (name: "subsubsection",
                                    kind: ScopeKind.ControlSequence,
-                                   before: "", logic: OR))
+                                   before: "", logic: OR, descend: true))
       else:
          discard
 
