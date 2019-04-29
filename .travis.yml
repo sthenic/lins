@@ -1,0 +1,18 @@
+os: linux
+language: c
+dist: trusty
+
+branches:
+  - master
+
+install:
+  - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
+  - sh init.sh -y
+
+before_script:
+  - export PATH=$HOME/.nimble/bin:$PATH
+  - nimble refresh -y
+  - nimble install yaml -y
+
+script:
+  - nim tests
