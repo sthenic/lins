@@ -16,7 +16,7 @@ on one of these types.
 
 .. Something about regular expressions
 
-.. _YAML: http://yaml.org/
+.. _YAML: https://yaml.org/
 
 .. _`rule_severity_levels`:
 
@@ -63,6 +63,202 @@ context of each rule type.
     marks (``'``) are interpreted literally, i.e. ``\n`` will print the two
     characters ``\`` and ``n``. Strings enclosed in *double* quotation marks
     (``"``) will interpret the contents using escape sequences.
+
+.. _`rule_scope`:
+
+Scopes
+======
+
+A rule may define a ``scope`` section to specify that the rule should only be
+enforced in certain parts of the text. The section expects a list of scope
+*identifiers* (as strings), and the available identifiers and their meaning
+depends on the linter. Identifiers unknown to the active linter have no effect:
+
+.. code-block:: YAML
+
+    scope:
+      - paragraph # Only used by the plain-text linter.
+      - comment # Only used by the LaTeX linter.
+
+The sections below define the scope identifiers known to each linter.
+
+
+Plain text
+----------
+
++---------------+--------------------------------------------------+
+|     Label     |                      Target                      |
++===============+==================================================+
+| ``text``      | Entire document                                  |
++---------------+--------------------------------------------------+
+| ``paragraph`` | Each paragraph                                   |
+|               | (see the :ref:`occurence <rule_occurence>` rule) |
++---------------+--------------------------------------------------+
+
+LaTeX
+-----
+
+There is a rule file :ref:`section <rule_latex_section>` specific to the LaTeX
+linter. The identifiers in the table below can be considered shorthand for the
+more general way of specifying scopes in a LaTeX document.
+
++-------------+-----------------------------------------------------------+
+|    Label    |                          Target                           |
++=============+===========================================================+
+| ``text``    | Text between ``\begin{document}`` and ``\end{document}``. |
++-------------+-----------------------------------------------------------+
+| ``comment`` | Comments, i.e. text starting from the character ``%`` to  |
+|             | the end of the line.                                      |
++-------------+-----------------------------------------------------------+
+| ``math``    | Math environments:                                        |
+|             |                                                           |
+|             | - Inline math (``$`` or ``\(``, ``\)``)                   |
+|             | - Displayed math (``$$`` or ``\[``, ``\]``)               |
+|             | - The environments ``equation`` and ``equation*``         |
++-------------+-----------------------------------------------------------+
+| ``title``   | Control sequences used to define section titles:          |
+|             |                                                           |
+|             | - ``\section``                                            |
+|             | - ``\subsection``                                         |
+|             | - ``\subsubsection``                                      |
++-------------+-----------------------------------------------------------+
+
+.. _`rule_linter_section`:
+
+Linter
+======
+
+A rule may define a ``linter`` section to specify that the rule should only be
+enabled when the target linter is being used. Currently, there are two linters
+available, identified as ``plain`` and ``latex``. The ``linter`` section accepts
+a list of these identifiers. For example,
+
+.. code-block:: YAML
+
+    linter:
+      - latex
+
+would cause the rule to only be used by the LaTeX linter. Conversely,
+
+.. code-block:: YAML
+
+    linter:
+      - plain
+
+would only enable the rule when the plain-text linter is used. By default, the
+rule is used by all the linters.
+
+
+.. _`rule_latex_section`:
+
+LaTeX
+=====
+
+Each rule may define a ``latex`` section to define in which context the rule
+should be enforced when the LaTeX linter is used. The section consists of a list
+of *scope entries* where each entry accepts the following fields:
+
++-------------+-----------------------------------------------+-------------+
+|    Label    |                  Description                  |   Default   |
++=============+===============================================+=============+
+| ``name``    | The name of the document element to match.    | N/A         |
+|             | Cannot be a regular expression.               |             |
++-------------+-----------------------------------------------+-------------+
+| ``type``    | The type of document element to match:        | N/A         |
+|             | ``control sequence`` or ``environment``.      |             |
++-------------+-----------------------------------------------+-------------+
+| ``before``  | Regular expression with access to the *raw*   | ``<empty>`` |
+|             | text *before* the scope entry                 |             |
+|             | (see :ref:`contexts <linter_latex_context>`). |             |
+|             | The text is limited to ``20`` characters.     |             |
++-------------+-----------------------------------------------+-------------+
+| ``descend`` | A scope entry where ``descend`` is            | ``true``    |
+|             | ``false`` implies that the scope is not       |             |
+|             | allowed to descend beyond this level.         |             |
+|             |                                               |             |
+|             | For example, we could define a rule saying    |             |
+|             | that a ``\caption`` should contain more       |             |
+|             | than five words. But unless we set  the       |             |
+|             | ``descend`` to ``false`` for the              |             |
+|             | ``\caption`` scope entry---the contents of    |             |
+|             | any nested environments or control            |             |
+|             | sequences would trigger the rule as well.     |             |
++-------------+-----------------------------------------------+-------------+
+| ``logic``   | The ``logic`` field specifies how a scope     | ``or``      |
+|             | entry interacts with the other entries in     |             |
+|             | determining whether or not rule should        |             |
+|             | be enforced. Valid values are ``or``,         |             |
+|             | ``and`` and ``not``.                          |             |
+|             |                                               |             |
+|             | Whether to enforce the rule or not is         |             |
+|             | determined according to:                      |             |
+|             |                                               |             |
+|             | ``(O or A) and not N``                        |             |
+|             |                                               |             |
+|             | where                                         |             |
+|             |                                               |             |
+|             | - ``O`` represents all scope entries with     |             |
+|             |   the ``or`` logic reduced to a single        |             |
+|             |   truth value with the ``or`` operation.      |             |
+|             | - ``A`` represents all scope entries with     |             |
+|             |   the ``and`` logic reduced to a single       |             |
+|             |   truth value with the ``and`` operation.     |             |
+|             | - ``N`` represents all scope entries with     |             |
+|             |   the ``not`` logic reduced to a single       |             |
+|             |   truth value with the ``or`` operation.      |             |
+|             |                                               |             |
+|             | As a special case: if the list only           |             |
+|             | consists of entries marked with ``not``,      |             |
+|             | then ``(O or A)`` evaluates to ``true``.      |             |
++-------------+-----------------------------------------------+-------------+
+
+.. note::
+
+    Fields with default values are optional.
+
+Let us look at an example:
+
+.. code-block:: YAML
+
+    latex:
+      - name: foo
+        type: control sequence
+        before: required\s$
+      - name: bar
+        type: environment
+        logic: and
+      - name: baz
+        type: control sequence
+        logic: and
+
+The scope defined by the section above will enforce the rule for
+
+- any text inside the ``\foo`` control sequence, provided it is preceded by the
+  string "required" followed by a space character (note the ``$`` character
+  anchoring the regular expression to the end of the text), i.e.
+
+  .. code-block:: LaTeX
+
+      Some introductory text is required \foo{to cause the rule to be
+      enforced in here}{and here too} but \foo{the rule is not enforced
+      in here}.
+
+- any text inside *both* the ``bar`` environment and the ``baz`` control
+  sequence, i.e.
+
+  .. code-block:: LaTeX
+
+      The rule will \baz{not be enforced here}
+      \begin{bar}
+      and not here either.
+      \baz{However, this text will be targeted by the rule.}
+      \end{bar}
+
+.. note::
+
+    Additional examples of rules specific to the LaTeX linter can be found
+    :ref:`here <linter_latex_examples>`.
+
 
 .. _`rule_existence`:
 

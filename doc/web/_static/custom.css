@@ -3,3 +3,53 @@ pre {
     padding: 7px 15px;
     font-size: 0.8em;
 }
+
+/* Adjust admonition boxes. */
+div.admonition {
+    border: none;
+    background-color: #eeeeee;
+    box-shadow: 4px 4px 4px #cccccc;
+}
+
+/* Nicer looking tables. */
+table.docutils {
+    border: none;
+    box-shadow: 4px 4px 4px #eeeeee;
+    min-width: 100%;
+}
+
+table.docutils thead {
+    background: #eeeeee;
+    border: none;
+}
+
+table.docutils tbody {
+    border: none;
+}
+
+table.docutils th {
+    padding: 10px;
+    border: none;
+    border-bottom: 1pt solid #cccccc;
+}
+
+table.docutils td {
+    padding: 10px;
+    border: none;
+    vertical-align: top;
+}
+
+table.docutils tr:nth-child(even) {
+    background: #eeeeee77
+}
+
+/* Extend w/ Bitsream Charcter since Georgia are not shipped with Unix systems. */
+body {
+    font-family: "Bitstream Charter", Georgia, serif;
+    font-size: 18px
+}
+
+/* Less blueish hue for monospaced text. */
+tt, code {
+    background-color: #eeeeee
+}

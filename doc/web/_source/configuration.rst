@@ -105,7 +105,7 @@ Defining a Style
 ----------------
 
 Each style is defined in its own ``Style`` section. Immediately following the
-section title, the style's ``name`` is expected. Additionally, ``default``
+section title, the style's ``name`` is expected. Additionally, the ``default``
 keyword may be used to select this as the *default style*. Unless another style
 is specified using the ``--style`` option, the default style will automatically
 be selected when invoking the tool. Additionally, you are able to overwrite the

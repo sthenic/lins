@@ -2,8 +2,9 @@
 Introduction
 ************
 
-Lins is a lightweight, extensible linter for prose. The tool is written in
-`Nim`_ and inspired by `Vale <https://github.com/errata-ai/vale>`_.
+Lins is a lightweight, extensible linter for prose---specifically developed with
+LaTeX in mind. The tool is written in `Nim`_ and inspired by `Vale
+<https://github.com/errata-ai/vale>`_.
 
 .. _Nim: https://nim-lang.org
 
@@ -13,7 +14,7 @@ Lins is a lightweight, extensible linter for prose. The tool is written in
 
 .. _Gitlab repository: https://gitlab.com/sthenic/lins
 
-This documentation is generated with `Sphinx`_ using the `Alabaster`_ theme.
+This documentation is generated with `Sphinx`_ uses the `Alabaster`_ theme.
 
 .. _Sphinx: http://www.sphinx-doc.org/
 .. _Alabaster: https://github.com/bitprophet/alabaster/
@@ -22,11 +23,11 @@ Features
 ========
 
 * Full Unicode support
-* Ability to handle in-sentence line breaks
+* Integrated support for :ref:`LaTeX <linter_latex>` (plain text is also supported)
 * Define :ref:`rules <lins_rules>` using `YAML`_
 * Define :ref:`styles <cfg_styles>` from a collection of rules
 
-.. _YAML: http://yaml.org/
+.. _YAML: https://yaml.org/
 
 Contents
 ========
@@ -39,6 +40,7 @@ The documentation is organized into the following sections:
   _source/installation
   _source/usage
   _source/configuration
+  _source/linters
   _source/rules
 
 
