@@ -7,6 +7,6 @@ linter:
   - latex
 latex:
   - name: ref
-    kind: control sequence
+    type: control sequence
 tokens:
   - ^(?!fig:|tab:|sec:|ch:|itm:|lst:|alg:|app:)\w+

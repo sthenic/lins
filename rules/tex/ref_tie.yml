@@ -7,10 +7,10 @@ linter:
   - latex
 latex:
   - name: eqref
-    kind: control sequence
+    type: control sequence
     before: (?<!~)$
   - name: ref
-    kind: control sequence
+    type: control sequence
     before: (?<!~)$
 tokens:
   - .+

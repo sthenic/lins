@@ -287,7 +287,7 @@ template validate_latex_section(data: typed, filename: string,
          case to_lower_ascii(prop):
          of "name":
             entry.name = val
-         of "kind":
+         of "type":
             case to_lower_ascii(val):
             of "environment":
                entry.kind = ScopeKind.Environment

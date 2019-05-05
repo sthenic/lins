@@ -7,7 +7,7 @@ linter:
   - latex
 latex:
   - name: ref
-    kind: control sequence
+    type: control sequence
     before: (?<!Fig\.|Figs\.)~$
 tokens:
   - 'fig:'

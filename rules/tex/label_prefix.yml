@@ -7,10 +7,10 @@ linter:
   - latex
 latex:
   - name: label
-    kind: control sequence
+    type: control sequence
   - name: ref
-    kind: control sequence
+    type: control sequence
   - name: eqref
-    kind: control sequence
+    type: control sequence
 tokens:
   - ^(?!fig:|tab:|eq:|sec:|ch:|itm:|lst:|alg:|app:)\w+
