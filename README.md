@@ -3,7 +3,7 @@
 [![pipeline status](https://gitlab.com/sthenic/lins/badges/latest/pipeline.svg)](https://gitlab.com/sthenic/lins/commits/latest)
 
 # README
-Lins is a lightweight, extensible linter for prose. The tool is written in [Nim](https://nim-lang.org) and inspired by [Vale](https://github.com/errata-ai/vale).
+Lins is a lightweight, extensible linter for prose—specifically developed with LaTeX in mind. The tool is written in [Nim](https://nim-lang.org) and inspired by [Vale](https://github.com/errata-ai/vale).
 
 ## Documentation
 The project's documentation is available [here](https://sthenic.gitlab.io/lins).
