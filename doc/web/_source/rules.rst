@@ -77,7 +77,7 @@ depends on the linter. Identifiers unknown to the active linter have no effect:
 .. code-block:: YAML
 
     scope:
-      - paragraph # Only used by the plain-text linter.
+      - paragraph # Only used by the plain text linter.
       - comment # Only used by the LaTeX linter.
 
 The sections below define the scope identifiers known to each linter.
@@ -145,7 +145,7 @@ would cause the rule to only be used by the LaTeX linter. Conversely,
     linter:
       - plain
 
-would only enable the rule when the plain-text linter is used. By default, the
+would only enable the rule when the plain text linter is used. By default, the
 rule is used by all the linters.
 
 

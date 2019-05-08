@@ -26,7 +26,7 @@ options:
 
   --linter=LINTER           Set the linter selection mode. Valid values are:
                               - 'auto': Choose linter based on file extensions.
-                              - 'plain': Choose the plain-text linter.
+                              - 'plain': Choose the plain text linter.
                               - 'latex': Choose the LaTeX linter.
                             The default value is 'auto'.
 
