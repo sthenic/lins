@@ -219,10 +219,234 @@ Examples
 
 This section presents a few real-world examples of rules specific to the LaTeX
 linter. Refer to the documentation on rule files :ref:`rule files <lins_rules>`
-for documentation.
+for documentation of the syntax.
 
 .. note::
 
     Many of these examples exists as rule files in the `rules/tex
     <https://gitlab.com/sthenic/lins/tree/master/rules/tex>`_ directory in the
     source repository.
+
+Check that a ``\ref`` contains a proper label prefix:
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "Unknown \\ref label prefix '$1'."
+    ignorecase: true
+    nonword: true
+    level: error
+    linter:
+      - latex
+    latex:
+      - name: ref
+        type: control sequence
+    tokens:
+      - ^(?!fig:|tab:|sec:|ch:|itm:|lst:|alg:|app:)\w+
+
+
+Check that an ``\eqref`` contains a proper label prefix:
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "Unknown \\eqref label prefix '$1'."
+    ignorecase: true
+    nonword: true
+    level: error
+    linter:
+      - latex
+    latex:
+      - name: eqref
+        type: control sequence
+    tokens:
+      - ^(?!eq:)\w+
+
+
+Check that ``\ref`` is not used to reference an equation:
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "Use \\eqref to reference equations."
+    ignorecase: true
+    nonword: true
+    level: error
+    linter:
+      - latex
+    latex:
+      - name: ref
+        type: control sequence
+    tokens:
+      - ^eq:\w+
+
+
+Check that a ``\ref`` to a figure is preceded by ``Fig.`` or ``Figs.`` (IEEE
+reference styling):
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "Use 'Fig.' or 'Figs.'."
+    ignorecase: true
+    nonword: true
+    level: error
+    linter:
+      - latex
+    latex:
+      - name: ref
+        type: control sequence
+        before: (?<!Fig\.|Figs\.)~$
+    tokens:
+      - 'fig:'
+
+
+
+Enforce the rule that a caption to e.g. a figure or a table should end with a
+full stop---making it more likely that the author writes a complete sentence:
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "A caption should end with a full stop '.'."
+    ignorecase: true
+    nonword: true
+    level: error
+    linter:
+      - latex
+    latex:
+      - name: caption
+        type: control sequence
+        descend: false
+    tokens:
+      - (?<!\.)$
+
+Enforce the rule that a caption should be longer than five words:
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "A caption should be a full sentence with more than five words."
+    ignorecase: true
+    nonword: true
+    level: error
+    linter:
+      - latex
+    latex:
+      - name: caption
+        type: control sequence
+        before: (?<!\.)$
+        descend: false
+    tokens:
+      - ^(\b\w+[.!?]?\s*){0,5}$
+
+Warn the user when there are annotations left in the document source code:
+
+.. code-block:: YAML
+
+    message: "'$1' left in text."
+    extends: existence
+    ignorecase: false
+    nonword: true
+    level: warning
+    scope:
+      - comment
+    tokens:
+      - FIXME
+      - TODO
+      - NOTE
+
+Enforce typographically correct quotation marks (single):
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "Unexpected quotation mark, consider using `$1' or using an emphasis macro, e.g. \\emph or \\texttt."
+    ignorecase: true
+    level: warning
+    nonword: true
+    linter:
+      - latex
+    tokens:
+      - (?<=\s')(\w.*?\b)(?=`|'|"|”)
+      # Check for correct start but incorrect end.
+      - (?<=\s`)(\w.*?\b)(?=`|"|”|'')
+
+Enforce typographically correct quotation marks (double):
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "Unexpected quotation mark, consider using ``$1'' or using an emphasis macro, e.g. \\emph or \\texttt."
+    ignorecase: true
+    level: warning
+    nonword: true
+    linter:
+      - latex
+    tokens:
+      - (?<="|”|'')(\w.*?\b)(?="|'|”|`)
+      # Check for correct start but incorrect end.
+      - (?<=``)(\w.*?\b)(?="|”|`|'\s)
+
+Check for camel case identifiers inside the ``\texttt`` control sequence and
+suggest adding two parentheses:
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "Add two parentheses '()' to the end of the function '$1'."
+    ignorecase: false
+    nonword: true
+    level: error
+    linter:
+      - latex
+    latex:
+      - name: texttt
+        type: control sequence
+    tokens:
+      - '(?<!:|\/|\\)([a-z]*)([A-Z]+[a-z0-9][A-za-z0-9]*){2,}+(?!\/)(?!\()'
+
+Check for identifiers that should be typeset using the TeX typewriter font, i.e.
+enclosed in ``\texttt``:
+
+.. code-block:: YAML
+
+    extends: existence
+    message: "Use \\texttt to typeset '$1'."
+    ignorecase: false
+    nonword: true
+    level: error
+    linter:
+      - latex
+    latex:
+      - name: document
+        type: environment
+        logic: and
+      - name: texttt
+        type: control sequence
+        logic: not
+      - name: href
+        type: control sequence
+        logic: not
+      - name: cite
+        type: control sequence
+        logic: not
+      - name: lstlisting
+        type: environment
+        logic: not
+      - name: includegraphics
+        type: control sequence
+        logic: not
+      - name: input
+        type: control sequence
+        logic: not
+    tokens:
+      # Pascal & camel case identifiers, except when preceded by ':', '/' or '\' (paths).
+      - (?<!:|\/|\\)([a-z]*)([A-Z]+[a-z0-9][A-za-z0-9]*){2,}
+      # Snake case identifiers, except when preceded by ':', '/' or '\' (paths).
+      - (?<!:|\/|\\)\b[a-z][a-z0-9]+(_[a-z0-9]+){1,}\b
+      # Filenames
+      - \b\w{3,}\.[a-z]+\b
+    exceptions:
+      - CentOS
+      - OpenSuse
