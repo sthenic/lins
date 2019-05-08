@@ -98,9 +98,9 @@ Plain text
 LaTeX
 -----
 
-There is a rule file :ref:`section <rule_latex_section>` specific to the LaTeX
-linter. The identifiers in the table below can be considered shorthand for the
-more general way of specifying scopes in a LaTeX document.
+There is a rule file :ref:`section <rule_latex>` specific to the LaTeX linter.
+The identifiers in the table below can be considered shorthand for the more
+general way of specifying scopes in a LaTeX document.
 
 +-------------+-----------------------------------------------------------+
 |    Label    |                          Target                           |
@@ -123,7 +123,34 @@ more general way of specifying scopes in a LaTeX document.
 |             | - ``\subsubsection``                                      |
 +-------------+-----------------------------------------------------------+
 
-.. _`rule_linter_section`:
+
+.. _`rule_exception`:
+
+Exceptions
+==========
+
+A rule may define an ``exceptions`` section, listing exceptions to the rule. The
+section contents should be a list of strings and a minimum of one entry is
+required. The list entries may be regular expressions.
+
+.. code-block:: YAML
+
+    exceptions:
+      - this is fine
+      - this too
+
+Using a regular expression:
+
+.. code-block:: YAML
+
+    exceptions:
+      - this (is fine|too)
+
+If a rule matches at any point in the linted text, the match is checked against
+the exceptions before a violation is generated.
+
+
+.. _`rule_linter`:
 
 Linter
 ======
@@ -149,7 +176,7 @@ would only enable the rule when the plain text linter is used. By default, the
 rule is used by all the linters.
 
 
-.. _`rule_latex_section`:
+.. _`rule_latex`:
 
 LaTeX
 =====
