@@ -29,7 +29,7 @@ matrix:
         skip_cleanup: true
         keep_history: false
         on:
-          branch: latest
+          branch: stable
 
 
     - name: "Build macOS"
@@ -51,7 +51,7 @@ matrix:
         on:
           tags: true
 
-    - name: "Build xenial"
+    - name: "Build Xenial"
       os: linux
       dist: xenial
       script:
@@ -81,7 +81,7 @@ matrix:
         on:
           tags: true
 
-    - name: "Build windows"
+    - name: "Build Windows"
       os: linux
       dist: xenial
       before_install:
