@@ -1,9 +1,85 @@
-os: linux
+sudo: false
 language: c
-dist: trusty
 
-branches:
-  - master
+matrix:
+  include:
+    - name: "Tests"
+      os: linux
+      dist: trusty
+      branches:
+        - master
+      script:
+        - nim tests
+
+    - name: "Build macOS"
+      os: osx
+      script:
+        - ARCHIVE_FILENAME="lins-${LINS_VERSION}-macos"
+        - nim build
+        - tar -czf "${ARCHIVE_FILENAME}.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
+        - md5 ${ARCHIVE_FILENAME}.tar.gz > ${ARCHIVE_FILENAME}.tar.gz.md5
+      deploy:
+        provider: releases
+        api_key: "$GITHUB_OAUTH_TOKEN"
+        skip_cleanup: true
+        overwrite: true
+        file:
+          - "${ARCHIVE_FILENAME}.tar.gz"
+          - "${ARCHIVE_FILENAME}.md5"
+        on:
+          tags: true
+
+    - name: "Build xenial"
+      os: linux
+      dist: xenial
+      script:
+        - source /etc/os-release
+        - PLATFORM_INFO="${ID}-${VERSION_ID}-$(uname -i)"
+        - ARCHIVE_FILENAME="lins-${LINS_VERSION}-${PLATFORM_INFO}"
+        - nim build
+        - cd build
+        - chmod -R 755 deb/DEBIAN
+        - sh build_deb.sh "${PLATFORM_INFO}"
+        - cp *.deb ../
+        - cd ..
+        - tar -czf "${ARCHIVE_FILENAME}.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
+        - md5sum "${ARCHIVE_FILENAME}.tar.gz" > ${ARCHIVE_FILENAME}.tar.gz.md5
+        - md5sum "${ARCHIVE_FILENAME}.deb" > ${ARCHIVE_FILENAME}.deb.md5
+      deploy:
+        provider: releases
+        api_key: "$GITHUB_OAUTH_TOKEN"
+        skip_cleanup: true
+        overwrite: true
+        file:
+          - "${ARCHIVE_FILENAME}.tar.gz"
+          - "${ARCHIVE_FILENAME}.tar.gz.md5"
+          - "${ARCHIVE_FILENAME}.deb"
+          - "${ARCHIVE_FILENAME}.deb.md5"
+        on:
+          tags: true
+
+    - name: "Build windows"
+      os: linux
+      dist: xenial
+      before_install:
+        - sudo apt install -y mingw-w64 zip
+      script:
+        - ARCHIVE_FILENAME="lins-${LINS_VERSION}-win_x86_64"
+        - nim buildxwin64
+        - curl https://nim-lang.org/download/dlls.zip -sSf > dlls.zip
+        - unzip dlls.zip
+        - zip "${ARCHIVE_FILENAME}.zip" lins.exe LICENSE THIRD_PARTY_LICENSES.md pcre64.dll
+        - md5sum ${ARCHIVE_FILENAME}.zip > ${ARCHIVE_FILENAME}.zip.md5
+      deploy:
+        provider: releases
+        api_key: "$GITHUB_OAUTH_TOKEN"
+        skip_cleanup: true
+        overwrite: true
+        file:
+          - "${ARCHIVE_FILENAME}.zip"
+          - "${ARCHIVE_FILENAME}.zip.md5"
+        on:
+          tags: true
 
 install:
   - curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
@@ -13,6 +89,4 @@ before_script:
   - export PATH=$HOME/.nimble/bin:$PATH
   - nimble refresh -y
   - nimble install yaml -y
-
-script:
-  - nim tests
+  - LINS_VERSION=$(cat VERSION)
