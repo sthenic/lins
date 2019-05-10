@@ -24,7 +24,7 @@ matrix:
         - make html
       deploy:
         provider: pages
-        api_key: "$GITHUB_OAUTH_TOKEN"
+        github_token: "$GITHUB_OAUTH_TOKEN"
         local_dir: doc/web/_build/html
         skip_cleanup: true
         keep_history: false
