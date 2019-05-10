@@ -7,7 +7,8 @@ matrix:
       os: linux
       dist: trusty
       branches:
-        - master
+        only:
+          - master
       script:
         - nim tests
 
@@ -18,6 +19,9 @@ matrix:
         - nim build
         - tar -czf "${ARCHIVE_FILENAME}.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
         - md5 ${ARCHIVE_FILENAME}.tar.gz > ${ARCHIVE_FILENAME}.tar.gz.md5
+      branches:
+        only:
+          - /^v\d+\.\d+\.\d+$/
       deploy:
         provider: releases
         api_key: "$GITHUB_OAUTH_TOKEN"
@@ -45,6 +49,9 @@ matrix:
         - tar -czf "${ARCHIVE_FILENAME}.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
         - md5sum "${ARCHIVE_FILENAME}.tar.gz" > ${ARCHIVE_FILENAME}.tar.gz.md5
         - md5sum "${ARCHIVE_FILENAME}.deb" > ${ARCHIVE_FILENAME}.deb.md5
+      branches:
+        only:
+          - /^v\d+\.\d+\.\d+$/
       deploy:
         provider: releases
         api_key: "$GITHUB_OAUTH_TOKEN"
@@ -70,6 +77,9 @@ matrix:
         - unzip dlls.zip
         - zip "${ARCHIVE_FILENAME}.zip" lins.exe LICENSE THIRD_PARTY_LICENSES.md pcre64.dll
         - md5sum ${ARCHIVE_FILENAME}.zip > ${ARCHIVE_FILENAME}.zip.md5
+      branches:
+        only:
+          - /^v\d+\.\d+\.\d+$/
       deploy:
         provider: releases
         api_key: "$GITHUB_OAUTH_TOKEN"
