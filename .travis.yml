@@ -5,9 +5,29 @@ matrix:
   include:
     - name: "Tests"
       os: linux
-      dist: trusty
+      dist: xenial
       script:
         - nim tests
+
+    - name: "Documentation"
+      os: linux
+      dist: xenial
+      install:
+        - pip3 install sphinx
+      before_script:
+        - echo "Building documentation"
+      script:
+        - cd doc/web
+        - make html
+      deploy:
+        provider: pages
+        api_key: "$GITHUB_OAUTH_TOKEN"
+        local_dir: doc/web/_build/html
+        skip_cleanup: true
+        keep_history: false
+        on:
+          branch: master
+
 
     - name: "Build macOS"
       os: osx
