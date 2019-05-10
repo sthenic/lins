@@ -10,6 +10,9 @@ matrix:
         - nim tests
 
     - name: "Documentation"
+      language: python
+      python:
+        - "3.7"
       os: linux
       dist: xenial
       install:
