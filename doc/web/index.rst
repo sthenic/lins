@@ -10,9 +10,9 @@ LaTeX in mind. The tool is written in `Nim`_ and inspired by `Vale
 
 .. note::
 
-    The source code may be found in the project's `Gitlab repository`_.
+    The source code may be found in the project's `Github repository`_.
 
-.. _Gitlab repository: https://gitlab.com/sthenic/lins
+.. _Github repository: https://github.com/sthenic/lins
 
 This documentation is generated with `Sphinx`_ uses the `Alabaster`_ theme.
 
@@ -55,22 +55,22 @@ to fix the problem quickly.
 Roadmap
 =======
 
-Have a look at the project's upcoming `milestones`_ to see where we're headed.
+Have a look at the `project board`_ to see where we're headed.
 
 
 Additionally, if you have a feature you would like to see added to the tool or
 perhaps an enhancement of an existing feature, please register an issue on the
 `issue board`_.
 
-.. _milestones: https://gitlab.com/sthenic/lins/milestones
-.. _issue board: https://gitlab.com/sthenic/lins/issues
+.. _project board: https://github.com/sthenic/lins/projects
+.. _issue board: https://github.com/sthenic/lins/issues
 
 License
 =======
 
 Lins is released under the `MIT license`_.
 
-.. _MIT License: https://gitlab.com/sthenic/lins/blob/master/LICENSE
+.. _MIT License: https://github.com/sthenic/lins/blob/master/LICENSE
 
 Third-party Dependencies
 ========================

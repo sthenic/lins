@@ -224,7 +224,7 @@ for documentation of the syntax.
 .. note::
 
     Many of these examples exists as rule files in the `rules/tex
-    <https://gitlab.com/sthenic/lins/tree/master/rules/tex>`_ directory in the
+    <https://github.com/sthenic/lins/tree/master/rules/tex>`_ directory in the
     source repository.
 
 Check that a ``\ref`` contains a proper label prefix:
