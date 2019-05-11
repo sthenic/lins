@@ -55,14 +55,14 @@ to fix the problem quickly.
 Roadmap
 =======
 
-Have a look at the `project board`_ to see where we're headed.
+Have a look at the project's upcoming `milestones`_ to see where we're headed.
 
 
 Additionally, if you have a feature you would like to see added to the tool or
 perhaps an enhancement of an existing feature, please register an issue on the
 `issue board`_.
 
-.. _project board: https://github.com/sthenic/lins/projects
+.. _milestones: https://github.com/sthenic/lins/milestones
 .. _issue board: https://github.com/sthenic/lins/issues
 
 License
