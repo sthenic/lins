@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.6.1 - 2019-05-11
+
+* Repository is now hosted on Github. No functional changes.
+
 ## v0.6.0 - 2019-05-08
 
 * Major refactoring completed to add support for a LaTeX linter. No breaking   changes are expected. There's still a plain text linter which is selected by default. The LaTeX linter is chosen automatically for files with the `.tex` or `.sty` extensions. Please refer to the project documentation for details on the new functionality.
