@@ -63,6 +63,27 @@ To remove the package call
 
     $ sudo dpkg -r lins
 
+
+.. _`install_macos`:
+
+macOS
+=====
+
+1. Get the latest release archive for macOS `here <https://github.com/sthenic/lins/releases>`_.
+
+2. Verify the MD5 checksum of the archive. (*OPTIONAL*)
+
+3. Unpack the archive to a persistent location.
+
+4. Add the resulting path to your ``PATH`` variable.
+
+5. Open a terminal session and verify the installation by calling the tool with
+   ``lins``.
+
+To uninstall the package, perform the above steps in reverse: remove the
+``PATH`` entry and delete the files.
+
+
 .. _`install_windows`:
 
 Windows
@@ -79,7 +100,5 @@ Windows
 5. Open a Command Prompt or PowerShell session and verify the installation by
    calling the tool with ``lins``.
 
-Uninstalling the tool involves performing the above steps in reverse, i.e.
-
-* removing the entry from your ``PATH`` variable and
-* removing the directory containing the unpacked release archive.
+To uninstall the package, perform the above steps in reverse: remove the
+``PATH`` entry and delete the files.
