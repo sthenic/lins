@@ -209,7 +209,7 @@ is emitted as two segments:
 
 Defining the rule discussed above involves just specifying ``(?<!~)$`` as the
 value for the ``before`` field for a ``\ref`` scope entry in the :ref:`LaTeX
-section <rule_latex_section>` of the rule file.
+section <rule_latex>` of the rule file.
 
 
 .. _`linter_latex_examples`:
