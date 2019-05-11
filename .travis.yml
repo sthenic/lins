@@ -47,7 +47,7 @@ matrix:
         overwrite: true
         file:
           - "${ARCHIVE_FILENAME}.tar.gz"
-          - "${ARCHIVE_FILENAME}.md5"
+          - "${ARCHIVE_FILENAME}.tar.gz.md5"
         on:
           tags: true
 
