@@ -47,8 +47,7 @@ common field is the matching text. Consider the following string,
 
     Please remove '$1'.
 
-If the parent rule matches the word 'foo', the message presented to the user
-will be
+If the rule matches the word 'foo', the message presented to the user will be
 
 .. code-block:: text
 
@@ -387,9 +386,8 @@ Occurence
 =========
 
 The *occurrence* rule enforces a requirement on the maximum/minimum number of
-times a token may/should occur in a particular ``scope`` (``text``,
-``paragraph`` or ``sentence``). The ``message`` string for this rule doesn't
-accept a format specifier.
+times a token may/should occur in a particular :ref:`scope <rule_scope>`. The
+``message`` string for this rule doesn't accept a format specifier.
 
 .. code-block:: YAML
 
@@ -397,7 +395,8 @@ accept a format specifier.
     message: "Sentences should have fewer than 25 words."
     level: suggestion
     ignorecase: true
-    scope: sentence
+    scope:
+      - paragraph
     limit: 25
     limit_kind: max
     token: '\b(\w+)\b'
@@ -423,7 +422,8 @@ The matching token is provided as input to the ``message`` string.
     message: "'$1' is repeated."
     level: warning
     ignorecase: true
-    scope: sentence
+    scope:
+      - paragraph
     token: '\b(\w+)\b'
 
 .. _`rule_consistency`:
@@ -434,8 +434,7 @@ Consistency
 The *consistency* rule checks for occurrences of either the key or the value
 specified as key-value pairs in its ``either`` list. For each pair, the earliest
 match in the linted text is assumed to be the preferred version and occurrences
-of its undesired counterpart will generate a rule violation. This rule also
-accepts the ``scope`` field.
+of its undesired counterpart will generate a rule violation.
 
 .. code-block:: YAML
 
@@ -443,7 +442,8 @@ accepts the ``scope`` field.
     message: "Inconsistent spelling of '$1'."
     level: error
     ignorecase: true
-    scope: text
+    scope:
+      - text
     either:
       organize: organise
       recognize: recognise
@@ -461,7 +461,8 @@ We can generalize the example above as:
     message: "Inconsistent spelling of '$1'."
     level: error
     ignorecase: true
-    scope: text
+    scope:
+      - text
     either:
       (?:\w+)nize: (?:\w+)nise
       (?:\w+)log: (?:\w+)logue
@@ -482,7 +483,8 @@ provided as input to the ``message`` string.
     message: "'$1' found without finding 'foo'."
     level: warning
     ignorecase: true
-    scope: text
+    scope:
+      - text
     first: 'foo'
     second: '(bar|baz)'
 
