@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+* The plain text parser now ignores empty segments, just like the LaTeX parser.
+
 ## v0.6.1 - 2019-05-11
 
 * Repository is now hosted on Github. No functional changes.

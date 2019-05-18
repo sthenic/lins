@@ -56,13 +56,21 @@ proc add_tok(p: var PlainParser) =
    p.last_tok = p.tok
 
 
+proc add_seg(p: var PlainParser, seg: var PlainTextSegment) =
+   ## Add a segment to the sequence of completed segments.
+   if len(seg.text.strip()) != 0:
+      # We skip adding segments with length zero or consisting entirely of
+      # whitespace.
+      add(p.segs, seg)
+
+
 proc parse_character(p: var PlainParser) =
    add_tok(p)
    get_token(p)
 
 
 proc parse_paragraph_break(p: var PlainParser) =
-   add(p.segs, p.seg)
+   add_seg(p, p.seg)
    inc(p.par_idx)
    p.seg = PlainTextSegment()
    p.seg.par_idx = p.par_idx
@@ -84,7 +92,7 @@ proc parse_all*(p: var PlainParser): seq[PlainTextSegment] =
    get_token(p)
    while p.tok.token_type != EndOfFile:
       parse_token(p)
-   add(p.segs, p.seg)
+   add_seg(p, p.seg)
    result = p.segs
 
 
