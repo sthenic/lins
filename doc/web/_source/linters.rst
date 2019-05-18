@@ -97,7 +97,7 @@ The stream of TeX tokens is later interpreted in the LaTeX sense, identifying
 environments, option capture groups and special :ref:`font styling macros
 <linter_latex_font_style>` like ``\emph``, ``\textbf`` etc.
 
-As in the plain text case, the text in the target file is passed on to the
+Just like the plain text parser, the text in the target file is passed on to the
 linting stage in segments. However, these segments---apart from containing only
 the text that will be typset in the document---also contain meta information
 such as the :ref:`scope <linter_latex_scope>` and the :ref:`context
@@ -144,8 +144,8 @@ Scopes
 
 Scopes play a key role in the LaTeX linter and can be leveraged by :ref:`rules
 <lins_rules>` to great effect. The *scope* is defined as the chain of the
-control sequences and environments enclosing the text segment. These are called
-*scope entries* in this context. For example,
+control sequences and environments enclosing the text segment. Each link in the
+chain is a *scope entry*. For example,
 
 .. code-block:: LaTeX
 
@@ -204,8 +204,11 @@ is emitted as two segments:
 - one containing the text leading up to ``\ref`` (plus the last ``.`` character)
   and
 - one containing the text "tab:my_table" where the scope entry for
-  ``\ref`` has the context ``_reference_to_Table_`` (``_`` is the space
-  character).
+  ``\ref`` has the context
+
+  .. raw:: html
+
+      <code>&nbsp;reference to Table&nbsp;</code>
 
 Defining the rule discussed above involves just specifying ``(?<!~)$`` as the
 value for the ``before`` field for a ``\ref`` scope entry in the :ref:`LaTeX
@@ -218,8 +221,8 @@ Examples
 --------
 
 This section presents a few real-world examples of rules specific to the LaTeX
-linter. Refer to the documentation on rule files :ref:`rule files <lins_rules>`
-for documentation of the syntax.
+linter. Refer to the section on :ref:`rule files <lins_rules>` for documentation
+of the syntax.
 
 .. note::
 

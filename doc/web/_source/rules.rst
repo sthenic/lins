@@ -85,14 +85,14 @@ The sections below define the scope identifiers known to each linter.
 Plain text
 ----------
 
-+---------------+--------------------------------------------------+
-|     Label     |                      Target                      |
-+===============+==================================================+
-| ``text``      | Entire document                                  |
-+---------------+--------------------------------------------------+
-| ``paragraph`` | Each paragraph                                   |
-|               | (see the :ref:`occurence <rule_occurence>` rule) |
-+---------------+--------------------------------------------------+
++---------------+----------------------------------------------------+
+|     Label     |                       Target                       |
++===============+====================================================+
+| ``text``      | Entire document                                    |
++---------------+----------------------------------------------------+
+| ``paragraph`` | Each paragraph                                     |
+|               | (see the :ref:`occurrence <rule_occurrence>` rule) |
++---------------+----------------------------------------------------+
 
 LaTeX
 -----
@@ -180,7 +180,7 @@ rule is used by all the linters.
 LaTeX
 =====
 
-Each rule may define a ``latex`` section to define in which context the rule
+Each rule may define a ``latex`` section to specify in which context the rule
 should be enforced when the LaTeX linter is used. The section consists of a list
 of *scope entries* where each entry accepts the following fields:
 
@@ -212,7 +212,7 @@ of *scope entries* where each entry accepts the following fields:
 +-------------+-----------------------------------------------+-------------+
 | ``logic``   | The ``logic`` field specifies how a scope     | ``or``      |
 |             | entry interacts with the other entries in     |             |
-|             | determining whether or not rule should        |             |
+|             | determining whether or not the rule should    |             |
 |             | be enforced. Valid values are ``or``,         |             |
 |             | ``and`` and ``not``.                          |             |
 |             |                                               |             |
@@ -380,10 +380,10 @@ a violation.
 
 .. TODO: Revise last sentence, add an example.
 
-.. _`rule_occurence`:
+.. _`rule_occurrence`:
 
-Occurence
-=========
+Occurrence
+==========
 
 The *occurrence* rule enforces a requirement on the maximum/minimum number of
 times a token may/should occur in a particular :ref:`scope <rule_scope>`. The
@@ -392,17 +392,15 @@ times a token may/should occur in a particular :ref:`scope <rule_scope>`. The
 .. code-block:: YAML
 
     extends: occurrence
-    message: "Sentences should have fewer than 25 words."
+    message: "Don't use 'however' more than once in one paragraph."
     level: suggestion
     ignorecase: true
     scope:
       - paragraph
-    limit: 25
+    limit: 1
     limit_kind: max
-    token: '\b(\w+)\b'
+    token: '\bHowever\b'
 
-In the example above we define a rule that triggers for sentences with more than
-25 words.
 
 .. _`rule_repetition`:
 
@@ -450,8 +448,9 @@ of its undesired counterpart will generate a rule violation.
       analog: analogue
 
 The keys and values may be general regular expressions but unless the
-``nonword`` field is set to ``true``, word boundary tokens ``\b`` are
-automatically added to the expression.
+``nonword`` field is set to ``true``, word boundary tokens ``\b`` are added to
+the expression. The ``message`` string will be supplied the matching text as a
+replacement field.
 
 We can generalize the example above as:
 
