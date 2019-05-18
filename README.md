@@ -2,7 +2,7 @@
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 ![Travis (.org) branch](https://img.shields.io/travis/sthenic/lins/master.svg?style=flat-square)
 
-# Lins
+# ![lins](/doc/logo/logo.png?raw=true)
 Lins is a lightweight, extensible linter for prose—specifically developed with LaTeX in mind. The tool is written in [Nim](https://nim-lang.org) and inspired by [Vale](https://github.com/errata-ai/vale).
 
 ## Documentation
