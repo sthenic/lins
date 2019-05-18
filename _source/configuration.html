@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Configuration &#8212; Lins 0.6.1
+ documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Linters" href="linters.html" />
+    <link rel="prev" title="Usage" href="usage.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A lightweight, extensible linter for prose.</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-file">Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rule-directories">Rule Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#styles">Styles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="linters.html">Linters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rules.html">Rules</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="usage.html" title="previous chapter">Usage</a></li>
+      <li>Next: <a href="linters.html" title="next chapter">Linters</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="configuration">
+<span id="lins-cfg"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<p>Configuring the tool through a <em>configuration file</em>  allows you to specify paths
+to <a class="reference internal" href="#cfg-rule-dirs"><span class="std std-ref">directories</span></a> containing <a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">rule files</span></a>
+and to define <a class="reference internal" href="#cfg-styles"><span class="std std-ref">styles</span></a> from these files.</p>
+<div class="section" id="configuration-file">
+<span id="cfg-file"></span><h2>Configuration File<a class="headerlink" href="#configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>The configuration file is expected to be named <code class="docutils literal notranslate"><span class="pre">.lins.cfg</span></code> or <code class="docutils literal notranslate"><span class="pre">lins.cfg</span></code> and
+uses a syntax similar to Windows’ <code class="docutils literal notranslate"><span class="pre">.ini</span></code> files. The tool determines which
+configuration file to use through a search that follows these parameters:</p>
+<ul>
+<li><p>The path to the current working directory is traversed in ascending order
+until a configuration file is found or the root directory is reached.
+Additionally, the search algorithm descends into any directory named
+<code class="docutils literal notranslate"><span class="pre">.lins/</span></code> on its way to the root.</p></li>
+<li><p>If the directory traversal yields no results, the tool determines the path to
+the user’s configuration directory which defaults to</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">$XDG_CONFIG_HOME</span></code>—if defined, otherwise <code class="docutils literal notranslate"><span class="pre">/home/&lt;user&gt;/.config</span></code> on
+Unix systems and</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">C:\Users\&lt;user&gt;\.config</span></code> on Windows systems.</p></li>
+</ul>
+</div></blockquote>
+<p>The <code class="docutils literal notranslate"><span class="pre">lins/</span></code> subdirectory is appended to the path and searched for a
+configuration file.</p>
+</li>
+</ul>
+<p>Upon finding a configuration file, the search is aborted and the file contents
+are parsed.</p>
+<p>You are also able to explicitly specify a configuration file by setting the
+<code class="docutils literal notranslate"><span class="pre">LINS_CFG</span></code> <a class="reference internal" href="#cfg-env"><span class="std std-ref">environment variable</span></a> to the full path of the
+configuration file. This method takes precedence over any file found through the
+search outlined above.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The absolute path of the selected configuration file is reported at runtime.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can disable the use of a configuration file by specifying the option
+<code class="docutils literal notranslate"><span class="pre">--no-cfg</span></code>.</p>
+</div>
+<p>Below is an example of a configuration file. The following sections break down
+and explain its contents.</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[RuleDirs]</span>
+<span class="na">&quot;/path/to/rules/foo&quot;</span>
+<span class="na">baz</span><span class="o">=</span><span class="s">&quot;/path/to/rules/bar&quot;</span>
+
+<span class="k">[Style]</span>
+<span class="na">name</span> <span class="o">=</span> <span class="s">mainstyle</span>
+<span class="na">default</span> <span class="o">=</span> <span class="s">true</span>
+
+<span class="na">rule</span> <span class="o">=</span> <span class="s">foo</span>
+<span class="k">[Except]</span>
+<span class="na">FooRule1</span>
+<span class="na">FooRule2</span>
+
+<span class="na">rule</span> <span class="o">=</span> <span class="s">baz</span>
+
+<span class="k">[Style]</span>
+<span class="na">name</span> <span class="o">=</span> <span class="s">secondarystyle</span>
+
+<span class="na">rule</span> <span class="o">=</span> <span class="s">baz</span>
+<span class="k">[Only]</span>
+<span class="na">BazRule</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rule-directories">
+<span id="cfg-rule-dirs"></span><h2>Rule Directories<a class="headerlink" href="#rule-directories" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[RuleDirs]</span>
+<span class="na">&quot;/path/to/rules/foo&quot;</span>
+<span class="na">baz</span><span class="o">=</span><span class="s">&quot;/path/to/rules/bar&quot;</span>
+</pre></div>
+</div>
+<p>Rule directories are specified in the <code class="docutils literal notranslate"><span class="pre">RuleDirs</span></code> section. The directories are
+not traversed recursively so only rule files residing on the top level are
+added. Entries are separated by line breaks and may explicitly be assigned a
+<em>label</em> by using the <code class="docutils literal notranslate"><span class="pre">=</span></code> character. Entries without an explicit label will
+use the name of their lowest-level directory.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Relative paths are computed w.r.t. the path of the configuration file.</p>
+</div>
+</div>
+<div class="section" id="styles">
+<span id="cfg-styles"></span><h2>Styles<a class="headerlink" href="#styles" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">Rule files</span></a> may be grouped together to form a <em>style</em>. Styles
+are important for a few reasons:</p>
+<ul class="simple">
+<li><p><em>Flexibility</em>—by adding an abstraction layer between the rule files and the
+user, you gain flexibility.</p></li>
+<li><p><em>File structure</em>—since you explicitly select which rule files should be
+included in a particular style, the tool imposes no requirements on how the
+rule files are organized.</p></li>
+<li><p><em>Ease of use</em>—when linting, the user only specifies a style and is not
+affected by the style’s maintainer removing and adding rule files.</p></li>
+</ul>
+<p>Perhaps Marketing uses a different style than R&amp;D when writing documents. For
+example, two styles may share the same core rule set but one may enforce the
+<em>passive voice</em> while the other enforces the <em>active voice</em>.</p>
+<div class="section" id="defining-a-style">
+<span id="cfg-define-style"></span><h3>Defining a Style<a class="headerlink" href="#defining-a-style" title="Permalink to this headline">¶</a></h3>
+<p>Each style is defined in its own <code class="docutils literal notranslate"><span class="pre">Style</span></code> section. Immediately following the
+section title, the style’s <code class="docutils literal notranslate"><span class="pre">name</span></code> is expected. Additionally, the <code class="docutils literal notranslate"><span class="pre">default</span></code>
+keyword may be used to select this as the <em>default style</em>. Unless another style
+is specified using the <code class="docutils literal notranslate"><span class="pre">--style</span></code> option, the default style will automatically
+be selected when invoking the tool. Additionally, you are able to overwrite the
+default specifier and assign this property to another style by setting the
+<code class="docutils literal notranslate"><span class="pre">LINS_DEFAULT_STYLE</span></code> <a class="reference internal" href="#cfg-env"><span class="std std-ref">environment variable</span></a>.</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[Style]</span>
+<span class="na">name</span> <span class="o">=</span> <span class="s">mainstyle</span>
+<span class="na">default</span> <span class="o">=</span> <span class="s">true</span>
+</pre></div>
+</div>
+<p>To assign rules to a style the <code class="docutils literal notranslate"><span class="pre">rule</span></code> keyword is used together with a target
+label (defined in the <code class="docutils literal notranslate"><span class="pre">RuleDirs</span></code> section). This will include all rules defined
+in the label’s target directory (unless the <code class="docutils literal notranslate"><span class="pre">Except</span></code> or <code class="docutils literal notranslate"><span class="pre">Only</span></code> sections are
+used).</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="na">rule</span> <span class="o">=</span> <span class="s">baz</span>
+</pre></div>
+</div>
+<div class="section" id="except-and-only">
+<h4>Except and Only<a class="headerlink" href="#except-and-only" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">Except</span></code> and <code class="docutils literal notranslate"><span class="pre">Only</span></code> sections applies to the latest <code class="docutils literal notranslate"><span class="pre">rule</span></code> keyword and
+are mutually exclusive, i.e. a rule can make use of either the <code class="docutils literal notranslate"><span class="pre">Except</span></code>
+section or the <code class="docutils literal notranslate"><span class="pre">Only</span></code> section, but not both.</p>
+<p>The purpose of each section is straight-forward:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Except</span></code> section includes all rule files <em>except</em> the ones listed in
+the section.</p></li>
+</ul>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="na">rule</span> <span class="o">=</span> <span class="s">foo</span>
+<span class="k">[Except]</span>
+<span class="na">FooRule1</span>
+<span class="na">FooRule2</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Only</span></code> section <em>only</em> includes the rule files listed in the section.</p></li>
+</ul>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="na">rule</span> <span class="o">=</span> <span class="s">baz</span>
+<span class="k">[Only]</span>
+<span class="na">BazRule</span>
+</pre></div>
+</div>
+<p>In both cases, the lists consist of filenames (case sensitive and without the
+extension) with one entry per line.</p>
+</div>
+</div>
+</div>
+<div class="section" id="environment-variables">
+<span id="cfg-env"></span><h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
+<p>Environment variables offer yet another way of configuring the tool in a
+persistent manner.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LINS_CFG</span></code>—full path to a <a class="reference internal" href="#cfg-file"><span class="std std-ref">configuration file</span></a>. Provided
+the specified file exists, this file takes precedence over any file located
+through the regular search method described in <a class="reference internal" href="#cfg-file"><span class="std std-ref">Configuration File</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LINS_DEFAULT_STYLE</span></code>—name of the default <a class="reference internal" href="#cfg-styles"><span class="std std-ref">style</span></a>. This
+name is case sensitive and must match a style defined in the active
+configuration file. If these criteria are met, this takes precedence over any
+other default style.</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2019 Marcus Eriksson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_source/configuration.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

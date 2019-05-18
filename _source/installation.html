@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Installation &#8212; Lins 0.6.1
+ documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Usage" href="usage.html" />
+    <link rel="prev" title="Introduction" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A lightweight, extensible linter for prose.</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#linux">Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#macos">macOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#windows">Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linters.html">Linters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rules.html">Rules</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">Introduction</a></li>
+      <li>Next: <a href="usage.html" title="next chapter">Usage</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<span id="lins-installation"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>Depending on your operating system you have different installation methods open
+to you. Please refer to the relevant section below for further instructions.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This tool only supports 64-bit operating systems running on x86 platforms.</p>
+</div>
+<div class="section" id="linux">
+<span id="install-linux"></span><h2>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h2>
+<p>If your distribution supports installation from <code class="docutils literal notranslate"><span class="pre">.deb</span></code> files, please follow
+<a class="reference internal" href="#install-deb"><span class="std std-ref">these</span></a> instructions. Otherwise, a slightly more manual
+approach is required:</p>
+<ol class="arabic simple">
+<li><p>Get the latest release archive <a class="reference external" href="https://github.com/sthenic/lins/releases">here</a>.</p></li>
+<li><p>Verify the MD5 checksum of the archive. (<em>OPTIONAL</em>)</p></li>
+<li><p>Unpack the archive to a persistent location.</p></li>
+<li><p>Add the resulting path to your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable.</p></li>
+<li><p>Open a terminal session and verify the installation by calling the tool with
+<code class="docutils literal notranslate"><span class="pre">lins</span></code>.</p></li>
+</ol>
+<p>To uninstall the package, perform the above steps in reverse: remove the
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code> entry and delete the files.</p>
+<div class="section" id="debian-based-distributions">
+<span id="install-deb"></span><h3>Debian-based Distributions<a class="headerlink" href="#debian-based-distributions" title="Permalink to this headline">¶</a></h3>
+<p>For Debian-based distributions: Debian, Ubuntu and the likes, there is a
+<code class="docutils literal notranslate"><span class="pre">.deb</span></code> package for each release to simplify the installation process.</p>
+<ol class="arabic simple">
+<li><p>Get the latest <code class="docutils literal notranslate"><span class="pre">.deb</span></code> package <a class="reference external" href="https://github.com/sthenic/lins/releases">here</a>.</p></li>
+<li><p>Verify the MD5 checksum of the package. (<em>OPTIONAL</em>)</p></li>
+<li><p>Install the <code class="docutils literal notranslate"><span class="pre">.deb</span></code> package with e.g.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ sudo dpkg -i lins-0.1.0-x86_64.deb
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Open a terminal session and verify the installation by calling the tool with
+<code class="docutils literal notranslate"><span class="pre">lins</span></code>.</p></li>
+</ol>
+<p>To remove the package call</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ sudo dpkg -r lins
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="macos">
+<span id="install-macos"></span><h2>macOS<a class="headerlink" href="#macos" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Get the latest release archive for macOS <a class="reference external" href="https://github.com/sthenic/lins/releases">here</a>.</p></li>
+<li><p>Verify the MD5 checksum of the archive. (<em>OPTIONAL</em>)</p></li>
+<li><p>Unpack the archive to a persistent location.</p></li>
+<li><p>Add the resulting path to your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable.</p></li>
+<li><p>Open a terminal session and verify the installation by calling the tool with
+<code class="docutils literal notranslate"><span class="pre">lins</span></code>.</p></li>
+</ol>
+<p>To uninstall the package, perform the above steps in reverse: remove the
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code> entry and delete the files.</p>
+</div>
+<div class="section" id="windows">
+<span id="install-windows"></span><h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Get the latest release archive for 64-bit Windows <a class="reference external" href="https://github.com/sthenic/lins/releases">here</a>.</p></li>
+<li><p>Verify the MD5 checksum of the archive. (<em>OPTIONAL</em>)</p></li>
+<li><p>Unpack the archive to a persistent location.</p></li>
+<li><p>Add the resulting path to your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable.</p></li>
+<li><p>Open a Command Prompt or PowerShell session and verify the installation by
+calling the tool with <code class="docutils literal notranslate"><span class="pre">lins</span></code>.</p></li>
+</ol>
+<p>To uninstall the package, perform the above steps in reverse: remove the
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code> entry and delete the files.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2019 Marcus Eriksson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_source/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

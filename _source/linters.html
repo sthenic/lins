@@ -1,0 +1,476 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Linters &#8212; Lins 0.6.1
+ documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Rules" href="rules.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A lightweight, extensible linter for prose.</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Linters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#plain-text">Plain text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#latex">LaTeX</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rules.html">Rules</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="configuration.html" title="previous chapter">Configuration</a></li>
+      <li>Next: <a href="rules.html" title="next chapter">Rules</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="linters">
+<span id="lins-linters"></span><h1>Linters<a class="headerlink" href="#linters" title="Permalink to this headline">¶</a></h1>
+<p>When Lins reads the input file, the text first passes through a parser tasked
+with piecing together <em>segments</em> of text which are then passed on to the linting
+stage. The linting stage enforces the rules defined by the user by seaching for
+and reporting any violations in the set of text segments.</p>
+<p>Currently, two different parsers—and by extension, two different linters—are
+available:</p>
+<ul class="simple">
+<li><p>the <a class="reference internal" href="#linter-plain-text"><span class="std std-ref">plain text linter</span></a> (the default) and</p></li>
+<li><p>the <a class="reference internal" href="#linter-latex"><span class="std std-ref">LaTeX linter</span></a> (selected automatically for files with
+the <code class="docutils literal notranslate"><span class="pre">.tex</span></code> and <code class="docutils literal notranslate"><span class="pre">.sty</span></code> extensions).</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can manually select which linter to use with the <code class="docutils literal notranslate"><span class="pre">--linter</span></code> option.</p>
+</div>
+<div class="section" id="plain-text">
+<span id="linter-plain-text"></span><h2>Plain text<a class="headerlink" href="#plain-text" title="Permalink to this headline">¶</a></h2>
+<p>The plain text parser emits a text segment for each <em>paragraph</em>. Two consecutive
+line breaks is interpreted as a paragraph break. For example, this text:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>A Section Title
+---------------
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta
+odio non efficitur pharetra. Phasellus venenatis accumsan quam, ut
+lacinia magna ornare iaculis.
+
+Integer porttitor vel dolor accumsan sodales. Etiam est sem,
+ullamcorper sit amet viverra eu, tempus sed nisi. Nulla scelerisque
+purus nunc. Sed consectetur nunc in est euismod, aliquet volutpat
+ante luctus. Nam feugiat quam a tortor ultricies tristique.
+</pre></div>
+</div>
+<p>is split up into the following text segments:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>A Section Title
+---------------
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta
+odio non efficitur pharetra. Phasellus venenatis accumsan quam, ut
+lacinia magna ornare iaculis.
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Integer porttitor vel dolor accumsan sodales. Etiam est sem,
+ullamcorper sit amet viverra eu, tempus sed nisi. Nulla scelerisque
+purus nunc. Sed consectetur nunc in est euismod, aliquet volutpat
+ante luctus. Nam feugiat quam a tortor ultricies tristique.
+</pre></div>
+</div>
+<div class="section" id="scopes">
+<span id="linter-plain-text-scope"></span><h3>Scopes<a class="headerlink" href="#scopes" title="Permalink to this headline">¶</a></h3>
+<p>Since a text segment corresponds to a paragraph, that becomes the granularity of
+the plain text linter. Thus, two <em>scopes</em> are available:</p>
+<ul class="simple">
+<li><p><em>text</em>—spanning the entire document and</p></li>
+<li><p><em>paragraph</em>—spanning a paragraph.</p></li>
+</ul>
+<p>Scopes are used when defining <a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">rule files</span></a>.</p>
+</div>
+</div>
+<div class="section" id="latex">
+<span id="linter-latex"></span><h2>LaTeX<a class="headerlink" href="#latex" title="Permalink to this headline">¶</a></h2>
+<p>The LaTeX parser follows the rules of the TeX language; identifying control
+symbols, control words, comments and the text to be typeset. The parser does
+<em>not</em> perform expansion or symbol lookup. However, control symbols <em>are</em>
+replaced with the character that they would generate in the typeset text, i.e.
+<code class="docutils literal notranslate"><span class="pre">\_</span></code> inserts an underscore, <code class="docutils literal notranslate"><span class="pre">\%</span></code> a percent sign, <code class="docutils literal notranslate"><span class="pre">\&amp;</span></code> an ampersand and so
+on.</p>
+<p>The stream of TeX tokens is later interpreted in the LaTeX sense, identifying
+environments, option capture groups and special <a class="reference internal" href="#linter-latex-font-style"><span class="std std-ref">font styling macros</span></a> like <code class="docutils literal notranslate"><span class="pre">\emph</span></code>, <code class="docutils literal notranslate"><span class="pre">\textbf</span></code> etc.</p>
+<p>Just like the plain text parser, the text in the target file is passed on to the
+linting stage in segments. However, these segments—apart from containing only
+the text that will be typset in the document—also contain meta information
+such as the <a class="reference internal" href="#linter-latex-scope"><span class="std std-ref">scope</span></a> and the <a class="reference internal" href="#linter-latex-context"><span class="std std-ref">context</span></a>.</p>
+<p>The <a class="reference internal" href="#linter-latex-examples"><span class="std std-ref">Examples</span></a> section breaks down a few real-world examples
+and demonstrates how the parser works. Lins can be instructed to dump the parser
+output with the <code class="docutils literal notranslate"><span class="pre">--parser-output</span></code> option.</p>
+<div class="section" id="font-styling-macros">
+<span id="linter-latex-font-style"></span><h3>Font Styling Macros<a class="headerlink" href="#font-styling-macros" title="Permalink to this headline">¶</a></h3>
+<p>The font styling macros defined by LaTeX such as <code class="docutils literal notranslate"><span class="pre">\textbf</span></code>, <code class="docutils literal notranslate"><span class="pre">\emph</span></code> are
+handled differently from regular control sequences. Instead of triggering a new
+segment and adding to the scope chain, the text inside is expanded into the text
+of the parent segment. This is done to allow rules to target expressions
+consisting of more than one word where the author has decided to style one of
+the words differently from the others. For example, say we want to warn the
+author about the existence of “bad expression”. This behavior results in</p>
+<div class="highlight-LaTeX notranslate"><div class="highlight"><pre><span></span>This is a sentence containing the <span class="k">\emph</span><span class="nb">{</span>bad<span class="nb">}</span> expression.
+</pre></div>
+</div>
+<p>being emitted as one single segment with the complete sentence as the text to be
+typeset, i.e. <code class="docutils literal notranslate"><span class="pre">\emph</span></code> is discarded—allowing the rule searching for “bad
+expression” to trigger a violation.</p>
+<p>The only exception to this behavior is <code class="docutils literal notranslate"><span class="pre">\texttt</span></code> which is <em>not</em> expanded into
+the text of the parent segment. This is because of the assumption that this
+particular font style is used for identifiers and do not tie in to the
+surronding text in the same way. More importantly, this offers the ability to
+create rules to target identifiers written in snake case or camel case,
+triggering a warning that <code class="docutils literal notranslate"><span class="pre">\texttt</span></code> should be used to typeset this word.</p>
+</div>
+<div class="section" id="linter-latex-scope">
+<span id="id1"></span><h3>Scopes<a class="headerlink" href="#linter-latex-scope" title="Permalink to this headline">¶</a></h3>
+<p>Scopes play a key role in the LaTeX linter and can be leveraged by <a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">rules</span></a> to great effect. The <em>scope</em> is defined as the chain of the
+control sequences and environments enclosing the text segment. Each link in the
+chain is a <em>scope entry</em>. For example,</p>
+<div class="highlight-LaTeX notranslate"><div class="highlight"><pre><span></span><span class="k">\section</span><span class="nb">{</span>The Section Title<span class="nb">}</span>
+</pre></div>
+</div>
+<p>would be emitted as a segment containing “The Section Title” as the text to be
+typeset and <code class="docutils literal notranslate"><span class="pre">section</span></code> (control sequence) as the attached scope.</p>
+<p>The same goes for environments,</p>
+<div class="highlight-LaTeX notranslate"><div class="highlight"><pre><span></span><span class="k">\begin</span><span class="nb">{</span>foo<span class="nb">}</span>
+This is the first
+paragraph.
+
+This is the second paragraph.
+<span class="k">\end</span><span class="nb">{</span>foo<span class="nb">}</span>
+</pre></div>
+</div>
+<p>would be emitted as two segments:</p>
+<ul class="simple">
+<li><p>one containing “This is the first paragraph.”</p></li>
+<li><p>and one containing “This is the second paragraph.”,</p></li>
+</ul>
+<p>both with the scope: <code class="docutils literal notranslate"><span class="pre">foo</span></code> (environment). Segments are emitted when the
+<code class="docutils literal notranslate"><span class="pre">\par</span></code> token (which is implied by two newline characters) is processed <em>and</em>
+when enclosures end. A single newline character inserts a space—all according
+to the rules of TeX.</p>
+<div class="section" id="context">
+<span id="linter-latex-context"></span><h4>Context<a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h4>
+<p>The <em>context</em> is a property attached to a scope entry. It holds 20 characters
+from the <em>raw</em> text leading up to the start of the enclosure. For example, in</p>
+<div class="highlight-LaTeX notranslate"><div class="highlight"><pre><span></span>01234567890123456789<span class="k">\foo</span><span class="nb">{</span>Inside the foo control sequence.<span class="nb">}</span>
+</pre></div>
+</div>
+<p>the context of the <code class="docutils literal notranslate"><span class="pre">\foo</span></code> scope entry would hold the characters
+<code class="docutils literal notranslate"><span class="pre">01234567890123456789</span></code>. This feature may be used to define rules enforcing the
+use of specific TeX source code before a particular control sequence. For
+example, a rule requiring any reference macro like <code class="docutils literal notranslate"><span class="pre">\ref</span></code> or <code class="docutils literal notranslate"><span class="pre">\eqref</span></code> to be
+preceded by the <em>tie</em> character <code class="docutils literal notranslate"><span class="pre">~</span></code> (non-breaking space) is straight-forward
+to define using contexts.</p>
+<div class="highlight-LaTeX notranslate"><div class="highlight"><pre><span></span>This is a reference to Table <span class="k">\ref</span><span class="nb">{</span>tab:my<span class="nb">_</span>table<span class="nb">}</span>.
+</pre></div>
+</div>
+<p>is emitted as two segments:</p>
+<ul>
+<li><p>one containing the text leading up to <code class="docutils literal notranslate"><span class="pre">\ref</span></code> (plus the last <code class="docutils literal notranslate"><span class="pre">.</span></code> character)
+and</p></li>
+<li><p>one containing the text “tab:my_table” where the scope entry for
+<code class="docutils literal notranslate"><span class="pre">\ref</span></code> has the context</p>
+<code>&nbsp;reference to Table&nbsp;</code></li>
+</ul>
+<p>Defining the rule discussed above involves just specifying <code class="docutils literal notranslate"><span class="pre">(?&lt;!~)$</span></code> as the
+value for the <code class="docutils literal notranslate"><span class="pre">before</span></code> field for a <code class="docutils literal notranslate"><span class="pre">\ref</span></code> scope entry in the <a class="reference internal" href="rules.html#rule-latex"><span class="std std-ref">LaTeX
+section</span></a> of the rule file.</p>
+</div>
+</div>
+<div class="section" id="examples">
+<span id="linter-latex-examples"></span><h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>This section presents a few real-world examples of rules specific to the LaTeX
+linter. Refer to the section on <a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">rule files</span></a> for documentation
+of the syntax.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Many of these examples exists as rule files in the <a class="reference external" href="https://github.com/sthenic/lins/tree/master/rules/tex">rules/tex</a> directory in the
+source repository.</p>
+</div>
+<p>Check that a <code class="docutils literal notranslate"><span class="pre">\ref</span></code> contains a proper label prefix:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Unknown</span><span class="nv"> </span><span class="s">\\ref</span><span class="nv"> </span><span class="s">label</span><span class="nv"> </span><span class="s">prefix</span><span class="nv"> </span><span class="s">&#39;$1&#39;.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">latex</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ref</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">^(?!fig:|tab:|sec:|ch:|itm:|lst:|alg:|app:)\w+</span>
+</pre></div>
+</div>
+<p>Check that an <code class="docutils literal notranslate"><span class="pre">\eqref</span></code> contains a proper label prefix:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Unknown</span><span class="nv"> </span><span class="s">\\eqref</span><span class="nv"> </span><span class="s">label</span><span class="nv"> </span><span class="s">prefix</span><span class="nv"> </span><span class="s">&#39;$1&#39;.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">latex</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">eqref</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">^(?!eq:)\w+</span>
+</pre></div>
+</div>
+<p>Check that <code class="docutils literal notranslate"><span class="pre">\ref</span></code> is not used to reference an equation:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Use</span><span class="nv"> </span><span class="s">\\eqref</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">reference</span><span class="nv"> </span><span class="s">equations.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">latex</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ref</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">^eq:\w+</span>
+</pre></div>
+</div>
+<p>Check that a <code class="docutils literal notranslate"><span class="pre">\ref</span></code> to a figure is preceded by <code class="docutils literal notranslate"><span class="pre">Fig.</span></code> or <code class="docutils literal notranslate"><span class="pre">Figs.</span></code> (IEEE
+reference styling):</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Use</span><span class="nv"> </span><span class="s">&#39;Fig.&#39;</span><span class="nv"> </span><span class="s">or</span><span class="nv"> </span><span class="s">&#39;Figs.&#39;.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">latex</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ref</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">before</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;!Fig\.|Figs\.)~$</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="s">&#39;fig:&#39;</span>
+</pre></div>
+</div>
+<p>Enforce the rule that a caption to e.g. a figure or a table should end with a
+full stop—making it more likely that the author writes a complete sentence:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;A</span><span class="nv"> </span><span class="s">caption</span><span class="nv"> </span><span class="s">should</span><span class="nv"> </span><span class="s">end</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">full</span><span class="nv"> </span><span class="s">stop</span><span class="nv"> </span><span class="s">&#39;.&#39;.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">latex</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">caption</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">descend</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;!\.)$</span>
+</pre></div>
+</div>
+<p>Enforce the rule that a caption should be longer than five words:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;A</span><span class="nv"> </span><span class="s">caption</span><span class="nv"> </span><span class="s">should</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">full</span><span class="nv"> </span><span class="s">sentence</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">more</span><span class="nv"> </span><span class="s">than</span><span class="nv"> </span><span class="s">five</span><span class="nv"> </span><span class="s">words.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">latex</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">caption</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">before</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;!\.)$</span>
+    <span class="nt">descend</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">^(\b\w+[.!?]?\s*){0,5}$</span>
+</pre></div>
+</div>
+<p>Warn the user when there are annotations left in the document source code:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">message</span><span class="p">:</span> <span class="s">&quot;&#39;$1&#39;</span><span class="nv"> </span><span class="s">left</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">text.&quot;</span>
+<span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">warning</span>
+<span class="nt">scope</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">comment</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">FIXME</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">TODO</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">NOTE</span>
+</pre></div>
+</div>
+<p>Enforce typographically correct quotation marks (single):</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Unexpected</span><span class="nv"> </span><span class="s">quotation</span><span class="nv"> </span><span class="s">mark,</span><span class="nv"> </span><span class="s">consider</span><span class="nv"> </span><span class="s">using</span><span class="nv"> </span><span class="s">`$1&#39;</span><span class="nv"> </span><span class="s">or</span><span class="nv"> </span><span class="s">using</span><span class="nv"> </span><span class="s">an</span><span class="nv"> </span><span class="s">emphasis</span><span class="nv"> </span><span class="s">macro,</span><span class="nv"> </span><span class="s">e.g.</span><span class="nv"> </span><span class="s">\\emph</span><span class="nv"> </span><span class="s">or</span><span class="nv"> </span><span class="s">\\texttt.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">warning</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;=\s&#39;)(\w.*?\b)(?=`|&#39;|&quot;|”)</span>
+  <span class="c1"># Check for correct start but incorrect end.</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;=\s`)(\w.*?\b)(?=`|&quot;|”|&#39;&#39;)</span>
+</pre></div>
+</div>
+<p>Enforce typographically correct quotation marks (double):</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Unexpected</span><span class="nv"> </span><span class="s">quotation</span><span class="nv"> </span><span class="s">mark,</span><span class="nv"> </span><span class="s">consider</span><span class="nv"> </span><span class="s">using</span><span class="nv"> </span><span class="s">``$1&#39;&#39;</span><span class="nv"> </span><span class="s">or</span><span class="nv"> </span><span class="s">using</span><span class="nv"> </span><span class="s">an</span><span class="nv"> </span><span class="s">emphasis</span><span class="nv"> </span><span class="s">macro,</span><span class="nv"> </span><span class="s">e.g.</span><span class="nv"> </span><span class="s">\\emph</span><span class="nv"> </span><span class="s">or</span><span class="nv"> </span><span class="s">\\texttt.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">warning</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;=&quot;|”|&#39;&#39;)(\w.*?\b)(?=&quot;|&#39;|”|`)</span>
+  <span class="c1"># Check for correct start but incorrect end.</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;=``)(\w.*?\b)(?=&quot;|”|`|&#39;\s)</span>
+</pre></div>
+</div>
+<p>Check for camel case identifiers inside the <code class="docutils literal notranslate"><span class="pre">\texttt</span></code> control sequence and
+suggest adding two parentheses:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Add</span><span class="nv"> </span><span class="s">two</span><span class="nv"> </span><span class="s">parentheses</span><span class="nv"> </span><span class="s">&#39;()&#39;</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">end</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">function</span><span class="nv"> </span><span class="s">&#39;$1&#39;.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">latex</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">texttt</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="s">&#39;(?&lt;!:|\/|\\)([a-z]*)([A-Z]+[a-z0-9][A-za-z0-9]*){2,}+(?!\/)(?!\()&#39;</span>
+</pre></div>
+</div>
+<p>Check for identifiers that should be typeset using the TeX typewriter font, i.e.
+enclosed in <code class="docutils literal notranslate"><span class="pre">\texttt</span></code>:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Use</span><span class="nv"> </span><span class="s">\\texttt</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">typeset</span><span class="nv"> </span><span class="s">&#39;$1&#39;.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">nonword</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+<span class="nt">latex</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">document</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">environment</span>
+    <span class="nt">logic</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">and</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">texttt</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">logic</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">not</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">href</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">logic</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">not</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cite</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">logic</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">not</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">lstlisting</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">environment</span>
+    <span class="nt">logic</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">not</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">includegraphics</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">logic</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">not</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">input</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">logic</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">not</span>
+<span class="nt">tokens</span><span class="p">:</span>
+  <span class="c1"># Pascal &amp; camel case identifiers, except when preceded by &#39;:&#39;, &#39;/&#39; or &#39;\&#39; (paths).</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;!:|\/|\\)([a-z]*)([A-Z]+[a-z0-9][A-za-z0-9]*){2,}</span>
+  <span class="c1"># Snake case identifiers, except when preceded by &#39;:&#39;, &#39;/&#39; or &#39;\&#39; (paths).</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;!:|\/|\\)\b[a-z][a-z0-9]+(_[a-z0-9]+){1,}\b</span>
+  <span class="c1"># Filenames</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">\b\w{3,}\.[a-z]+\b</span>
+<span class="nt">exceptions</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">CentOS</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">OpenSuse</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2019 Marcus Eriksson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_source/linters.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

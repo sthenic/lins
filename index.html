@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Introduction &#8212; Lins 0.6.1
+ documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="_source/installation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="#">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A lightweight, extensible linter for prose.</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_source/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_source/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_source/linters.html">Linters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_source/rules.html">Rules</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="_source/installation.html" title="next chapter">Installation</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>Lins is a lightweight, extensible linter for prose—specifically developed with
+LaTeX in mind. The tool is written in <a class="reference external" href="https://nim-lang.org">Nim</a> and inspired by <a class="reference external" href="https://github.com/errata-ai/vale">Vale</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The source code may be found in the project’s <a class="reference external" href="https://github.com/sthenic/lins">Github repository</a>.</p>
+</div>
+<p>This documentation is generated with <a class="reference external" href="http://www.sphinx-doc.org/">Sphinx</a> uses the <a class="reference external" href="https://github.com/bitprophet/alabaster/">Alabaster</a> theme.</p>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Full Unicode support</p></li>
+<li><p>Integrated support for <a class="reference internal" href="_source/linters.html#linter-latex"><span class="std std-ref">LaTeX</span></a> (plain text is also supported)</p></li>
+<li><p>Define <a class="reference internal" href="_source/rules.html#lins-rules"><span class="std std-ref">rules</span></a> using <a class="reference external" href="https://yaml.org/">YAML</a></p></li>
+<li><p>Define <a class="reference internal" href="_source/configuration.html#cfg-styles"><span class="std std-ref">styles</span></a> from a collection of rules</p></li>
+</ul>
+</div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<p>The documentation is organized into the following sections:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_source/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_source/installation.html#linux">Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/installation.html#macos">macOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/installation.html#windows">Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_source/usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_source/usage.html#pattern-matching">Pattern Matching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/usage.html#command-line-interface">Command Line Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_source/configuration.html">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_source/configuration.html#configuration-file">Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/configuration.html#rule-directories">Rule Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/configuration.html#styles">Styles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/configuration.html#environment-variables">Environment Variables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_source/linters.html">Linters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_source/linters.html#plain-text">Plain text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/linters.html#latex">LaTeX</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_source/rules.html">Rules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#severity-levels">Severity Levels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#message-strings">Message Strings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#scopes">Scopes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#exceptions">Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#linter">Linter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#rule-latex">LaTeX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#existence">Existence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#substitution">Substitution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#occurrence">Occurrence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#repetition">Repetition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#consistency">Consistency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#conditional">Conditional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_source/rules.html#definition">Definition</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="reporting-issues">
+<h2>Reporting Issues<a class="headerlink" href="#reporting-issues" title="Permalink to this headline">¶</a></h2>
+<p>If you discover a bug or what you believe is unintended behavior, please submit
+an issue on the <a class="reference external" href="https://github.com/sthenic/lins/issues">issue board</a>. A minimal working example and a short
+description of the context is appreciated and goes a long way towards being able
+to fix the problem quickly.</p>
+</div>
+<div class="section" id="roadmap">
+<h2>Roadmap<a class="headerlink" href="#roadmap" title="Permalink to this headline">¶</a></h2>
+<p>Have a look at the project’s upcoming <a class="reference external" href="https://github.com/sthenic/lins/milestones">milestones</a> to see where we’re headed.</p>
+<p>Additionally, if you have a feature you would like to see added to the tool or
+perhaps an enhancement of an existing feature, please register an issue on the
+<a class="reference external" href="https://github.com/sthenic/lins/issues">issue board</a>.</p>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>Lins is released under the <a class="reference external" href="https://github.com/sthenic/lins/blob/master/LICENSE">MIT license</a>.</p>
+</div>
+<div class="section" id="third-party-dependencies">
+<h2>Third-party Dependencies<a class="headerlink" href="#third-party-dependencies" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/nim-lang/Nim">Nim’s standard library</a> (<a class="reference external" href="https://github.com/nim-lang/Nim/blob/master/copying.txt">LICENSE</a>)</p></li>
+<li><p><a class="reference external" href="https://github.com/flyx/NimYAML">NimYAML</a> (<a class="reference external" href="https://github.com/flyx/NimYAML/blob/master/copying.txt">LICENSE</a>)</p></li>
+<li><p><a class="reference external" href="http://pcre.sourceforge.net">PCRE</a> (<a class="reference external" href="http://pcre.sourceforge.net/license.txt">LICENSE</a>)</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2019 Marcus Eriksson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

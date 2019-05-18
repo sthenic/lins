@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Usage &#8212; Lins 0.6.1
+ documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A lightweight, extensible linter for prose.</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pattern-matching">Pattern Matching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#command-line-interface">Command Line Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linters.html">Linters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rules.html">Rules</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
+      <li>Next: <a href="configuration.html" title="next chapter">Configuration</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="usage">
+<span id="lins-usage"></span><h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>Lins is a command-line tool—meaning that most of the time, the user will
+interface with it through a terminal session. Linting a text file involves
+invoking Lins with the path to one or several target files as input arguments.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ lins my_file.txt
+</pre></div>
+</div>
+<p>The input file has to be encoded in UTF-8 (of which ASCII is a subset) and not
+contain anything other than the target text. Files from other word processing
+applications often contain, apart from the text itself, additional data specific
+to that tool. These types of files are not supported.</p>
+<div class="section" id="pattern-matching">
+<h2>Pattern Matching<a class="headerlink" href="#pattern-matching" title="Permalink to this headline">¶</a></h2>
+<p>Selecting target files based on a pattern is supported. However, the extent of
+this support is OS-dependent. The <code class="docutils literal notranslate"><span class="pre">*.ext</span></code> notation is always supported. POSIX
+systems use the <code class="docutils literal notranslate"><span class="pre">glob</span></code> call which enables wildcarding directories. For example,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ lins **/*.txt
+</pre></div>
+</div>
+<p>descends one level into every directory in the current working directory and
+grabs every file with the <code class="docutils literal notranslate"><span class="pre">.txt</span></code> extension.</p>
+</div>
+<div class="section" id="command-line-interface">
+<h2>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>usage:
+  lins [OPTIONS] ARGUMENTS
+
+
+arguments:
+  file [file [file ...]]    Input file(s) to lint. To lint several files,
+                            separate them by whitespace. If no files are
+                            specified, piped input from stdin is assumed.
+
+                            Pattern matching is supported but the extent of this
+                            support is OS-dependent. The &quot;*.ext&quot; notation is
+                            always supported. The glob call is used on POSIX
+                            systems.
+
+
+options:
+  -h, --help                Print this help message and exit.
+  -v, --version             Print the version information and exit.
+
+  --col=COL                 Specify the column index of the first character
+                            in the input data. Default value: 1. See also the
+                            &#39;line&#39; option.
+
+  --line=LINE               Specify the line of the first character in the input
+                            data. Default value: 1. See also the &#39;col&#39; option.
+
+  --linter=LINTER           Set the linter selection mode. Valid values are:
+                              - &#39;auto&#39;: Choose linter based on file extensions.
+                              - &#39;plain&#39;: Choose the plain text linter.
+                              - &#39;latex&#39;: Choose the LaTeX linter.
+                            The default value is &#39;auto&#39;.
+
+  --list                    List available styles and current rule set.
+
+  --minimal                 Enable minimal output mode. All output except the
+                            violation information is suppressed.
+
+  --no-cfg                  Don&#39;t look for a configuration file.
+
+  --no-color                Don&#39;t color the output. Suppresses the ANSI escape
+                            sequences on UNIX.
+
+  --no-default              Don&#39;t use a default style (if defined in the
+                            configuration file).
+
+  --rule=RULE               Specify a rule set by name. The rule set will have
+                            to be defined in the configuration file.
+
+  --rule-dir=RULE_DIR       Specify a root directory to traverse in search of
+                            rule files.
+
+  --severity=SEVERITY       Set the severity threshold. Only violations reaching
+                            this level are printed. For example, &#39;warning&#39; would
+                            print both errors and warnings but not suggestions.
+                            Valid values are &#39;error&#39;, &#39;warning&#39; and
+                            &#39;suggestion&#39;.
+
+  --severity-exit           Enable exit status depending on the highest severity
+                            level of any rule violation.
+                              - ELINTERROR: 3
+                              - ELINTWARNING: 2
+                              - ELINGSUGGESTION: 1
+                              - ESUCCESS: 0
+                            Without this option, only values 0, 3 and negative
+                            values are possible. Warnings and suggestions will
+                            exit with status 0.
+
+  --style=STYLE             Specify which style to use for linting. Styles
+                            are defined in the configuration file.
+
+debug options:
+  --parser-output=FILENAME  Write the output from the parser to the specified
+                            file.
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2019 Marcus Eriksson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_source/usage.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

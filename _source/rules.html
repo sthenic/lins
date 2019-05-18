@@ -1,0 +1,568 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Rules &#8212; Lins 0.6.1
+ documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Linters" href="linters.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A lightweight, extensible linter for prose.</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linters.html">Linters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Rules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#severity-levels">Severity Levels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#message-strings">Message Strings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scopes">Scopes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#exceptions">Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linter">Linter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rule-latex">LaTeX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#existence">Existence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#substitution">Substitution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#occurrence">Occurrence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#repetition">Repetition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#consistency">Consistency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conditional">Conditional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#definition">Definition</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="linters.html" title="previous chapter">Linters</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="rules">
+<span id="lins-rules"></span><h1>Rules<a class="headerlink" href="#rules" title="Permalink to this headline">¶</a></h1>
+<p>Rules are specified in <em>rule files</em> using <a class="reference external" href="https://yaml.org/">YAML</a>. Each file may define one rule
+at most. There are seven <em>rule types</em> which determine the general
+characteristics of the performed check and any user-defined rule must be based
+on one of these types.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A rule is <em>violated</em> if the condition it defines matches at any point in the
+linted text.</p>
+</div>
+<div class="section" id="severity-levels">
+<span id="rule-severity-levels"></span><h2>Severity Levels<a class="headerlink" href="#severity-levels" title="Permalink to this headline">¶</a></h2>
+<p>There are three severity levels: <code class="docutils literal notranslate"><span class="pre">error</span></code>, <code class="docutils literal notranslate"><span class="pre">warning</span></code> and <code class="docutils literal notranslate"><span class="pre">suggestion</span></code>. You
+may set up a threshold to filter the output and suppress undesired violations
+using the <code class="docutils literal notranslate"><span class="pre">--severity</span></code> option. By default, the threshold is set to
+<code class="docutils literal notranslate"><span class="pre">suggestion</span></code> which provides full output. If instead the severity is lowered to
+<code class="docutils literal notranslate"><span class="pre">warning</span></code>, this would suppress suggestions but still display errors and
+warnings.</p>
+</div>
+<div class="section" id="message-strings">
+<span id="rule-message-strings"></span><h2>Message Strings<a class="headerlink" href="#message-strings" title="Permalink to this headline">¶</a></h2>
+<p>When a rule is violated, a <em>message</em> is displayed providing the user with
+information about the matching text. The message string is defined in the rule
+file together with the other parameters and may have <em>static</em> and <em>dynamic</em>
+content. The dynamic content is controlled by <em>format specifiers</em> such as <code class="docutils literal notranslate"><span class="pre">$1</span></code>
+and <code class="docutils literal notranslate"><span class="pre">$2</span></code>. These entries indicate where to insert the match’s dynamic content.
+Precisely what constitutes dynamic content depends on the rule type but a
+common field is the matching text. Consider the following string,</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Please remove &#39;$1&#39;.
+</pre></div>
+</div>
+<p>If the rule matches the word ‘foo’, the message presented to the user will be</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Please remove &#39;foo&#39;.
+</pre></div>
+</div>
+<p>The remaining sections will demonstrate the use of message strings in the
+context of each rule type.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Strings <em>without</em> quotation marks and strings enclosed in <em>single</em> quotation
+marks (<code class="docutils literal notranslate"><span class="pre">'</span></code>) are interpreted literally, i.e. <code class="docutils literal notranslate"><span class="pre">\n</span></code> will print the two
+characters <code class="docutils literal notranslate"><span class="pre">\</span></code> and <code class="docutils literal notranslate"><span class="pre">n</span></code>. Strings enclosed in <em>double</em> quotation marks
+(<code class="docutils literal notranslate"><span class="pre">&quot;</span></code>) will interpret the contents using escape sequences.</p>
+</div>
+</div>
+<div class="section" id="scopes">
+<span id="rule-scope"></span><h2>Scopes<a class="headerlink" href="#scopes" title="Permalink to this headline">¶</a></h2>
+<p>A rule may define a <code class="docutils literal notranslate"><span class="pre">scope</span></code> section to specify that the rule should only be
+enforced in certain parts of the text. The section expects a list of scope
+<em>identifiers</em> (as strings), and the available identifiers and their meaning
+depends on the linter. Identifiers unknown to the active linter have no effect:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">scope</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">paragraph</span> <span class="c1"># Only used by the plain text linter.</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">comment</span> <span class="c1"># Only used by the LaTeX linter.</span>
+</pre></div>
+</div>
+<p>The sections below define the scope identifiers known to each linter.</p>
+<div class="section" id="plain-text">
+<h3>Plain text<a class="headerlink" href="#plain-text" title="Permalink to this headline">¶</a></h3>
+<table class="docutils align-center">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 78%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Label</p></th>
+<th class="head"><p>Target</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">text</span></code></p></td>
+<td><p>Entire document</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">paragraph</span></code></p></td>
+<td><p>Each paragraph
+(see the <a class="reference internal" href="#rule-occurrence"><span class="std std-ref">occurrence</span></a> rule)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="latex">
+<h3>LaTeX<a class="headerlink" href="#latex" title="Permalink to this headline">¶</a></h3>
+<p>There is a rule file <a class="reference internal" href="#rule-latex"><span class="std std-ref">section</span></a> specific to the LaTeX linter.
+The identifiers in the table below can be considered shorthand for the more
+general way of specifying scopes in a LaTeX document.</p>
+<table class="docutils align-center">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 82%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Label</p></th>
+<th class="head"><p>Target</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">text</span></code></p></td>
+<td><p>Text between <code class="docutils literal notranslate"><span class="pre">\begin{document}</span></code> and <code class="docutils literal notranslate"><span class="pre">\end{document}</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">comment</span></code></p></td>
+<td><p>Comments, i.e. text starting from the character <code class="docutils literal notranslate"><span class="pre">%</span></code> to
+the end of the line.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">math</span></code></p></td>
+<td><p>Math environments:</p>
+<ul class="simple">
+<li><p>Inline math (<code class="docutils literal notranslate"><span class="pre">$</span></code> or <code class="docutils literal notranslate"><span class="pre">\(</span></code>, <code class="docutils literal notranslate"><span class="pre">\)</span></code>)</p></li>
+<li><p>Displayed math (<code class="docutils literal notranslate"><span class="pre">$$</span></code> or <code class="docutils literal notranslate"><span class="pre">\[</span></code>, <code class="docutils literal notranslate"><span class="pre">\]</span></code>)</p></li>
+<li><p>The environments <code class="docutils literal notranslate"><span class="pre">equation</span></code> and <code class="docutils literal notranslate"><span class="pre">equation*</span></code></p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">title</span></code></p></td>
+<td><p>Control sequences used to define section titles:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">\section</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">\subsection</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">\subsubsection</span></code></p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="exceptions">
+<span id="rule-exception"></span><h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<p>A rule may define an <code class="docutils literal notranslate"><span class="pre">exceptions</span></code> section, listing exceptions to the rule. The
+section contents should be a list of strings and a minimum of one entry is
+required. The list entries may be regular expressions.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">exceptions</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">this is fine</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">this too</span>
+</pre></div>
+</div>
+<p>Using a regular expression:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">exceptions</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">this (is fine|too)</span>
+</pre></div>
+</div>
+<p>If a rule matches at any point in the linted text, the match is checked against
+the exceptions before a violation is generated.</p>
+</div>
+<div class="section" id="linter">
+<span id="rule-linter"></span><h2>Linter<a class="headerlink" href="#linter" title="Permalink to this headline">¶</a></h2>
+<p>A rule may define a <code class="docutils literal notranslate"><span class="pre">linter</span></code> section to specify that the rule should only be
+enabled when the target linter is being used. Currently, there are two linters
+available, identified as <code class="docutils literal notranslate"><span class="pre">plain</span></code> and <code class="docutils literal notranslate"><span class="pre">latex</span></code>. The <code class="docutils literal notranslate"><span class="pre">linter</span></code> section accepts
+a list of these identifiers. For example,</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latex</span>
+</pre></div>
+</div>
+<p>would cause the rule to only be used by the LaTeX linter. Conversely,</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">linter</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">plain</span>
+</pre></div>
+</div>
+<p>would only enable the rule when the plain text linter is used. By default, the
+rule is used by all the linters.</p>
+</div>
+<div class="section" id="rule-latex">
+<span id="id1"></span><h2>LaTeX<a class="headerlink" href="#rule-latex" title="Permalink to this headline">¶</a></h2>
+<p>Each rule may define a <code class="docutils literal notranslate"><span class="pre">latex</span></code> section to specify in which context the rule
+should be enforced when the LaTeX linter is used. The section consists of a list
+of <em>scope entries</em> where each entry accepts the following fields:</p>
+<table class="docutils align-center">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 64%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Label</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">name</span></code></p></td>
+<td><p>The name of the document element to match.
+Cannot be a regular expression.</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td><p>The type of document element to match:
+<code class="docutils literal notranslate"><span class="pre">control</span> <span class="pre">sequence</span></code> or <code class="docutils literal notranslate"><span class="pre">environment</span></code>.</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">before</span></code></p></td>
+<td><p>Regular expression with access to the <em>raw</em>
+text <em>before</em> the scope entry
+(see <a class="reference internal" href="linters.html#linter-latex-context"><span class="std std-ref">contexts</span></a>).
+The text is limited to <code class="docutils literal notranslate"><span class="pre">20</span></code> characters.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;empty&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">descend</span></code></p></td>
+<td><p>A scope entry where <code class="docutils literal notranslate"><span class="pre">descend</span></code> is
+<code class="docutils literal notranslate"><span class="pre">false</span></code> implies that the scope is not
+allowed to descend beyond this level.</p>
+<p>For example, we could define a rule saying
+that a <code class="docutils literal notranslate"><span class="pre">\caption</span></code> should contain more
+than five words. But unless we set  the
+<code class="docutils literal notranslate"><span class="pre">descend</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code> for the
+<code class="docutils literal notranslate"><span class="pre">\caption</span></code> scope entry—the contents of
+any nested environments or control
+sequences would trigger the rule as well.</p>
+</td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">logic</span></code></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">logic</span></code> field specifies how a scope
+entry interacts with the other entries in
+determining whether or not the rule should
+be enforced. Valid values are <code class="docutils literal notranslate"><span class="pre">or</span></code>,
+<code class="docutils literal notranslate"><span class="pre">and</span></code> and <code class="docutils literal notranslate"><span class="pre">not</span></code>.</p>
+<p>Whether to enforce the rule or not is
+determined according to:</p>
+<p><code class="docutils literal notranslate"><span class="pre">(O</span> <span class="pre">or</span> <span class="pre">A)</span> <span class="pre">and</span> <span class="pre">not</span> <span class="pre">N</span></code></p>
+<p>where</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">O</span></code> represents all scope entries with
+the <code class="docutils literal notranslate"><span class="pre">or</span></code> logic reduced to a single
+truth value with the <code class="docutils literal notranslate"><span class="pre">or</span></code> operation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span></code> represents all scope entries with
+the <code class="docutils literal notranslate"><span class="pre">and</span></code> logic reduced to a single
+truth value with the <code class="docutils literal notranslate"><span class="pre">and</span></code> operation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code> represents all scope entries with
+the <code class="docutils literal notranslate"><span class="pre">not</span></code> logic reduced to a single
+truth value with the <code class="docutils literal notranslate"><span class="pre">or</span></code> operation.</p></li>
+</ul>
+<p>As a special case: if the list only
+consists of entries marked with <code class="docutils literal notranslate"><span class="pre">not</span></code>,
+then <code class="docutils literal notranslate"><span class="pre">(O</span> <span class="pre">or</span> <span class="pre">A)</span></code> evaluates to <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</td>
+<td><p><code class="docutils literal notranslate"><span class="pre">or</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Fields with default values are optional.</p>
+</div>
+<p>Let us look at an example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">latex</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">before</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">required\s$</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">bar</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">environment</span>
+    <span class="nt">logic</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">and</span>
+  <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">baz</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
+    <span class="nt">logic</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">and</span>
+</pre></div>
+</div>
+<p>The scope defined by the section above will enforce the rule for</p>
+<ul>
+<li><p>any text inside the <code class="docutils literal notranslate"><span class="pre">\foo</span></code> control sequence, provided it is preceded by the
+string “required” followed by a space character (note the <code class="docutils literal notranslate"><span class="pre">$</span></code> character
+anchoring the regular expression to the end of the text), i.e.</p>
+<div class="highlight-LaTeX notranslate"><div class="highlight"><pre><span></span>Some introductory text is required <span class="k">\foo</span><span class="nb">{</span>to cause the rule to be
+enforced in here<span class="nb">}{</span>and here too<span class="nb">}</span> but <span class="k">\foo</span><span class="nb">{</span>the rule is not enforced
+in here<span class="nb">}</span>.
+</pre></div>
+</div>
+</li>
+<li><p>any text inside <em>both</em> the <code class="docutils literal notranslate"><span class="pre">bar</span></code> environment and the <code class="docutils literal notranslate"><span class="pre">baz</span></code> control
+sequence, i.e.</p>
+<div class="highlight-LaTeX notranslate"><div class="highlight"><pre><span></span>The rule will <span class="k">\baz</span><span class="nb">{</span>not be enforced here<span class="nb">}</span>
+<span class="k">\begin</span><span class="nb">{</span>bar<span class="nb">}</span>
+and not here either.
+<span class="k">\baz</span><span class="nb">{</span>However, this text will be targeted by the rule.<span class="nb">}</span>
+<span class="k">\end</span><span class="nb">{</span>bar<span class="nb">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Additional examples of rules specific to the LaTeX linter can be found
+<a class="reference internal" href="linters.html#linter-latex-examples"><span class="std std-ref">here</span></a>.</p>
+</div>
+</div>
+<div class="section" id="existence">
+<span id="rule-existence"></span><h2>Existence<a class="headerlink" href="#existence" title="Permalink to this headline">¶</a></h2>
+<p>The <em>existence</em> rule checks for the presence of any of its <code class="docutils literal notranslate"><span class="pre">tokens</span></code> and
+reports a violation if there’s a match in the linted text. The <code class="docutils literal notranslate"><span class="pre">message</span></code>
+string will be supplied the matching text as a replacement field.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Consider</span><span class="nv"> </span><span class="s">removing</span><span class="nv"> </span><span class="s">&#39;$1&#39;.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">warning</span>
+<span class="nt">tokens</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">foo</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">bar</span>
+</pre></div>
+</div>
+<p>The rule definition above translates to the regular expression
+<code class="docutils literal notranslate"><span class="pre">(?i)\b(foo|bar)\b</span></code>, where <code class="docutils literal notranslate"><span class="pre">\b</span></code> indicates a <em>word boundary</em> and <code class="docutils literal notranslate"><span class="pre">(?i)</span></code> is
+the <em>case insensitivity</em> modifier. The <code class="docutils literal notranslate"><span class="pre">nonword</span></code> field (boolean) may be
+specified to instead match anywhere in the text.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">raw</span></code> field may be used to gain access to the regular expression directly
+whereby any listed item is prepended (in the order they appear) to the final
+expression. Consider the following example which defines a rule to catch a few
+uncomparables.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;&#39;$1&#39;</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">comparable.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">raw</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">\b(?:most|more|less|least|very)\b\s*</span>
+<span class="nt">tokens</span><span class="p">:</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">absolute</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">adequate</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">complete</span>
+<span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">unique</span>
+</pre></div>
+</div>
+<p>Here, the resulting regular expression will be</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>(?i)\b(?:most|more|less|least|very)\b\s*\b(absolute|adequate|complete|unique)\b
+</pre></div>
+</div>
+<p>which will catch occurrences of “very unique”, “less complete” etc.</p>
+</div>
+<div class="section" id="substitution">
+<span id="rule-substitution"></span><h2>Substitution<a class="headerlink" href="#substitution" title="Permalink to this headline">¶</a></h2>
+<p>The <em>substitution</em> rule checks for the presence of any of the keys defined in
+its key-value list <code class="docutils literal notranslate"><span class="pre">swap</span></code> and reports a violation if there’s a match in the
+linted text. The <code class="docutils literal notranslate"><span class="pre">message</span></code> string will be provided the <em>key</em> and <em>value</em> of
+the matching <code class="docutils literal notranslate"><span class="pre">swap</span></code> entry as format specifiers <code class="docutils literal notranslate"><span class="pre">$1</span></code> and <code class="docutils literal notranslate"><span class="pre">$2</span></code>,
+respectively.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">substitution</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Prefer</span><span class="nv"> </span><span class="s">&#39;$2&#39;</span><span class="nv"> </span><span class="s">over</span><span class="nv"> </span><span class="s">&#39;$1&#39;.&quot;</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">warning</span>
+<span class="nt">swap</span><span class="p">:</span>
+  <span class="nt">catch on fire</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">catch fire</span>
+  <span class="s">&#39;(cell</span><span class="nv"> </span><span class="s">phone|cell-phone)&#39;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">cellphone</span>
+</pre></div>
+</div>
+<p>Keys are interpreted as regular expressions and <em>word boundaries</em> (<code class="docutils literal notranslate"><span class="pre">\b</span></code>) are
+added unless the <code class="docutils literal notranslate"><span class="pre">nonword</span></code> field is set to <code class="docutils literal notranslate"><span class="pre">true</span></code>. If the regular expression
+defines multiple capture groups, the <em>first</em> group will be used for the message
+replacement text. Non-capturing groups <code class="docutils literal notranslate"><span class="pre">(?:</span></code> may be used to modify the
+behavior as needed.</p>
+<p>Lastly, there is one additional feature to this rule: if the expression given as
+the <em>key</em> matches text which is already equal to the substitution value, the
+violation is ignored. This is needed to write compact key expressions which
+sometimes cover the ‘correct’ case in addition to all error cases. For example,</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>swap:
+  analog[ -]to[ -]digital: analog-to-digital
+</pre></div>
+</div>
+<p>covers all the error combinations with one single regular expression, but also
+covers the correct case. This feature prevents the latter from being reported as
+a violation.</p>
+</div>
+<div class="section" id="occurrence">
+<span id="rule-occurrence"></span><h2>Occurrence<a class="headerlink" href="#occurrence" title="Permalink to this headline">¶</a></h2>
+<p>The <em>occurrence</em> rule enforces a requirement on the maximum/minimum number of
+times a token may/should occur in a particular <a class="reference internal" href="#rule-scope"><span class="std std-ref">scope</span></a>. The
+<code class="docutils literal notranslate"><span class="pre">message</span></code> string for this rule doesn’t accept a format specifier.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">occurrence</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Don&#39;t</span><span class="nv"> </span><span class="s">use</span><span class="nv"> </span><span class="s">&#39;however&#39;</span><span class="nv"> </span><span class="s">more</span><span class="nv"> </span><span class="s">than</span><span class="nv"> </span><span class="s">once</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">one</span><span class="nv"> </span><span class="s">paragraph.&quot;</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">suggestion</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">scope</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">paragraph</span>
+<span class="nt">limit</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">limit_kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">max</span>
+<span class="nt">token</span><span class="p">:</span> <span class="s">&#39;\bHowever\b&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="repetition">
+<span id="rule-repetition"></span><h2>Repetition<a class="headerlink" href="#repetition" title="Permalink to this headline">¶</a></h2>
+<p>The <em>repetition</em> rule checks for repetitions of its tokens. The tokens are
+converted to lowercase if the <code class="docutils literal notranslate"><span class="pre">ignorecase</span></code> field is set to <code class="docutils literal notranslate"><span class="pre">true</span></code>. In
+contrast to the <em>occurrence</em> rule, this rule counts unique matches. That means
+that while the token <code class="docutils literal notranslate"><span class="pre">'\b(\w+)\b'</span></code> will match both ‘foo’ and ‘bar’, a the rule
+is not violated until ‘foo’ or ‘bar’ is repeated again in the target <code class="docutils literal notranslate"><span class="pre">scope</span></code>.
+The matching token is provided as input to the <code class="docutils literal notranslate"><span class="pre">message</span></code> string.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">repetition</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;&#39;$1&#39;</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">repeated.&quot;</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">warning</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">scope</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">paragraph</span>
+<span class="nt">token</span><span class="p">:</span> <span class="s">&#39;\b(\w+)\b&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="consistency">
+<span id="rule-consistency"></span><h2>Consistency<a class="headerlink" href="#consistency" title="Permalink to this headline">¶</a></h2>
+<p>The <em>consistency</em> rule checks for occurrences of either the key or the value
+specified as key-value pairs in its <code class="docutils literal notranslate"><span class="pre">either</span></code> list. For each pair, the earliest
+match in the linted text is assumed to be the preferred version and occurrences
+of its undesired counterpart will generate a rule violation.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">consistency</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Inconsistent</span><span class="nv"> </span><span class="s">spelling</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">&#39;$1&#39;.&quot;</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">scope</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">text</span>
+<span class="nt">either</span><span class="p">:</span>
+  <span class="nt">organize</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">organise</span>
+  <span class="nt">recognize</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">recognise</span>
+  <span class="nt">analog</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">analogue</span>
+</pre></div>
+</div>
+<p>The keys and values may be general regular expressions but unless the
+<code class="docutils literal notranslate"><span class="pre">nonword</span></code> field is set to <code class="docutils literal notranslate"><span class="pre">true</span></code>, word boundary tokens <code class="docutils literal notranslate"><span class="pre">\b</span></code> are added to
+the expression. The <code class="docutils literal notranslate"><span class="pre">message</span></code> string will be supplied the matching text as a
+replacement field.</p>
+<p>We can generalize the example above as:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">consistency</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;Inconsistent</span><span class="nv"> </span><span class="s">spelling</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">&#39;$1&#39;.&quot;</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">error</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">scope</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">text</span>
+<span class="nt">either</span><span class="p">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">(?:\w+)nize</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">(?:\w+)nise</span>
+  <span class="l l-Scalar l-Scalar-Plain">(?:\w+)log</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">(?:\w+)logue</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="conditional">
+<span id="rule-conditional"></span><h2>Conditional<a class="headerlink" href="#conditional" title="Permalink to this headline">¶</a></h2>
+<p>The <em>conditional</em> rule checks that <code class="docutils literal notranslate"><span class="pre">first</span></code> occurs before <code class="docutils literal notranslate"><span class="pre">second</span></code> in the
+given <code class="docutils literal notranslate"><span class="pre">scope</span></code>. In the case of a violation, the match for <code class="docutils literal notranslate"><span class="pre">second</span></code> is
+provided as input to the <code class="docutils literal notranslate"><span class="pre">message</span></code> string.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">conditional</span>
+<span class="nt">message</span><span class="p">:</span> <span class="s">&quot;&#39;$1&#39;</span><span class="nv"> </span><span class="s">found</span><span class="nv"> </span><span class="s">without</span><span class="nv"> </span><span class="s">finding</span><span class="nv"> </span><span class="s">&#39;foo&#39;.&quot;</span>
+<span class="nt">level</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">warning</span>
+<span class="nt">ignorecase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">scope</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">text</span>
+<span class="nt">first</span><span class="p">:</span> <span class="s">&#39;foo&#39;</span>
+<span class="nt">second</span><span class="p">:</span> <span class="s">&#39;(bar|baz)&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="definition">
+<span id="rule-definition"></span><h2>Definition<a class="headerlink" href="#definition" title="Permalink to this headline">¶</a></h2>
+<p>Documentation coming soon.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2019 Marcus Eriksson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_source/rules.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
