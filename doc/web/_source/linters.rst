@@ -115,7 +115,7 @@ Font Styling Macros
 
 The font styling macros defined by LaTeX such as ``\textbf``, ``\emph`` are
 handled differently from regular control sequences. Instead of triggering a new
-segment and adding to the scope chain, the text inside is expanded into the text
+segment and adding to the scope chain, the text within is expanded into the text
 of the parent segment. This is done to allow rules to target expressions
 consisting of more than one word where the author has decided to style one of
 the words differently from the others. For example, say we want to warn the
@@ -167,8 +167,8 @@ The same goes for environments,
 
 would be emitted as two segments:
 
-- one containing "This is the first paragraph."
-- and one containing "This is the second paragraph.",
+- one containing "This is the first paragraph." and
+- one containing "This is the second paragraph.",
 
 both with the scope: ``foo`` (environment). Segments are emitted when the
 ``\par`` token (which is implied by two newline characters) is processed *and*
@@ -305,7 +305,7 @@ reference styling):
 
 
 
-Enforce the rule that a caption to e.g. a figure or a table should end with a
+Enforce the rule that a caption to, e.g. a figure or a table should end with a
 full stop---making it more likely that the author writes a complete sentence:
 
 .. code-block:: YAML
