@@ -80,9 +80,6 @@ proc print_violation*(l: Linter, v: Violation) =
    of ERROR:
       severity_str = "error"
       severity_color = fgRed
-   else:
-      log.abort(LinterValueError, "Unsupported severity level '$1'.",
-                $v.severity)
 
    call_styled_write_line(&" l.{v.position.line:<4}  ",
                           styleBright, severity_color, &"{severity_str:<12}",
@@ -150,8 +147,6 @@ proc lint_segment*[T](l: var Linter, seg: T, rules: seq[Rule]): ViolationCount =
          inc(result.warning)
       of SUGGESTION:
          inc(result.suggestion)
-      else:
-         discard
 
       l.print_violation(v)
 

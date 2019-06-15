@@ -112,5 +112,5 @@ install:
 before_script:
   - export PATH=$HOME/.nimble/bin:$PATH
   - nimble refresh -y
-  - nimble install yaml -y
+  - nimble install yaml@#head -y
   - LINS_VERSION=$(cat VERSION)

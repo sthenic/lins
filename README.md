@@ -1,4 +1,4 @@
-[![NIM](https://img.shields.io/badge/Nim-0.19.6-orange.svg?style=flat-square)](https://nim-lang.org)
+[![NIM](https://img.shields.io/badge/Nim-0.20.0-orange.svg?style=flat-square)](https://nim-lang.org)
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 ![Travis (.org) branch](https://img.shields.io/travis/sthenic/lins/master.svg?style=flat-square)
 

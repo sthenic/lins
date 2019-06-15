@@ -511,7 +511,7 @@ method enforce*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
       try:
          let def = m_def.captures[0]
          let pos = r.calculate_position(seg.line, seg.col,
-                                        m_def.capture_bounds[0].get.a + 1,
+                                        m_def.capture_bounds[0].a + 1,
                                         seg.linebreaks)
 
          if r.definitions.has_key_or_put(def, pos):
@@ -537,7 +537,7 @@ method enforce*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
          let decl = m_decl.captures[0]
          let (line_decl, col_decl) =
             r.calculate_position(seg.line, seg.col,
-                                 m_decl.capture_bounds[0].get.a + 1,
+                                 m_decl.capture_bounds[0].a + 1,
                                  seg.linebreaks)
 
          var is_violated = false
@@ -573,7 +573,7 @@ method enforce*(r: RuleConditional, seg: TextSegment): seq[Violation] =
       try:
          (line_first, col_first) =
             r.calculate_position(seg.line, seg.col,
-                                 m_first.get.capture_bounds[0].get.a + 1,
+                                 m_first.get.capture_bounds[0].a + 1,
                                  seg.linebreaks)
 
          r.first_observed = true

@@ -83,6 +83,9 @@ proc get_context_before(l: TeXLexer, pos: int): string =
 
    var tmp = ""
    for i in countup(1, l.nof_context_chars):
+      if pos - i < 0:
+         break
+
       let c = l.buf[pos - i]
       if c == '\0':
          break
@@ -189,10 +192,9 @@ proc handle_replacement(l: var TeXLexer, pos: int): int =
 
 proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
    var pos = l.bufpos + 1 # Skip '\'
-   var buf = l.buf
    var state = l.state
 
-   case buf[pos]
+   case l.buf[pos]
    of {'\c', '\L', lexbase.EndOfFile}:
       # Empty control sequence, buffer is refilled outside of this function as
       # long as we don't move past the CR/LF character. We also keep the current
@@ -203,8 +205,8 @@ proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
       # If the next character is of category 11, we construct a control
       # word and move to state S.
       tok.token_type = ControlWord
-      while buf[pos] in CATEGORY[11]:
-         add(tok.token, buf[pos])
+      while l.buf[pos] in CATEGORY[11]:
+         add(tok.token, l.buf[pos])
          inc(pos)
          # Handle trio/quartet replacement within the control word.
          pos = handle_replacement(l, pos)
@@ -213,7 +215,7 @@ proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
       # If the next character is of category 10, we construct a control
       # space and move to state S.
       tok.token_type = ControlSymbol
-      add(tok.token, buf[pos])
+      add(tok.token, l.buf[pos])
       inc(pos)
       state = StateS
    else:
@@ -230,7 +232,7 @@ proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
          # since they are often used as environment delimiters.
          tok.token_type = ControlSymbol
          tok.context.after = get_context_after(l, pos)
-         add(tok.token, buf[pos])
+         add(tok.token, l.buf[pos])
          inc(pos)
          state = StateM
 
