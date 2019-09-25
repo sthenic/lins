@@ -113,7 +113,7 @@ output with the ``--parser-output`` option.
 Font Styling Macros
 -------------------
 
-The font styling macros defined by LaTeX such as ``\textbf``, ``\emph`` are
+The font styling macros defined by LaTeX such as ``\textbf`` and ``\emph`` are
 handled differently from regular control sequences. Instead of triggering a new
 segment and adding to the scope chain, the text within is expanded into the text
 of the parent segment. This is done to allow rules to target expressions
