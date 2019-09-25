@@ -1,6 +1,5 @@
 import lexbase
 import streams
-import strutils
 
 # This module implements a plain text lexer converting characters to tokens.
 # In the spirit of TeX, newlines are removed a paragraph is inferred when.

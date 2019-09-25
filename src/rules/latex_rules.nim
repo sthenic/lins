@@ -1,9 +1,6 @@
 import nre
-import strutils
-import tables
 
 import ./rules
-import ../utils/log
 import ../parsers/latex_parser
 
 export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation

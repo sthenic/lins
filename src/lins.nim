@@ -1,15 +1,10 @@
 import times
 import strutils
 import strformat
-import parseopt
-import tables
-import os
-import ospaths
 import terminal
 import streams
 
 import linters/meta_linter
-import rules/rules
 import rules/parser
 import utils/log
 import utils/cfg

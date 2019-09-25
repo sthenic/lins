@@ -1,6 +1,6 @@
 task build, "Compile the application into an executable.":
    withDir("src"):
-      exec("nim c -d:release --multimethods:on --passC:-flto --passL:-s --gc:markAndSweep lins")
+      exec("nim c -d:release --multimethods:on --warning[LockLevel]:off --passC:-flto --passL:-s --gc:markAndSweep lins")
 
    rmFile("lins".toExe)
    mvFile("src/lins".toExe, "lins".toExe)
@@ -36,7 +36,7 @@ task utilstests, "Run the linter test suite":
 
 task buildxwin64, "Compile the application into an executable.":
    withDir("src"):
-      exec("nim c -d:release --os:windows -d:xwin --passC:-flto --passL:-s --gc:markAndSweep lins")
+      exec("nim c -d:release --multimethods:on --warning[LockLevel]:off --os:windows -d:xwin --passC:-flto --passL:-s --gc:markAndSweep lins")
 
    rmFile("lins.exe")
    mvFile("src/lins.exe", "lins.exe")
@@ -45,7 +45,7 @@ task buildxwin64, "Compile the application into an executable.":
 
 task debug, "Compile the application with debugging trace messages active":
    withDir("src"):
-      exec("nim c --multimethods:on lins")
+      exec("nim c --multimethods:on --warning[LockLevel]:off lins")
 
    rmFile("lins".toExe)
    mvFile("src/lins".toExe, "lins".toExe)

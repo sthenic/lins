@@ -1,5 +1,5 @@
 import streams
-import ospaths
+import os
 
 import ./linter
 import ../utils/log

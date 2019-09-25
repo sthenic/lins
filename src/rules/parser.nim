@@ -7,7 +7,6 @@ import strutils
 import strformat
 import sequtils
 import os
-import ospaths
 import nre
 import terminal
 

@@ -2,7 +2,6 @@ import terminal
 import parseopt
 import strutils
 import os
-import ospaths
 
 import ./log
 import ../rules/rules

@@ -1,5 +1,4 @@
 import os
-import ospaths
 import parsecfg
 import strutils
 import streams

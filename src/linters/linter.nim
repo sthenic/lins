@@ -3,7 +3,6 @@ import strformat
 import streams
 import terminal
 import nre
-import sequtils
 import times
 
 import ../utils/log
