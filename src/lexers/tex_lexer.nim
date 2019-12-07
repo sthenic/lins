@@ -108,9 +108,9 @@ proc get_context_after(l: TeXLexer, pos: int): string =
 proc handle_crlf(l: var TeXLexer, pos: int): int =
    # Refill buffer at end-of-line characters. Store the context in case the
    # buffer is refilled completely, i.e. result is 0 leaving this proc.
-   l.context_carry = get_context_before(l, l.bufpos)
-   add(l.context_carry, l.buf[l.bufpos])
-   case l.buf[l.bufpos]
+   l.context_carry = get_context_before(l, pos)
+   add(l.context_carry, l.buf[pos])
+   case l.buf[pos]
    of '\c':
       result = lexbase.handleCR(l, pos)
    of '\L':
