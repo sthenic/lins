@@ -94,12 +94,12 @@ if cli_state.print_list:
 
 # Build the set of active rule files.
 let t_start = cpu_time()
-let lint_rules = get_rules(cfg_state, cli_state)
+var lint_rules = get_rules(cfg_state, cli_state)
 let t_diff_ms = (cpu_time() - t_start) * 1000
 log.info("Parsing rule files took ", fgGreen, styleBright,
          format_float(t_diff_ms, ffDecimal, 1), " ms", resetStyle, ".")
 
-if lint_rules == @[]:
+if len(lint_rules) == 0:
    log.error("No rules specified.")
    quit(ENORULES)
 

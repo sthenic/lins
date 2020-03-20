@@ -37,9 +37,10 @@ template run_test(title, stimuli: string; reference: seq[LaTeXTextSegment],
 proc new*(t: typedesc[LaTeXTextSegment], text: string, line, col: int,
           linebreaks: seq[Linebreak], scope: seq[ScopeEntry],
           do_lint: bool = true, expand: bool = false): LaTeXTextSegment =
-   result = LaTeXTextSegment(text: text, line: line, col: col,
-                             linebreaks: linebreaks, scope: scope,
-                             expand: expand, do_lint: do_lint)
+
+   result = LaTeXTextSegment(
+      base: TextSegment(text: text, line: line, col: col, linebreaks: linebreaks),
+      scope: scope, expand: expand, do_lint: do_lint)
 
 
 proc new*(t: typedesc[ScopeEntry], name: string, kind: ScopeKind,

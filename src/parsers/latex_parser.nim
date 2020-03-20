@@ -44,8 +44,9 @@ type
       delimiter_count: int # Delimiter count
       is_enabled: bool
 
-   LaTeXTextSegment* = object of TextSegment
+   LaTeXTextSegment* = object
       scope*: seq[ScopeEntry]
+      base*: TextSegment
       expand: bool
       do_lint*: bool # TODO: Think of a better name? Maybe 'valid'?
 
@@ -114,7 +115,7 @@ proc init(s: var LaTeXTextSegment) =
    set_len(s.scope, 0)
    s.expand = false
    s.do_lint = true
-   base_parser.init(s)
+   init(s.base)
 
 
 proc init(s: var ScopeEntry) =
@@ -146,20 +147,20 @@ proc close_parser*(p: var LaTeXParser) =
 
 
 proc add_tok(p: var LaTeXParser) =
-   if len(p.seg.text) == 0:
-      p.seg.line = p.tok.line
-      p.seg.col = p.tok.col
+   if len(p.seg.base.text) == 0:
+      p.seg.base.line = p.tok.line
+      p.seg.base.col = p.tok.col
    elif is_valid(p.last_tok) and p.tok.line > p.last_tok.line:
-      add(p.seg.linebreaks, (len(p.seg.text), p.tok.line))
+      add(p.seg.base.linebreaks, (len(p.seg.base.text), p.tok.line))
 
-   add(p.seg.text, p.tok.token)
+   add(p.seg.base.text, p.tok.token)
    p.last_tok = p.tok
 
 
 proc add_seg(p: var LaTeXParser, seg: var LaTeXTextSegment) =
    ## Add a segment to the sequence of completed segments.
    seg.do_lint = p.is_enabled
-   if len(seg.text.strip()) != 0:
+   if len(seg.base.text.strip()) != 0:
       # We skip adding segments with length zero or consisting entirely of
       # whitespace.
       add(p.segs, seg)
@@ -189,10 +190,10 @@ proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool,
 proc is_on_different_lines(x, y: LaTeXTextSegment): bool =
    ## Check if the segment ``y`` starts on a different line from wherever ``x``
    ## has reached.
-   if len(x.linebreaks) != 0:
-      result = y.line > x.linebreaks[^1].line
+   if len(x.base.linebreaks) != 0:
+      result = y.base.line > x.base.linebreaks[^1].line
    else:
-      result = y.line > x.line
+      result = y.base.line > x.base.line
 
 
 proc expand_segment(p: var LaTeXParser, inner: LaTeXTextSegment) =
@@ -204,16 +205,16 @@ proc expand_segment(p: var LaTeXParser, inner: LaTeXTextSegment) =
    # different line from the last recorded line in the outer segment. In that
    # case, we add a linebreak pointing at the first character of the inner
    # segment.
-   let outer_len = len(p.seg.text)
+   let outer_len = len(p.seg.base.text)
    if outer_len == 0:
-      p.seg.line = inner.line
-      p.seg.col = inner.col
+      p.seg.base.line = inner.base.line
+      p.seg.base.col = inner.base.col
    elif is_on_different_lines(p.seg, inner):
-      add(p.seg.linebreaks, (outer_len, inner.line))
+      add(p.seg.base.linebreaks, (outer_len, inner.base.line))
 
-   for lb in inner.linebreaks:
-      add(p.seg.linebreaks, (outer_len + lb.pos, lb.line))
-   add(p.seg.text, inner.text)
+   for lb in inner.base.linebreaks:
+      add(p.seg.base.linebreaks, (outer_len + lb.pos, lb.line))
+   add(p.seg.base.text, inner.base.text)
 
 
 proc end_enclosure(p: var LaTeXParser, context_after: string) =
@@ -455,9 +456,9 @@ proc parse_comment(p: var LaTeXParser) =
       p.is_enabled = false
    else:
       var seg = LaTeXTextSegment()
-      seg.text = p.tok.token
-      seg.col = p.tok.col
-      seg.line = p.tok.line
+      seg.base.text = p.tok.token
+      seg.base.col = p.tok.col
+      seg.base.line = p.tok.line
       seg.scope = @[ScopeEntry(kind: ScopeKind.Comment)]
       add_seg(p, seg)
 

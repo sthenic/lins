@@ -82,7 +82,7 @@ template info*(args: varargs[typed]) =
                              resetStyle, args)
 
 
-template info*(msg: string, args: varargs[string]) =
+template info*(msg: string, args: varargs[string, `$`]) =
    if not quiet_mode:
       let msg_split = wrap_words(format(msg, args), 80, true).split_lines()
       call_styled_write_line(styleBright, INFO_COLOR, "INFO:    ",
@@ -97,7 +97,7 @@ template warning*(args: varargs[typed]) =
                              resetStyle, args)
 
 
-template warning*(msg: string, args: varargs[string]) =
+template warning*(msg: string, args: varargs[string, `$`]) =
    if not quiet_mode:
       let msg_split = wrap_words(format(msg, args), 80, true).split_lines()
       call_styled_write_line(styleBright, WARNING_COLOR, "WARNING: ",
@@ -112,7 +112,7 @@ template error*(args: varargs[typed]) =
                              resetStyle, args)
 
 
-template error*(msg: string, args: varargs[string]) =
+template error*(msg: string, args: varargs[string, `$`]) =
    if not quiet_mode:
       let msg_split = wrap_words(format(msg, args), 80, true).split_lines()
       call_styled_write_line(styleBright, ERROR_COLOR, "ERROR:   ",
@@ -127,7 +127,7 @@ template debug*(args: varargs[typed]) =
       debug_always(args)
 
 
-template debug*(msg: string, args: varargs[string]) =
+template debug*(msg: string, args: varargs[string, `$`]) =
    when not defined(release):
       debug_always(msg, args)
 
@@ -138,12 +138,12 @@ template debug_always*(args: varargs[typed]) =
                              resetStyle, args)
 
 
-template debug_always*(msg: string, args: varargs[string]) =
+template debug_always*(msg: string, args: varargs[string, `$`]) =
    if not quiet_mode:
       call_styled_write_line(styleBright, DEBUG_COLOR, "DEBUG:   ",
                              resetStyle, format(msg, args))
 
 
-template abort*(e: typedesc[Exception], msg: string, args: varargs[string]) =
+template abort*(e: typedesc[Exception], msg: string, args: varargs[string, `$`]) =
    error(msg, args)
    raise new_exception(e, format(msg, args))

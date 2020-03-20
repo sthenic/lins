@@ -83,50 +83,8 @@ proc lint_filter(r: Rule, seg: LaTeXTextSegment): bool =
             (r.linter_kind == ANY or r.linter_kind == LATEX)
 
 
-method enforce*(r: RuleExistence, seg: LaTeXTextSegment): seq[Violation] =
+proc enforce*(r: var Rule, seg: LaTeXTextSegment): seq[Violation] =
    if not lint_filter(r, seg):
       return
 
-   result = proc_call(enforce(r, TextSegment(seg)))
-
-
-method enforce*(r: RuleSubstitution, seg: LaTeXTextSegment): seq[Violation] =
-   if not lint_filter(r, seg):
-      return
-
-   result = proc_call(enforce(r, TextSegment(seg)))
-
-
-method enforce*(r: RuleOccurrence, seg: LaTeXTextSegment): seq[Violation] =
-   if not lint_filter(r, seg):
-      return
-
-   result = proc_call(enforce(r, TextSegment(seg)))
-
-
-method enforce*(r: RuleRepetition, seg: LaTeXTextSegment): seq[Violation] =
-   if not lint_filter(r, seg):
-      return
-
-   result = proc_call(enforce(r, TextSegment(seg)))
-
-
-method enforce*(r: RuleConsistency, seg: LaTeXTextSegment): seq[Violation] =
-   if not lint_filter(r, seg):
-      return
-
-   result = proc_call(enforce(r, TextSegment(seg)))
-
-
-method enforce*(r: RuleDefinition, seg: LaTeXTextSegment): seq[Violation] =
-   if not lint_filter(r, seg):
-      return
-
-   result = proc_call(enforce(r, TextSegment(seg)))
-
-
-method enforce*(r: RuleConditional, seg: LaTeXTextSegment): seq[Violation] =
-   if not lint_filter(r, seg):
-      return
-
-   result = proc_call(enforce(r, TextSegment(seg)))
+   result = enforce(r, seg.base)

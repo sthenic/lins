@@ -1,6 +1,6 @@
 task build, "Compile the application into an executable.":
    withDir("src"):
-      exec("nim c -d:release --multimethods:on --warning[LockLevel]:off --passC:-flto --passL:-s --gc:markAndSweep lins")
+      exec("nim c -d:release --passC:-flto --passL:-s --gc:markAndSweep lins")
 
    rmFile("lins".toExe)
    mvFile("src/lins".toExe, "lins".toExe)

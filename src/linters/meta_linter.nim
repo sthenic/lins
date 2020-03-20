@@ -39,13 +39,13 @@ proc print_footer(l: MetaLinter, lint_result: LintResult) =
    print_footer(lint_result, minimal_mode)
 
 
-proc lint_file(l: var MetaLinter, filename: string, rules: seq[Rule],
+proc lint_file(l: var MetaLinter, filename: string, rules: var seq[Rule],
                line_init, col_init: int, use_filter: bool): LintResult =
    result = lint_file(l.plain_linter, filename, rules, line_init, col_init)
    l.print_footer(result)
 
 
-proc lint_files*(l: var MetaLinter, files: seq[string], rules: seq[Rule],
+proc lint_files*(l: var MetaLinter, files: seq[string], rules: var seq[Rule],
                  line_init, col_init: int, filter: Filter): LintResult =
    for filename in files:
       case filter
@@ -66,7 +66,7 @@ proc lint_files*(l: var MetaLinter, files: seq[string], rules: seq[Rule],
    l.print_footer(result)
 
 
-proc lint_string*(l: var MetaLinter, str: string, rules: seq[Rule],
+proc lint_string*(l: var MetaLinter, str: string, rules: var seq[Rule],
                  line_init, col_init: int, filter: Filter): LintResult =
    case filter
    of Plain, Auto:

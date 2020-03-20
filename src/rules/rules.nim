@@ -61,8 +61,16 @@ type
       position: Position
       display_name: string
 
-   Rule* = ref object of RootObj
-      kind*: string
+   RuleKind* = enum
+      Existence,
+      Substitution,
+      Occurrence,
+      Repetition,
+      Consistency,
+      Definition,
+      Conditional
+
+   Rule* = object
       severity*: Severity
       message*: string
       source_file*: string
@@ -71,51 +79,30 @@ type
       latex_section*: LaTeXRuleSection
       plain_section*: PlainRuleSection
       linter_kind*: LinterKind
-      exceptions*: Regex
-
-   RuleExistence* = ref object of Rule
-      regex*: Regex
-
-   RuleSubstitution* = ref object of Rule
-      regex*: Regex
-      subst_table*: Table[string, string]
-
-   RuleOccurrence* = ref object of Rule
-      regex*: Regex
-      limit_val*: int
-      limit_kind*: Limit
-      nof_matches*: int
-      par_prev*: int
-      has_alerted*: bool
-
-   RuleRepetition* = ref object of Rule
-      regex*: Regex
-      par_prev*: int
-      matches*: Table[string, int]
-
-   RuleConsistency* = ref object of Rule
-      regex_first*: Regex
-      regex_second*: Regex
+      regex_one*, regex_two*, exceptions*: Regex
       par_prev*: int
       first_observed*: bool
-      second_observed*: bool
-
-   RuleDefinition* = ref object of Rule
-      regex_def*: Regex
-      regex_decl*: Regex
-      definitions*: Table[string, Position]
-      par_prev*: int
-
-   RuleConditional* = ref object of Rule
-      regex_first*: Regex
-      regex_second*: Regex
-      par_prev*: int
-      first_observed*: bool
+      case kind*: RuleKind
+      of Existence, Conditional:
+         discard
+      of Substitution:
+         subst_table*: Table[string, string]
+      of Occurrence:
+         limit_val*: int
+         limit_kind*: Limit
+         nof_matches*: int
+         has_alerted*: bool
+      of Repetition:
+         matches*: Table[string, int]
+      of Consistency:
+         second_observed*: bool
+      of Definition:
+         definitions*: Table[string, Position]
 
 
 proc create_violation*(r: Rule, pos: Position,
                        message_args: varargs[string]): Violation =
-   (kind: r.kind, severity: r.severity, source_file: r.source_file,
+   (kind: $r.kind, severity: r.severity, source_file: r.source_file,
     message: format(r.message, message_args), position: pos,
     display_name: r.display_name)
 
@@ -142,44 +129,67 @@ proc calculate_position*(r: Rule, line, col, violation_pos: int,
       result = (l, violation_pos - p)
 
 
-# Constructors
-proc new*(t: typedesc[Rule], kind: string, severity: Severity, message: string,
-          source_file: string, display_name: string, plain_section: PlainRuleSection,
-          latex_section: LaTeXRuleSection, linter_kind: LinterKind,
-          regex_exceptions: string): Rule =
-   Rule(kind: kind, severity: severity, message: message,
-        source_file: source_file, display_name: display_name,
-        plain_section: plain_section, latex_section: latex_section,
-        linter_kind: linter_kind, exceptions: re(regex_exceptions))
+proc `$`*(x: RuleKind): string =
+   case x
+   of Existence:
+      return "existence"
+   of Substitution:
+      return "substitution"
+   of Occurrence:
+      return "occurrence"
+   of Repetition:
+      return "repetition"
+   of Consistency:
+      return "consistency"
+   of Definition:
+      return "definition"
+   of Conditional:
+      return "conditional"
 
 
-proc new*(t: typedesc[RuleExistence], severity: Severity, message: string,
-          source_file: string, display_name: string, regex: string,
-          ignore_case: bool, plain_section: PlainRuleSection,
-          latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind, regex_exceptions: string): RuleExistence =
+proc new_rule(kind: RuleKind, severity: Severity,
+              message, source_file, display_name: string,
+              ignore_case: bool,
+              plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
+              linter_kind: LinterKind,
+              regex_one, regex_two, regex_exceptions: string): Rule =
+   result = Rule(kind: kind)
+   result.severity = severity
+   result.message = message
+   result.source_file = source_file
+   result.display_name = display_name
+   result.ignore_case = ignore_case
+   result.latex_section = latex_section
+   result.plain_section = plain_section
+   result.linter_kind = linter_kind
+   result.regex_one = re(regex_one)
+   result.regex_two = re(regex_two)
+   result.exceptions = re(regex_exceptions)
+   result.par_prev = 0
+   result.first_observed = false
+
+
+proc new_existence_rule*(severity: Severity,
+                         message, source_file, display_name, regex: string,
+                         ignore_case: bool,
+                         plain_section: PlainRuleSection,
+                         latex_section: LaTeXRuleSection,
+                         linter_kind: LinterKind, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
 
-   return RuleExistence(kind: "existence",
-                        severity: severity,
-                        message: message,
-                        source_file: source_file,
-                        display_name: display_name,
-                        ignore_case: ignore_case,
-                        regex: re(regex_flags & regex),
-                        plain_section: plain_section,
-                        latex_section: latex_section,
-                        linter_kind: linter_kind,
-                        exceptions: re(regex_exceptions))
+   result = new_rule(Existence, severity, message, source_file, display_name,
+                     ignore_case, plain_section, latex_section, linter_kind,
+                     regex_flags & regex, "", regex_exceptions)
 
-
-proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
-          source_file: string, display_name: string, regex: string,
-          subst_table: Table[string, string], ignore_case: bool,
-          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind, regex_exceptions: string): RuleSubstitution =
+proc new_substitution_rule*(severity: Severity,
+                            message, source_file, display_name, regex: string,
+                            ignore_case: bool,
+                            plain_section: PlainRuleSection,
+                            latex_section: LaTeXRuleSection,
+                            linter_kind: LinterKind, regex_exceptions: string,
+                            subst_table: Table[string, string]): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -188,186 +198,131 @@ proc new*(t: typedesc[RuleSubstitution], severity: Severity, message: string,
    for key, value in pairs(subst_table):
       lsubst_table[regex_flags & key] = value
 
-   return RuleSubstitution(kind: "substitution",
-                           severity: severity,
-                           message: message,
-                           source_file: source_file,
-                           display_name: display_name,
-                           ignore_case: ignore_case,
-                           regex: re(regex_flags & regex),
-                           subst_table: lsubst_table,
-                           plain_section: plain_section,
-                           latex_section: latex_section,
-                           linter_kind: linter_kind,
-                           exceptions: re(regex_exceptions))
+   result = new_rule(Substitution, severity, message, source_file, display_name,
+                     ignore_case, plain_section, latex_section, linter_kind,
+                     regex_flags & regex, "", regex_exceptions)
+   result.subst_table = lsubst_table
 
 
-proc new*(t: typedesc[RuleOccurrence], severity: Severity, message: string,
-          source_file: string,  display_name: string, regex: string,
-          limit_val: int, limit_kind: Limit, ignore_case: bool,
-          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind, regex_exceptions: string): RuleOccurrence =
+proc new_occurrence_rule*(severity: Severity,
+                          message, source_file,  display_name, regex: string,
+                          ignore_case: bool,
+                          plain_section: PlainRuleSection,
+                          latex_section: LaTeXRuleSection,
+                          linter_kind: LinterKind, regex_exceptions: string,
+                          limit_val: int, limit_kind: Limit): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
 
-   return RuleOccurrence(kind: "occurrence",
-                         severity: severity,
-                         message: message,
-                         source_file: source_file,
-                         display_name: display_name,
-                         ignore_case: ignore_case,
-                         regex: re(regex_flags & regex),
-                         limit_val: limit_val,
-                         limit_kind: limit_kind,
-                         plain_section: plain_section,
-                         latex_section: latex_section,
-                         linter_kind: linter_kind,
-                         exceptions: re(regex_exceptions))
+   result = new_rule(Occurrence, severity, message, source_file, display_name,
+                     ignore_case, plain_section, latex_section, linter_kind,
+                     regex_flags & regex, "", regex_exceptions)
+   result.limit_val = limit_val
+   result.limit_kind = limit_kind
 
 
-proc new*(t: typedesc[RuleRepetition], severity: Severity, message: string,
-          source_file: string,  display_name: string, regex: string,
-          ignore_case: bool, plain_section: PlainRuleSection,
-          latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind, regex_exceptions: string): RuleRepetition =
+proc new_repetition_rule*(severity: Severity,
+                          message, source_file, display_name, regex: string,
+                          ignore_case: bool,
+                          plain_section: PlainRuleSection,
+                          latex_section: LaTeXRuleSection,
+                          linter_kind: LinterKind, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
 
-   return RuleRepetition(kind: "repetition",
-                         severity: severity,
-                         message: message,
-                         source_file: source_file,
-                         display_name: display_name,
-                         ignore_case: ignore_case,
-                         regex: re(regex_flags & regex),
-                         plain_section: plain_section,
-                         latex_section: latex_section,
-                         matches: init_table[string, int](),
-                         exceptions: re(regex_exceptions))
+   result = new_rule(Repetition, severity, message, source_file, display_name,
+                     ignore_case, plain_section, latex_section, linter_kind,
+                     regex_flags & regex, "", regex_exceptions)
+   result.matches = init_table[string, int]()
 
 
-proc new*(t: typedesc[RuleConsistency], severity: Severity, message: string,
-          source_file: string, display_name: string, regex_first: string,
-          regex_second: string, ignore_case: bool,
-          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind, regex_exceptions: string): RuleConsistency =
+proc new_consistency_rule*(severity: Severity,
+                           message, source_file, display_name, regex_first, regex_second: string,
+                           ignore_case: bool,
+                           plain_section: PlainRuleSection,
+                           latex_section: LaTeXRuleSection,
+                           linter_kind: LinterKind, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
 
-   return RuleConsistency(kind: "consistency",
-                         severity: severity,
-                         message: message,
-                         source_file: source_file,
-                         display_name: display_name,
-                         ignore_case: ignore_case,
-                         regex_first: re(regex_flags & regex_first),
-                         regex_second: re(regex_flags & regex_second),
-                         plain_section: plain_section,
-                         latex_section: latex_section,
-                         linter_kind: linter_kind,
-                         exceptions: re(regex_exceptions))
-
+   result = new_rule(Consistency, severity, message, source_file, display_name,
+                     ignore_case, plain_section, latex_section, linter_kind,
+                     regex_flags & regex_first, regex_flags & regex_second,
+                     regex_exceptions)
 
 # Regexes should be auto-filled on an above level. Drafts are:
 #   regex_def = r'(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)'
 #   regex_decl = r'\b([A-Z]{3,5})\b'
-proc new*(t: typedesc[RuleDefinition], severity: Severity,
-          message: string, source_file: string, display_name: string,
-          regex_def: string, regex_decl: string, ignore_case: bool,
-          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind, regex_exceptions: string): RuleDefinition =
+proc new_definition_rule*(severity: Severity,
+                          message, source_file, display_name, regex_def, regex_decl: string,
+                          ignore_case: bool,
+                          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
+                          linter_kind: LinterKind, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
 
-   return RuleDefinition(kind: "definition",
-                         severity: severity,
-                         message: message,
-                         source_file: source_file,
-                         display_name: display_name,
-                         ignore_case: ignore_case,
-                         regex_def: re(regex_flags & regex_def),
-                         regex_decl: re(regex_flags & regex_decl),
-                         definitions: init_table[string, Position](),
-                         plain_section: plain_section,
-                         latex_section: latex_section,
-                         linter_kind: linter_kind,
-                         exceptions: re(regex_exceptions))
+   result = new_rule(Definition, severity, message, source_file, display_name,
+                     ignore_case, plain_section, latex_section, linter_kind,
+                     regex_flags & regex_def, regex_flags & regex_decl,
+                     regex_exceptions)
+   result.definitions = init_table[string, Position]()
 
 
-proc new*(t: typedesc[RuleConditional], severity: Severity, message: string,
-          source_file: string,  display_name: string, regex_first: string,
-          regex_second: string, ignore_case: bool,
-          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-          linter_kind: LinterKind, regex_exceptions: string): RuleConditional =
+proc new_conditional_rule*(severity: Severity,
+                           message, source_file,  display_name, regex_first, regex_second: string,
+                           ignore_case: bool,
+                           plain_section: PlainRuleSection,
+                           latex_section: LaTeXRuleSection,
+                           linter_kind: LinterKind, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
 
-   return RuleConditional(kind: "conditional",
-                          severity: severity,
-                          message: message,
-                          source_file: source_file,
-                          display_name: display_name,
-                          ignore_case: ignore_case,
-                          regex_first: re(regex_flags & regex_first),
-                          regex_second: re(regex_flags & regex_second),
-                          plain_section: plain_section,
-                          latex_section: latex_section,
-                          linter_kind: linter_kind,
-                          exceptions: re(regex_exceptions))
+   result = new_rule(Conditional, severity, message, source_file, display_name,
+                     ignore_case, plain_section, latex_section, linter_kind,
+                     regex_flags & regex_first, regex_flags & regex_second,
+                     regex_exceptions)
 
 
-method reset*(r: Rule) {.base.} =
-   discard
+proc reset*(r: var Rule) =
+   case r.kind
+   of Existence:
+      discard
+   of Substitution:
+      discard
+   of Occurrence:
+      r.nof_matches = 0
+      r.has_alerted = false
+   of Repetition:
+      r.par_prev = 0
+      r.matches = init_table[string, int]()
+   of Consistency:
+      r.par_prev = 0
+      r.first_observed = false
+      r.second_observed = false
+   of Definition:
+      r.par_prev = 0
+      r.definitions = init_table[string, Position]()
+   of Conditional:
+      r.par_prev = 0
+      r.first_observed = false
 
 
-method reset*(r: RuleOccurrence) =
-   r.nof_matches = 0
-   r.has_alerted = false
-
-
-method reset*(r: RuleRepetition) =
-   r.par_prev = 0
-   r.matches = init_table[string, int]()
-
-
-method reset*(r: RuleConsistency) =
-   r.par_prev = 0
-   r.first_observed = false
-   r.second_observed = false
-
-
-method reset*(r: RuleDefinition) =
-   r.par_prev = 0
-   r.definitions = init_table[string, Position]()
-
-
-method reset*(r: RuleConditional) =
-   r.par_prev = 0
-   r.first_observed = false
-
-
-proc reset*(s: seq[Rule]) =
-   for r in s: reset(r)
+proc reset*(s: var seq[Rule]) =
+   for r in mitems(s):
+      reset(r)
 
 
 proc is_exception(str: string, regex: Regex): bool =
    result = len(regex.pattern) > 0 and contains(str, regex)
 
 
-# Base implementations of enforcement methods. Input segment type is the base
-# 'TextSegment' as defined by the base parser module.
-method enforce*(r: Rule, seg: TextSegment): seq[Violation] {.base.} =
-   log.abort(EnforceNotImplementedError,
-             "Rule enforcement not implemented for rule '$1'.", r.kind)
-
-
-method enforce*(r: RuleExistence, seg: TextSegment): seq[Violation] =
-   for m in nre.find_iter(seg.text, r.regex):
+proc enforce_existence(r: Rule, seg: TextSegment): seq[Violation] =
+   for m in nre.find_iter(seg.text, r.regex_one):
       if is_exception($m, r.exceptions):
          continue
       let violation_pos = r.calculate_position(seg.line, seg.col,
@@ -376,8 +331,8 @@ method enforce*(r: RuleExistence, seg: TextSegment): seq[Violation] =
       result.add(r.create_violation(violation_pos, $m))
 
 
-method enforce*(r: RuleSubstitution, seg: TextSegment): seq[Violation] =
-   for m in nre.find_iter(seg.text, r.regex):
+proc enforce_substitution(r: Rule, seg: TextSegment): seq[Violation] =
+   for m in nre.find_iter(seg.text, r.regex_one):
       if is_exception($m, r.exceptions):
          continue
       let mpos = m.match_bounds.a
@@ -413,8 +368,8 @@ method enforce*(r: RuleSubstitution, seg: TextSegment): seq[Violation] =
          result.add(r.create_violation(violation_pos, $m, subst))
 
 
-method enforce*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
-   for m in nre.find_iter(seg.text, r.regex):
+proc enforce_occurrence(r: var Rule, seg: TextSegment): seq[Violation] =
+   for m in nre.find_iter(seg.text, r.regex_one):
       if is_exception($m, r.exceptions):
          continue
       # Count the match (pre-incrementation).
@@ -436,8 +391,8 @@ method enforce*(r: RuleOccurrence, seg: TextSegment): seq[Violation] =
       result.add(r.create_violation(sentence_pos))
 
 
-method enforce*(r: RuleRepetition, seg: TextSegment): seq[Violation] =
-   for m in nre.find_iter(seg.text, r.regex):
+proc enforce_repetition(r: var Rule, seg: TextSegment): seq[Violation] =
+   for m in nre.find_iter(seg.text, r.regex_one):
       if is_exception($m, r.exceptions):
          continue
       var tmp: string
@@ -457,14 +412,14 @@ method enforce*(r: RuleRepetition, seg: TextSegment): seq[Violation] =
          result.add(r.create_violation(violation_pos, $m))
 
 
-method enforce*(r: RuleConsistency, seg: TextSegment): seq[Violation] =
+proc enforce_consistency(r: var Rule, seg: TextSegment): seq[Violation] =
    if not r.first_observed and not r.second_observed:
       # Analyze matches for the first and second regex.
       var regex_first_pos: seq[int]
       var regex_second_pos: seq[int]
-      for m in nre.find_iter(seg.text, r.regex_first):
+      for m in nre.find_iter(seg.text, r.regex_one):
          add(regex_first_pos, m.match_bounds.a)
-      for m in nre.find_iter(seg.text, r.regex_second):
+      for m in nre.find_iter(seg.text, r.regex_two):
          add(regex_second_pos, m.match_bounds.a)
 
       # Determine which one occurrs first.
@@ -488,14 +443,14 @@ method enforce*(r: RuleConsistency, seg: TextSegment): seq[Violation] =
    # Go through the text segment again, generating violations for any
    # relevant matches.
    if r.first_observed:
-      for m in nre.find_iter(seg.text, r.regex_second):
+      for m in nre.find_iter(seg.text, r.regex_two):
          let violation_pos = r.calculate_position(seg.line, seg.col,
                                                   m.match_bounds.a + 1,
                                                   seg.linebreaks)
 
          result.add(r.create_violation(violation_pos, $m))
    elif r.second_observed:
-      for m in nre.find_iter(seg.text, r.regex_first):
+      for m in nre.find_iter(seg.text, r.regex_one):
          let violation_pos = r.calculate_position(seg.line, seg.col,
                                                   m.match_bounds.a + 1,
                                                   seg.linebreaks)
@@ -503,11 +458,11 @@ method enforce*(r: RuleConsistency, seg: TextSegment): seq[Violation] =
          result.add(r.create_violation(violation_pos, $m))
 
 
-method enforce*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
+proc enforce_definition(r: var Rule, seg: TextSegment): seq[Violation] =
    # Go through the sentence looking for definitions. Store the position to
    # make sure we can differentiate the order of definitions and
    # declarations within a sentence.
-   for m_def in nre.find_iter(seg.text, r.regex_def):
+   for m_def in nre.find_iter(seg.text, r.regex_one):
       try:
          let def = m_def.captures[0]
          let pos = r.calculate_position(seg.line, seg.col,
@@ -530,7 +485,7 @@ method enforce*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
    # has no definition, the rule is violated outright. Otherwise, we have
    # to double-check the position of the declaration in relation to the
    # definition. We skip any declarations in the exception list.
-   for m_decl in nre.find_iter(seg.text, r.regex_decl):
+   for m_decl in nre.find_iter(seg.text, r.regex_two):
       if is_exception($m_decl, r.exceptions):
          continue
       try:
@@ -564,11 +519,11 @@ method enforce*(r: RuleDefinition, seg: TextSegment): seq[Violation] =
                    "This should not have occurred.", r.source_file)
 
 
-method enforce*(r: RuleConditional, seg: TextSegment): seq[Violation] =
+proc enforce_conditional(r: var Rule, seg: TextSegment): seq[Violation] =
    var line_first = 0
    var col_first = 0
 
-   let m_first = nre.find(seg.text, r.regex_first)
+   let m_first = nre.find(seg.text, r.regex_one)
    if not is_none(m_first) and not r.first_observed:
       try:
          (line_first, col_first) =
@@ -585,7 +540,7 @@ method enforce*(r: RuleConditional, seg: TextSegment): seq[Violation] =
                    "No capture group defined for conditional in file '$1'. " &
                    "This should not have occurred.", r.source_file)
 
-   for m_second in nre.find_iter(seg.text, r.regex_second):
+   for m_second in nre.find_iter(seg.text, r.regex_two):
       let (line_second, col_second) =
          r.calculate_position(seg.line, seg.col,
                               m_second.match_bounds.a + 1, # TODO: Group here?
@@ -594,3 +549,21 @@ method enforce*(r: RuleConditional, seg: TextSegment): seq[Violation] =
           (line_first == line_second and col_first > col_second) or
           (line_first > line_second)):
          result.add(r.create_violation((line_second, col_second), $m_second))
+
+
+proc enforce*(r: var Rule, seg: TextSegment): seq[Violation] =
+   case r.kind
+   of Existence:
+      enforce_existence(r, seg)
+   of Substitution:
+      enforce_substitution(r, seg)
+   of Occurrence:
+      enforce_occurrence(r, seg)
+   of Repetition:
+      enforce_repetition(r, seg)
+   of Consistency:
+      enforce_consistency(r, seg)
+   of Definition:
+      enforce_definition(r, seg)
+   of Conditional:
+      enforce_conditional(r, seg)

@@ -125,14 +125,14 @@ proc print_footer*(lint_result: LintResult, minimal_mode: bool) =
    )
 
 
-proc lint_segment*[T](l: var Linter, seg: T, rules: seq[Rule]): ViolationCount =
+proc lint_segment*[T](l: var Linter, seg: T, rules: var seq[Rule]): ViolationCount =
    var violations: seq[Violation] = @[]
 
    if not is_nil(l.parser_output_stream):
       # Dump the parser output if the file stream is defined.
       l.parser_output_stream.write_line(seg, "\n")
 
-   for r in rules:
+   for r in mitems(rules):
       # Ignore rules if the log level is set too low.
       if r.severity < l.severity_threshold:
          continue
@@ -157,7 +157,7 @@ proc handle*(x: var LintResult, y: LintResult) =
    inc(x.nof_violations, y.nof_violations)
 
 
-proc lint_file*(l: var Linter, filename: string, rules: seq[Rule],
+proc lint_file*(l: var Linter, filename: string, rules: var seq[Rule],
                 line_init, col_init: int): LintResult =
    var t_start, t_stop: float
    result.has_violations = true
@@ -192,7 +192,7 @@ proc lint_file*(l: var Linter, filename: string, rules: seq[Rule],
       echo "No style errors found."
 
 
-proc lint_string*(l: var Linter, str: string, rules: seq[Rule],
+proc lint_string*(l: var Linter, str: string, rules: var seq[Rule],
                   line_init, col_init: int): LintResult =
    var t_start, t_stop: float
    result.has_violations = true

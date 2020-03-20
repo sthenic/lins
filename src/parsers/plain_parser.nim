@@ -19,8 +19,9 @@ type
       last_tok: PlainToken
       par_idx: int
 
-   PlainTextSegment* = object of TextSegment
+   PlainTextSegment* = object
       par_idx*: int
+      base*: TextSegment
 
 
 proc get_token*(p: var PlainParser) =
@@ -29,7 +30,7 @@ proc get_token*(p: var PlainParser) =
 
 proc init(seg: var PlainTextSegment) =
    seg.par_idx = 0
-   base_parser.init(seg)
+   init(seg.base)
 
 
 proc open_parser*(p: var PlainParser, filename: string, s: Stream) =
@@ -46,19 +47,19 @@ proc close_parser*(p: var PlainParser) =
 
 
 proc add_tok(p: var PlainParser) =
-   if len(p.seg.text) == 0:
-      p.seg.line = p.tok.line
-      p.seg.col = p.tok.col
+   if len(p.seg.base.text) == 0:
+      p.seg.base.line = p.tok.line
+      p.seg.base.col = p.tok.col
    elif p.tok.line > p.last_tok.line:
-      add(p.seg.linebreaks, (len(p.seg.text), p.tok.line))
+      add(p.seg.base.linebreaks, (len(p.seg.base.text), p.tok.line))
 
-   add(p.seg.text, p.tok.token)
+   add(p.seg.base.text, p.tok.token)
    p.last_tok = p.tok
 
 
 proc add_seg(p: var PlainParser, seg: var PlainTextSegment) =
    ## Add a segment to the sequence of completed segments.
-   if len(seg.text.strip()) != 0:
+   if len(seg.base.text.strip()) != 0:
       # We skip adding segments with length zero or consisting entirely of
       # whitespace.
       add(p.segs, seg)
