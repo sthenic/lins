@@ -16,21 +16,21 @@ task tests, "Run the test suite":
 
 task lexertests, "Run the lexer test suite":
    withDir("tests/lexers"):
-      exec("nim c -r tplain")
-      exec("nim c -r ttex")
+      exec("nim c --hints:off -r tplain")
+      exec("nim c --hints:off -r ttex")
    setCommand "nop"
 
 
 task parsertests, "Run the parser test suite":
    withDir("tests/parsers"):
-      exec("nim c -r tplain")
-      exec("nim c -r tlatex")
+      exec("nim c --hints:off -r tplain")
+      exec("nim c --hints:off -r tlatex")
    setCommand "nop"
 
 
 task utilstests, "Run the linter test suite":
    withDir("tests/utils"):
-      exec("nim c -r twordwrap")
+      exec("nim c --hints:off -r twordwrap")
    setCommand "nop"
 
 
