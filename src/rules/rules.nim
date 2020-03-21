@@ -62,13 +62,13 @@ type
       display_name: string
 
    RuleKind* = enum
-      Existence,
-      Substitution,
-      Occurrence,
-      Repetition,
-      Consistency,
-      Definition,
-      Conditional
+      RkExistence,
+      RkSubstitution,
+      RkOccurrence,
+      RkRepetition,
+      RkConsistency,
+      RkDefinition,
+      RkConditional
 
    Rule* = object
       severity*: Severity
@@ -80,22 +80,22 @@ type
       regex_one*, regex_two*, exceptions*: Regex
       par_prev*: int
       case kind*: RuleKind
-      of Existence:
+      of RkExistence:
          discard
-      of Substitution:
+      of RkSubstitution:
          subst_table*: Table[string, string]
-      of Occurrence:
+      of RkOccurrence:
          limit_val*: int
          limit_kind*: Limit
          nof_matches*: int
          has_alerted*: bool
-      of Repetition:
+      of RkRepetition:
          matches*: Table[string, int]
-      of Consistency:
+      of RkConsistency:
          first_observed*, second_observed*: bool
-      of Definition:
+      of RkDefinition:
          definitions*: Table[string, Position]
-      of Conditional:
+      of RkConditional:
          observed*: bool
 
 
@@ -130,19 +130,19 @@ proc calculate_position*(r: Rule, line, col, violation_pos: int,
 
 proc `$`*(x: RuleKind): string =
    case x
-   of Existence:
+   of RkExistence:
       return "existence"
-   of Substitution:
+   of RkSubstitution:
       return "substitution"
-   of Occurrence:
+   of RkOccurrence:
       return "occurrence"
-   of Repetition:
+   of RkRepetition:
       return "repetition"
-   of Consistency:
+   of RkConsistency:
       return "consistency"
-   of Definition:
+   of RkDefinition:
       return "definition"
-   of Conditional:
+   of RkConditional:
       return "conditional"
 
 
@@ -178,7 +178,7 @@ proc new_existence_rule*(severity: Severity,
    if ignore_case:
       regex_flags = "(?i)"
 
-   result = new_rule(Existence, severity, message, source_file, display_name,
+   result = new_rule(RkExistence, severity, message, source_file, display_name,
                      ignore_case, plain_section, latex_section, linter_kind,
                      regex_flags & regex, "", regex_exceptions)
 
@@ -199,7 +199,7 @@ proc new_substitution_rule*(severity: Severity,
    for key, value in pairs(subst_table):
       lsubst_table[regex_flags & key] = value
 
-   result = new_rule(Substitution, severity, message, source_file, display_name,
+   result = new_rule(RkSubstitution, severity, message, source_file, display_name,
                      ignore_case, plain_section, latex_section, linter_kind,
                      regex_flags & regex, "", regex_exceptions)
    result.subst_table = lsubst_table
@@ -217,11 +217,13 @@ proc new_occurrence_rule*(severity: Severity,
    if ignore_case:
       regex_flags = "(?i)"
 
-   result = new_rule(Occurrence, severity, message, source_file, display_name,
+   result = new_rule(RkOccurrence, severity, message, source_file, display_name,
                      ignore_case, plain_section, latex_section, linter_kind,
                      regex_flags & regex, "", regex_exceptions)
    result.limit_val = limit_val
    result.limit_kind = limit_kind
+   result.nof_matches = 0
+   result.has_alerted = false
 
 
 proc new_repetition_rule*(severity: Severity,
@@ -235,7 +237,7 @@ proc new_repetition_rule*(severity: Severity,
    if ignore_case:
       regex_flags = "(?i)"
 
-   result = new_rule(Repetition, severity, message, source_file, display_name,
+   result = new_rule(RkRepetition, severity, message, source_file, display_name,
                      ignore_case, plain_section, latex_section, linter_kind,
                      regex_flags & regex, "", regex_exceptions)
    result.matches = init_table[string, int]()
@@ -252,10 +254,13 @@ proc new_consistency_rule*(severity: Severity,
    if ignore_case:
       regex_flags = "(?i)"
 
-   result = new_rule(Consistency, severity, message, source_file, display_name,
+   result = new_rule(RkConsistency, severity, message, source_file, display_name,
                      ignore_case, plain_section, latex_section, linter_kind,
                      regex_flags & regex_first, regex_flags & regex_second,
                      regex_exceptions)
+   result.first_observed = false
+   result.second_observed = false
+
 
 # Regexes should be auto-filled on an above level. Drafts are:
 #   regex_def = r'(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)'
@@ -263,14 +268,15 @@ proc new_consistency_rule*(severity: Severity,
 proc new_definition_rule*(severity: Severity,
                           message, source_file, display_name: string,
                           ignore_case: bool,
-                          plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
+                          plain_section: PlainRuleSection,
+                          latex_section: LaTeXRuleSection,
                           linter_kind: LinterKind,
                           regex_def, regex_decl, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
 
-   result = new_rule(Definition, severity, message, source_file, display_name,
+   result = new_rule(RkDefinition, severity, message, source_file, display_name,
                      ignore_case, plain_section, latex_section, linter_kind,
                      regex_flags & regex_def, regex_flags & regex_decl,
                      regex_exceptions)
@@ -288,28 +294,29 @@ proc new_conditional_rule*(severity: Severity,
    if ignore_case:
       regex_flags = "(?i)"
 
-   result = new_rule(Conditional, severity, message, source_file, display_name,
+   result = new_rule(RkConditional, severity, message, source_file, display_name,
                      ignore_case, plain_section, latex_section, linter_kind,
                      regex_flags & regex_first, regex_flags & regex_second,
                      regex_exceptions)
+   result.observed = false
 
 
 proc reset*(r: var Rule) =
    r.par_prev = 0
    case r.kind
-   of Existence, Substitution:
+   of RkExistence, RkSubstitution:
       discard
-   of Occurrence:
+   of RkOccurrence:
       r.nof_matches = 0
       r.has_alerted = false
-   of Repetition:
+   of RkRepetition:
       r.matches = init_table[string, int]()
-   of Consistency:
+   of RkConsistency:
       r.first_observed = false
       r.second_observed = false
-   of Definition:
+   of RkDefinition:
       r.definitions = init_table[string, Position]()
-   of Conditional:
+   of RkConditional:
       r.observed = false
 
 
@@ -554,17 +561,17 @@ proc enforce_conditional(r: var Rule, seg: TextSegment): seq[Violation] =
 
 proc enforce*(r: var Rule, seg: TextSegment): seq[Violation] =
    case r.kind
-   of Existence:
+   of RkExistence:
       enforce_existence(r, seg)
-   of Substitution:
+   of RkSubstitution:
       enforce_substitution(r, seg)
-   of Occurrence:
+   of RkOccurrence:
       enforce_occurrence(r, seg)
-   of Repetition:
+   of RkRepetition:
       enforce_repetition(r, seg)
-   of Consistency:
+   of RkConsistency:
       enforce_consistency(r, seg)
-   of Definition:
+   of RkDefinition:
       enforce_definition(r, seg)
-   of Conditional:
+   of RkConditional:
       enforce_conditional(r, seg)

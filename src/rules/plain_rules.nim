@@ -15,9 +15,9 @@ proc enforce*(r: var Rule, seg: PlainTextSegment): seq[Violation] =
       return
 
    case r.kind
-   of Existence, Substitution:
+   of RkExistence, RkSubstitution:
       discard
-   of Occurrence:
+   of RkOccurrence:
       # Reset the match counter and alert status depending on the scope.
       case r.plain_section.scope
       of PARAGRAPH:
@@ -27,7 +27,7 @@ proc enforce*(r: var Rule, seg: PlainTextSegment): seq[Violation] =
       else:
          discard
 
-   of Repetition:
+   of RkRepetition:
       case r.plain_section.scope
       of PARAGRAPH:
          if not (r.par_prev == seg.par_idx):
@@ -35,7 +35,7 @@ proc enforce*(r: var Rule, seg: PlainTextSegment): seq[Violation] =
       else:
          discard
 
-   of Consistency:
+   of RkConsistency:
       # Reset the match counter and alert status depending on the scope.
       case r.plain_section.scope
       of PARAGRAPH:
@@ -44,7 +44,7 @@ proc enforce*(r: var Rule, seg: PlainTextSegment): seq[Violation] =
       else:
          discard
 
-   of Definition:
+   of RkDefinition:
       # Reset the match counter and alert status depending on the scope.
       case r.plain_section.scope
       of PARAGRAPH:
@@ -53,7 +53,7 @@ proc enforce*(r: var Rule, seg: PlainTextSegment): seq[Violation] =
       else:
          discard
 
-   of Conditional:
+   of RkConditional:
       # Reset the match counter and alert status depending on the scope.
       case r.plain_section.scope
       of PARAGRAPH:
