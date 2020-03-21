@@ -79,9 +79,8 @@ type
       linter_kind*: LinterKind
       regex_one*, regex_two*, exceptions*: Regex
       par_prev*: int
-      first_observed*: bool
       case kind*: RuleKind
-      of Existence, Conditional:
+      of Existence:
          discard
       of Substitution:
          subst_table*: Table[string, string]
@@ -93,9 +92,11 @@ type
       of Repetition:
          matches*: Table[string, int]
       of Consistency:
-         second_observed*: bool
+         first_observed*, second_observed*: bool
       of Definition:
          definitions*: Table[string, Position]
+      of Conditional:
+         observed*: bool
 
 
 proc create_violation*(r: Rule, pos: Position,
@@ -164,7 +165,6 @@ proc new_rule(kind: RuleKind, severity: Severity,
    result.regex_two = re(regex_two)
    result.exceptions = re(regex_exceptions)
    result.par_prev = 0
-   result.first_observed = false
 
 
 proc new_existence_rule*(severity: Severity,
@@ -295,27 +295,22 @@ proc new_conditional_rule*(severity: Severity,
 
 
 proc reset*(r: var Rule) =
+   r.par_prev = 0
    case r.kind
-   of Existence:
-      discard
-   of Substitution:
+   of Existence, Substitution:
       discard
    of Occurrence:
       r.nof_matches = 0
       r.has_alerted = false
    of Repetition:
-      r.par_prev = 0
       r.matches = init_table[string, int]()
    of Consistency:
-      r.par_prev = 0
       r.first_observed = false
       r.second_observed = false
    of Definition:
-      r.par_prev = 0
       r.definitions = init_table[string, Position]()
    of Conditional:
-      r.par_prev = 0
-      r.first_observed = false
+      r.observed = false
 
 
 proc reset*(s: var seq[Rule]) =
@@ -530,14 +525,14 @@ proc enforce_conditional(r: var Rule, seg: TextSegment): seq[Violation] =
    var col_first = 0
 
    let m_first = nre.find(seg.text, r.regex_one)
-   if not is_none(m_first) and not r.first_observed:
+   if not is_none(m_first) and not r.observed:
       try:
          (line_first, col_first) =
             r.calculate_position(seg.line, seg.col,
                                  m_first.get.capture_bounds[0].a + 1,
                                  seg.linebreaks)
 
-         r.first_observed = true
+         r.observed = true
 
       except IndexError:
          # Abort if no capture group can be found. This should not happen due
@@ -551,7 +546,7 @@ proc enforce_conditional(r: var Rule, seg: TextSegment): seq[Violation] =
          r.calculate_position(seg.line, seg.col,
                               m_second.match_bounds.a + 1, # TODO: Group here?
                               seg.linebreaks)
-      if (not r.first_observed or
+      if (not r.observed or
           (line_first == line_second and col_first > col_second) or
           (line_first > line_second)):
          result.add(r.create_violation((line_second, col_second), $m_second))
