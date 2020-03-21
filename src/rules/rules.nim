@@ -72,9 +72,7 @@ type
 
    Rule* = object
       severity*: Severity
-      message*: string
-      source_file*: string
-      display_name*: string
+      message*, source_file*, display_name*: string
       ignore_case*: bool
       latex_section*: LaTeXRuleSection
       plain_section*: PlainRuleSection
@@ -170,11 +168,12 @@ proc new_rule(kind: RuleKind, severity: Severity,
 
 
 proc new_existence_rule*(severity: Severity,
-                         message, source_file, display_name, regex: string,
+                         message, source_file, display_name: string,
                          ignore_case: bool,
                          plain_section: PlainRuleSection,
                          latex_section: LaTeXRuleSection,
-                         linter_kind: LinterKind, regex_exceptions: string): Rule =
+                         linter_kind: LinterKind,
+                         regex, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -183,12 +182,14 @@ proc new_existence_rule*(severity: Severity,
                      ignore_case, plain_section, latex_section, linter_kind,
                      regex_flags & regex, "", regex_exceptions)
 
+
 proc new_substitution_rule*(severity: Severity,
-                            message, source_file, display_name, regex: string,
+                            message, source_file, display_name: string,
                             ignore_case: bool,
                             plain_section: PlainRuleSection,
                             latex_section: LaTeXRuleSection,
-                            linter_kind: LinterKind, regex_exceptions: string,
+                            linter_kind: LinterKind,
+                            regex, regex_exceptions: string,
                             subst_table: Table[string, string]): Rule =
    var regex_flags = ""
    if ignore_case:
@@ -205,11 +206,12 @@ proc new_substitution_rule*(severity: Severity,
 
 
 proc new_occurrence_rule*(severity: Severity,
-                          message, source_file,  display_name, regex: string,
+                          message, source_file, display_name: string,
                           ignore_case: bool,
                           plain_section: PlainRuleSection,
                           latex_section: LaTeXRuleSection,
-                          linter_kind: LinterKind, regex_exceptions: string,
+                          linter_kind: LinterKind,
+                          regex, regex_exceptions: string,
                           limit_val: int, limit_kind: Limit): Rule =
    var regex_flags = ""
    if ignore_case:
@@ -223,11 +225,12 @@ proc new_occurrence_rule*(severity: Severity,
 
 
 proc new_repetition_rule*(severity: Severity,
-                          message, source_file, display_name, regex: string,
+                          message, source_file, display_name: string,
                           ignore_case: bool,
                           plain_section: PlainRuleSection,
                           latex_section: LaTeXRuleSection,
-                          linter_kind: LinterKind, regex_exceptions: string): Rule =
+                          linter_kind: LinterKind,
+                          regex, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -239,11 +242,12 @@ proc new_repetition_rule*(severity: Severity,
 
 
 proc new_consistency_rule*(severity: Severity,
-                           message, source_file, display_name, regex_first, regex_second: string,
+                           message, source_file, display_name: string,
                            ignore_case: bool,
                            plain_section: PlainRuleSection,
                            latex_section: LaTeXRuleSection,
-                           linter_kind: LinterKind, regex_exceptions: string): Rule =
+                           linter_kind: LinterKind,
+                           regex_first, regex_second, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -257,10 +261,11 @@ proc new_consistency_rule*(severity: Severity,
 #   regex_def = r'(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)'
 #   regex_decl = r'\b([A-Z]{3,5})\b'
 proc new_definition_rule*(severity: Severity,
-                          message, source_file, display_name, regex_def, regex_decl: string,
+                          message, source_file, display_name: string,
                           ignore_case: bool,
                           plain_section: PlainRuleSection, latex_section: LaTeXRuleSection,
-                          linter_kind: LinterKind, regex_exceptions: string): Rule =
+                          linter_kind: LinterKind,
+                          regex_def, regex_decl, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -273,11 +278,12 @@ proc new_definition_rule*(severity: Severity,
 
 
 proc new_conditional_rule*(severity: Severity,
-                           message, source_file,  display_name, regex_first, regex_second: string,
+                           message, source_file, display_name: string,
                            ignore_case: bool,
                            plain_section: PlainRuleSection,
                            latex_section: LaTeXRuleSection,
-                           linter_kind: LinterKind, regex_exceptions: string): Rule =
+                           linter_kind: LinterKind,
+                           regex_first, regex_second, regex_exceptions: string): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"

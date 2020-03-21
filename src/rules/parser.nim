@@ -573,8 +573,8 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    result.add(new_existence_rule(level, message, filename, display_name,
-                                 token_str, ignore_case, plain_section,
-                                 latex_section, linter_kind, exceptions))
+                                 ignore_case, plain_section,
+                                 latex_section, linter_kind, token_str, exceptions))
 
 
 proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
@@ -606,9 +606,9 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    result.add(new_substitution_rule(level, message, filename, display_name,
-                                    key_str, ignore_case,
+                                    ignore_case,
                                     plain_section, latex_section, linter_kind,
-                                    exceptions, subst_table))
+                                    key_str, exceptions, subst_table))
 
 
 proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
@@ -625,9 +625,9 @@ proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    result.add(new_occurrence_rule(level, message, filename, display_name,
-                                  data.token, ignore_case,
+                                  ignore_case,
                                   plain_section, latex_section, linter_kind,
-                                  exceptions, limit, limit_kind))
+                                  data.token, exceptions, limit, limit_kind))
 
 
 proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
@@ -643,8 +643,9 @@ proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    result.add(new_repetition_rule(level, message, filename, display_name,
-                                  data.token, ignore_case, plain_section,
-                                  latex_section, linter_kind, exceptions))
+                                  ignore_case, plain_section,
+                                  latex_section, linter_kind,
+                                  data.token, exceptions))
 
 
 proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
@@ -677,9 +678,9 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
       debug_consistency_entry(data, lfirst, lsecond, latex_section)
 
       result.add(new_consistency_rule(level, message, filename, display_name,
-                                      lfirst, lsecond, ignore_case,
+                                      ignore_case,
                                       plain_section, latex_section, linter_kind,
-                                      exceptions))
+                                      lfirst, lsecond, exceptions))
 
 
 proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
@@ -697,9 +698,9 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    result.add(new_definition_rule(level, message, filename, display_name,
-                                  data.definition, data.declaration,
-                                  ignore_case, plain_section, latex_section,
-                                  linter_kind, exceptions))
+                                  ignore_case,
+                                  plain_section, latex_section, linter_kind,
+                                  data.definition, data.declaration, exceptions))
 
 
 proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
@@ -721,9 +722,9 @@ proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
 
    let display_name = get_rule_display_name(filename)
    result.add(new_conditional_rule(level, message, filename, display_name,
-                                   data.first, data.second, ignore_case,
+                                   ignore_case,
                                    plain_section, latex_section, linter_kind,
-                                   exceptions))
+                                   data.first, data.second, exceptions))
 
 
 proc parse_rule_file*(filename: string): seq[Rule] =
