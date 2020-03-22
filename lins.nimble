@@ -23,6 +23,7 @@ task test, "Run the test suite.":
    exec("nimble lexertests")
    exec("nimble parsertests")
    exec("nimble utilstests")
+   exec("nimble lintertests")
 
 
 task lexertests, "Run the lexer test suite.":
@@ -41,3 +42,7 @@ task utilstests, "Run the utils test suite.":
    with_dir("tests/utils"):
       exec("nim c --hints:off -r twordwrap")
 
+
+task lintertests, "Run the linter test suite.":
+   with_dir("tests/linters"):
+      exec("nim c --hints:off -r tlatex")
