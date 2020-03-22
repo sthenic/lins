@@ -20,6 +20,7 @@ task build_release_xwin64, "Cross-compile the application into a Windows executa
 
 
 task test, "Run the test suite.":
+   exec("nimble install -d")
    exec("nimble lexertests")
    exec("nimble parsertests")
    exec("nimble utilstests")
