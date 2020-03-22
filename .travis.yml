@@ -7,7 +7,7 @@ matrix:
       os: linux
       dist: xenial
       script:
-        - nim tests
+        - nimble test
 
     - name: "Documentation"
       language: python
@@ -35,7 +35,7 @@ matrix:
     - name: "Build macOS"
       os: osx
       script:
-        - nim build
+        - nimble build_release
       before_deploy:
         - ARCHIVE_FILENAME="lins-${LINS_VERSION}-macos"
         - tar -czf "${ARCHIVE_FILENAME}.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
@@ -55,7 +55,7 @@ matrix:
       os: linux
       dist: xenial
       script:
-        - nim build
+        - nimble build_release
       before_deploy:
         - source /etc/os-release
         - PLATFORM_INFO="${ID}-${VERSION_ID}-$(uname -i)"
@@ -87,7 +87,7 @@ matrix:
       before_install:
         - sudo apt install -y mingw-w64 zip
       script:
-        - nim buildxwin64
+        - nimble build_release_xwin64
       before_deploy:
         - ARCHIVE_FILENAME="lins-${LINS_VERSION}-win_x86_64"
         - curl https://nim-lang.org/download/dlls.zip -sSf > dlls.zip
@@ -112,5 +112,4 @@ install:
 before_script:
   - export PATH=$HOME/.nimble/bin:$PATH
   - nimble refresh -y
-  - nimble install yaml@#head -y
   - LINS_VERSION=$(cat VERSION)
