@@ -50,7 +50,7 @@ type
       MIN
       MAX
 
-   Position = tuple
+   Position* = tuple
       line, col: int
 
    Violation* = tuple

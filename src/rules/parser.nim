@@ -5,7 +5,6 @@ import tables
 import typetraits
 import strutils
 import strformat
-import sequtils
 import os
 import nre
 import terminal
@@ -531,7 +530,7 @@ template debug_conditional(data: typed, filename: string,
       debug_latex_section(latex_section)
 
 
-proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
+proc parse_rule(data: ExistenceYAML, filename: string): Rule =
    ## Parse and validate YAML data for the rule 'existence' and return a
    ## sequence of RuleExistence objects.
    validate_extension_point(data, "existence", filename)
@@ -572,12 +571,12 @@ proc parse_rule(data: ExistenceYAML, filename: string): seq[Rule] =
    debug_existence(data, filename, token_str, latex_section)
 
    let display_name = get_rule_display_name(filename)
-   result.add(new_existence_rule(level, message, filename, display_name,
-                                 ignore_case, plain_section,
-                                 latex_section, linter_kind, token_str, exceptions))
+   result = new_existence_rule(level, message, filename, display_name,
+                               ignore_case, plain_section,
+                               latex_section, linter_kind, token_str, exceptions)
 
 
-proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
+proc parse_rule(data: SubstitutionYAML, filename: string): Rule =
    ## Parse and validate YAML data for the rule 'substitution' and return a
    ## sequence of RuleSubstitution objects.
    validate_extension_point(data, "substitution", filename)
@@ -605,13 +604,13 @@ proc parse_rule(data: SubstitutionYAML, filename: string): seq[Rule] =
    debug_substitution(data, filename, key_str, latex_section)
 
    let display_name = get_rule_display_name(filename)
-   result.add(new_substitution_rule(level, message, filename, display_name,
-                                    ignore_case,
-                                    plain_section, latex_section, linter_kind,
-                                    key_str, exceptions, subst_table))
+   result = new_substitution_rule(level, message, filename, display_name,
+                                  ignore_case,
+                                  plain_section, latex_section, linter_kind,
+                                  key_str, exceptions, subst_table)
 
 
-proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
+proc parse_rule(data: OccurrenceYAML, filename: string): Rule =
    ## Parse and validate YAML data for the rule 'occurrence' and return a
    ## sequence of RuleOccurrence objects.
    validate_extension_point(data, "occurrence", filename)
@@ -624,13 +623,13 @@ proc parse_rule(data: OccurrenceYAML, filename: string): seq[Rule] =
    debug_occurrence(data, filename, latex_section)
 
    let display_name = get_rule_display_name(filename)
-   result.add(new_occurrence_rule(level, message, filename, display_name,
-                                  ignore_case,
-                                  plain_section, latex_section, linter_kind,
-                                  data.token, exceptions, limit, limit_kind))
+   result = new_occurrence_rule(level, message, filename, display_name,
+                                ignore_case,
+                                plain_section, latex_section, linter_kind,
+                                data.token, exceptions, limit, limit_kind)
 
 
-proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
+proc parse_rule(data: RepetitionYAML, filename: string): Rule =
    ## Parse and validate YAML data for the rule 'repetition' and return a
    ## sequence of RuleRepetition objects.
    validate_extension_point(data, "repetition", filename)
@@ -642,13 +641,13 @@ proc parse_rule(data: RepetitionYAML, filename: string): seq[Rule] =
    debug_repetition(data, filename, latex_section)
 
    let display_name = get_rule_display_name(filename)
-   result.add(new_repetition_rule(level, message, filename, display_name,
-                                  ignore_case, plain_section,
-                                  latex_section, linter_kind,
-                                  data.token, exceptions))
+   result = new_repetition_rule(level, message, filename, display_name,
+                                ignore_case, plain_section,
+                                latex_section, linter_kind,
+                                data.token, exceptions)
 
 
-proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
+proc parse_rule(data: ConsistencyYAML, filename: string): Rule =
    ## Parse and validate YAML data for the rule 'consistency' and return a
    ## sequence of RuleConsistency objects.
    validate_extension_point(data, "consistency", filename)
@@ -677,13 +676,13 @@ proc parse_rule(data: ConsistencyYAML, filename: string): seq[Rule] =
 
       debug_consistency_entry(data, lfirst, lsecond, latex_section)
 
-      result.add(new_consistency_rule(level, message, filename, display_name,
-                                      ignore_case,
-                                      plain_section, latex_section, linter_kind,
-                                      lfirst, lsecond, exceptions))
+      result = new_consistency_rule(level, message, filename, display_name,
+                                    ignore_case,
+                                    plain_section, latex_section, linter_kind,
+                                    lfirst, lsecond, exceptions)
 
 
-proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
+proc parse_rule(data: DefinitionYAML, filename: string): Rule =
    ## Parse and validate YAML data for the rule 'definition' and return a
    ## sequence of RuleDefinition objects.
    validate_extension_point(data, "definition", filename)
@@ -697,13 +696,13 @@ proc parse_rule(data: DefinitionYAML, filename: string): seq[Rule] =
    debug_definition(data, filename, latex_section)
 
    let display_name = get_rule_display_name(filename)
-   result.add(new_definition_rule(level, message, filename, display_name,
-                                  ignore_case,
-                                  plain_section, latex_section, linter_kind,
-                                  data.definition, data.declaration, exceptions))
+   result = new_definition_rule(level, message, filename, display_name,
+                                ignore_case,
+                                plain_section, latex_section, linter_kind,
+                                data.definition, data.declaration, exceptions)
 
 
-proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
+proc parse_rule(data: ConditionalYAML, filename: string): Rule =
    ## Parse and validate YAML data for the rule 'definition' and return a
    ## sequence of RuleDefinition objects.
    validate_extension_point(data, "conditional", filename)
@@ -721,13 +720,13 @@ proc parse_rule(data: ConditionalYAML, filename: string): seq[Rule] =
    debug_conditional(data, filename, latex_section)
 
    let display_name = get_rule_display_name(filename)
-   result.add(new_conditional_rule(level, message, filename, display_name,
-                                   ignore_case,
-                                   plain_section, latex_section, linter_kind,
-                                   data.first, data.second, exceptions))
+   result = new_conditional_rule(level, message, filename, display_name,
+                                 ignore_case,
+                                 plain_section, latex_section, linter_kind,
+                                 data.first, data.second, exceptions)
 
 
-proc parse_rule_file*(filename: string): seq[Rule] =
+proc parse_rule_file*(filename: string): Rule =
    ##  Parse a YAML-formatted rule file and return a list of rule objects.
    ##
    ##  This function raises RuleValueError when a field has an unexpected or an
@@ -766,6 +765,31 @@ proc parse_rule_file*(filename: string): seq[Rule] =
                 "extension point. Skipping for now.", filename)
 
 
+proc parse_rule_string*(s: string): Rule =
+   ##  Parse a YAML-formatted rule specification from the input string.
+   ##
+   ##  This function raises RuleValueError when a field has an unexpected or an
+   ##  unsupported value.
+   var success = false
+   var data = Rules.new()
+
+   # Open the stream
+   for f in data.fields:
+      try:
+         load(s, f)
+         result = parse_rule(f, "string input")
+         success = true
+         break
+      except YamlConstructionError, YamlParserError:
+         discard
+
+   if not success:
+      log.abort(RuleParseError,
+                "Parse error in input string. Either it's not a valid YAML " &
+                "file or it doesn't specify the required fields for the " &
+                "extension point.")
+
+
 proc parse_rule_dir(rule_root_dir: string, mode: Mode): seq[Rule] =
    if not os.dir_exists(rule_root_dir):
       log.abort(RulePathError, "Invalid path '$1'.", rule_root_dir)
@@ -783,7 +807,7 @@ proc parse_rule_dir(rule_root_dir: string, mode: Mode): seq[Rule] =
             continue
 
          try:
-            result = concat(result, parse_rule_file(path))
+            add(result, parse_rule_file(path))
          except RuleValueError:
             discard
          except RuleParseError:
@@ -799,7 +823,7 @@ proc parse_rule_dir(rule_root_dir: string, mode: Mode): seq[Rule] =
             continue
 
          try:
-            result = concat(result, parse_rule_file(path))
+            add(result, parse_rule_file(path))
          except RuleValueError:
             discard
          except RuleParseError:

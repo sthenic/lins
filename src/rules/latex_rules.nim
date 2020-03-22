@@ -3,7 +3,8 @@ import nre
 import ./rules
 import ../parsers/latex_parser
 
-export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation
+export rules.reset, rules.enforce, rules.Rule, rules.Severity, rules.Violation,
+       rules.Position
 
 
 proc is_only_not(r: Rule): bool =
