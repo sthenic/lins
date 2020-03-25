@@ -258,15 +258,18 @@ proc handle_category_1(p: var LaTeXParser) =
    # group does not belong to any object and we continue with just incrementing
    # the delimiter count. However, if the scope entry is not empty, we update
    # the entry and begin another enclosure since this is a group that belongs
-   # to a control word.
+   # to a control word. Additionally, we inherit the leading context from the
+   # existing scope entry if the control word is followed by more than one
+   # capture group.
    inc(p.delimiter_count)
    if not is_empty(p.scope_entry):
+      let context_before = p.scope_entry.context.before
       p.scope_entry = ScopeEntry(name: p.scope_entry.name,
                                  kind: p.scope_entry.kind,
                                  encl: Group,
                                  count: p.scope_entry.count + 1,
                                  delimiter_count: p.delimiter_count)
-      begin_enclosure(p, false, false, p.tok.context.before)
+      begin_enclosure(p, false, false, context_before)
    get_token(p)
 
 
