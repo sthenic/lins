@@ -32,6 +32,9 @@ template run_test(title: string, rules: var seq[Rule], stimuli: string,
                       fgWhite, "Test '",  title, "'")
       nof_passed += 1
    except AssertionError:
+      echo "Full response:"
+      for r in response:
+         echo r
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
                       fgWhite, "Test '",  title, "'")
       nof_failed += 1
@@ -239,4 +242,41 @@ of the alphabet into groups of three letters each.
 """, @[
    create_violation(existence_exceptions, pos(1, 12), "ABC"),
    create_violation(existence_exceptions, pos(1, 25), "EFG")
+])
+
+
+let existence_latex_scopes = parse_rule_string("""
+extends: existence
+message: "Remove '$1'."
+ignorecase: false
+level: warning
+latex:
+  - name: foo
+    type: control sequence
+    before: required\s$
+  - name: bar
+    type: environment
+    logic: and
+  - name: baz
+    type: control sequence
+    logic: and
+tokens:
+- here
+- this""")
+trules = @[existence_latex_scopes]
+run_test("Existence, LaTeX scopes", trules,
+"""
+Some introductory text is required \foo{to cause the rule to be
+enforced in here}{and here too} but \foo{the rule is not enforced
+in here}.
+
+The rule will \baz{not be enforced here}
+\begin{bar}
+and not here either.
+\baz{However, this text will be targeted by the rule.}
+\end{bar}
+""", @[
+   create_violation(existence_latex_scopes, pos(2, 13), "here"),
+   create_violation(existence_latex_scopes, pos(2, 5), "here"),
+   create_violation(existence_latex_scopes, pos(8, 10), "this")
 ])
