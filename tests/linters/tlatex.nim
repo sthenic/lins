@@ -23,7 +23,6 @@ template run_test(title: string, rules: var seq[Rule], stimuli: string,
          add(response, r.enforce(seg))
 
    try:
-      do_assert(len(response) == len(reference))
       for i in 0..<response.len:
          if debug:
             echo response[i]
@@ -38,7 +37,7 @@ template run_test(title: string, rules: var seq[Rule], stimuli: string,
       nof_failed += 1
    except IndexError:
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
-                      fgWhite, "Test '",  title, "'", #resetStyle,
+                      fgWhite, "Test '",  title, "'",
                       " (missing reference data)")
       nof_failed += 1
 
@@ -57,7 +56,7 @@ level: warning
 tokens:
 - foo
 - bar""")
-add(trules, existence_foo_bar)
+trules = @[existence_foo_bar]
 run_test("Existence, simple", trules,
 """
 Catch foo if you can. Bar is trying to sneak past too.
@@ -116,7 +115,7 @@ message: "Remove '$1'."
 ignorecase: false
 level: suggestion
 scope:
-   - comment
+- comment
 tokens:
 - TODO
 - FIXME""")
@@ -139,7 +138,7 @@ message: "Remove '$1'."
 ignorecase: true
 level: suggestion
 scope:
-   - title
+- title
 tokens:
 - foo""")
 trules = @[existence_scope_title]
@@ -157,4 +156,87 @@ We need to go even deeper to explain the origins of 'foo'.
    create_violation(existence_scope_title, pos(1, 1), "foo"),
    create_violation(existence_scope_title, pos(4, 1), "foo"),
    create_violation(existence_scope_title, pos(7, 1), "foo")
+])
+
+
+let existence_scope_math = parse_rule_string("""
+extends: existence
+message: "Remove '$1'."
+ignorecase: true
+level: suggestion
+nonword: true
+scope:
+- math
+tokens:
+- foo""")
+trules = @[existence_scope_math]
+run_test("Existence, scope: math", trules,
+"""
+Foo in inline math:
+$foo(x)$
+\(x(foo)\)
+
+Foo in displayed math:
+$$foo(x)$$
+\[foo(y)\]
+
+Foo in equations:
+\begin{equation}
+\sum_{k=0}^\infty foo_k
+\end{equation}
+
+\begin{equation*}
+\sum_{k=0}^\infty foo_k
+\end{equation*}
+
+""", @[
+   create_violation(existence_scope_math, pos(2, 1), "foo"),
+   create_violation(existence_scope_math, pos(3, 3), "foo"),
+   create_violation(existence_scope_math, pos(6, 1), "foo"),
+   create_violation(existence_scope_math, pos(7, 1), "foo"),
+   create_violation(existence_scope_math, pos(11, 6), "foo"),
+   create_violation(existence_scope_math, pos(15, 6), "foo")
+])
+
+
+let existence_scope_text = parse_rule_string("""
+extends: existence
+message: "Remove '$1'."
+ignorecase: true
+level: suggestion
+nonword: true
+scope:
+- text
+tokens:
+- foo""")
+trules = @[existence_scope_text]
+run_test("Existence, scope: text", trules,
+"""
+Don't trigger on this foo.
+\begin{document}
+Trigger on this foo.
+\end{document}
+""", @[
+   create_violation(existence_scope_text, pos(3, 17), "foo")
+])
+
+
+let existence_exceptions = parse_rule_string("""
+extends: existence
+message: "Remove '$1'."
+ignorecase: false
+level: suggestion
+nonword: false
+tokens:
+- '[A-Z]{3,}'
+exceptions:
+- CDE""")
+trules = @[existence_exceptions]
+run_test("Existence, regex w/ exceptions", trules,
+"""
+The groups ABC, CDE and EFG are what you get if you split the first nine letters
+of the alphabet into groups of three letters each.
+""", @[
+   create_violation(existence_exceptions, pos(1, 12), "ABC"),
+   create_violation(existence_exceptions, pos(1, 25), "EFG")
 ])
