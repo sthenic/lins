@@ -180,12 +180,12 @@ run_test("Control sequence followed by options and groups",
    LaTeXTextSegment.new(
       """first group""", 1, 40, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Group, 2, 1,
-         ("q[options here]", ""))
+         ("Text before ", ""))
       ]),
    LaTeXTextSegment.new(
       """second group""", 1, 53, @[], @[
          ScopeEntry.new("mycontrolseq", ControlSequence, Group, 3, 1,
-         ("e]{first group}", ""))
+         ("Text before ", ""))
       ]),
    LaTeXTextSegment.new(
       """Text before .""", 1, 0, @[], @[]),
@@ -303,7 +303,7 @@ run_test("Option enclosure not allowed in math (equation)",
    ]),
    LaTeXTextSegment.new("2", 2, 24, @[], @[
       ScopeEntry.new("equation", ScopeKind.Environment, Enclosure.Environment, 0),
-      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1, ("{x_k^2 + y_k^2}", "")),
+      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1, ("n{equation}\n   ", "")),
    ]),
    LaTeXTextSegment.new(" ,x, y [0.5, 1) ", 1, 16, @[(1, 2)], @[
       ScopeEntry.new("equation", ScopeKind.Environment, Enclosure.Environment, 0),
@@ -319,7 +319,7 @@ run_test("Option enclosure not allowed in math (display math)",
    ]),
    LaTeXTextSegment.new("2", 1, 23, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0),
-      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1, ("{x_k^2 + y_k^2}", "")),
+      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1, ("$$", "")),
    ]),
    LaTeXTextSegment.new(",x, y [0.5, 1)", 1, 25, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.DisplayMath, 0),
@@ -335,7 +335,7 @@ run_test("Option enclosure not allowed in math (inline math)",
    ]),
    LaTeXTextSegment.new("2", 1, 22, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0),
-      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1, ("{x_k^2 + y_k^2}", "")),
+      ScopeEntry.new("frac", ScopeKind.ControlSequence, Enclosure.Group, 2, 1, ("$", "")),
    ]),
    LaTeXTextSegment.new(",x, y [0.5, 1)", 1, 24, @[], @[
       ScopeEntry.new("", ScopeKind.Math, Enclosure.Math, 0),
@@ -464,7 +464,7 @@ A simple sentence.
 \end{mytext}""", @[
    LaTeXTextSegment.new("Capture group 1", 1, 15, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
-      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 1, 1, ("\\begin{mytext}", ""))
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 1, 1, ("", ""))
    ]),
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
@@ -498,11 +498,11 @@ A simple sentence.
    ]),
    LaTeXTextSegment.new("required capture group", 1, 37, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
-      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 2, 1, ("you to include]", ""))
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 2, 1, ("\\begin{mytext}", ""))
    ]),
    LaTeXTextSegment.new("also required", 1, 61, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
-      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 3, 1, (" capture group}", ""))
+      ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Group, 3, 1, ("\\begin{mytext}", ""))
    ]),
    LaTeXTextSegment.new("A simple sentence. ", 2, 0, @[], @[
       ScopeEntry.new("mytext", ScopeKind.Environment, Enclosure.Environment, 0),
@@ -534,7 +534,7 @@ Row 2, column 0 & Row 2, column 1
    LaTeXTextSegment.new("ll", 2, 16, @[], @[
       ScopeEntry.new("table", ScopeKind.Environment, Enclosure.Environment, 0),
       ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Environment, 0, 0, ("\\begin{table}%\n", "")),
-      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Group, 1, 1, ("\\begin{tabular}", "")),
+      ScopeEntry.new("tabular", ScopeKind.Environment, Enclosure.Group, 1, 1, ("\\begin{table}%\n", "")),
    ]),
    LaTeXTextSegment.new("Header column 0 & Header column 1 ",
    3, 8, @[], @[
@@ -580,7 +580,7 @@ Row 2, column 0 & Row 2, column 1 & Row 2, column 2
                         "caption=This is the table caption. ", 2, 2,
    @[(39, 3), (50, 4), (84, 5)], @[
       ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Environment, 0),
-      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 1, 1, ("\\begin{tgtab}", ""))
+      ScopeEntry.new("tgtab", ScopeKind.Environment, Enclosure.Group, 1, 1, ("", ""))
    ]),
    LaTeXTextSegment.new(" Row 0, column 0 & Row 0, column 1 & Row 0, column 2 ",
    6, 3, @[(1, 7)], @[
