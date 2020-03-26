@@ -264,7 +264,7 @@ tokens:
 - here
 - this""")
 trules = @[existence_latex_scopes]
-run_test("Existence, LaTeX scopes", trules,
+run_test("Existence, LaTeX scopes (AND and OR)", trules,
 """
 Some introductory text is required \foo{to cause the rule to be
 enforced in here}{and here too} but \foo{the rule is not enforced
@@ -279,4 +279,51 @@ and not here either.
    create_violation(existence_latex_scopes, pos(2, 13), "here"),
    create_violation(existence_latex_scopes, pos(2, 5), "here"),
    create_violation(existence_latex_scopes, pos(8, 10), "this")
+])
+
+
+let existence_latex_scope_not = parse_rule_string("""
+extends: existence
+message: "Remove '$1'."
+ignorecase: false
+level: warning
+latex:
+  - name: foo
+    type: control sequence
+  - name: bar
+    type: control sequence
+    logic: not
+tokens:
+- here""")
+trules = @[existence_latex_scope_not]
+run_test("Existence, LaTeX scopes (NOT)", trules,
+"""
+Check for \foo{violations in here but not \bar{in here}}
+""", @[
+   create_violation(existence_latex_scope_not, pos(1, 15), "here"),
+])
+
+
+let existence_latex_scope_descend = parse_rule_string("""
+extends: existence
+message: "A caption should be more than five words."
+ignorecase: true
+nonword: true
+level: warning
+latex:
+  - name: caption
+    type: control sequence
+    descend: false
+tokens:
+- ^(\s*\b[\w']+\.?){0,5}$""")
+trules = @[existence_latex_scope_descend]
+run_test("Existence, LaTeX descend", trules,
+"""
+\caption{Fewer than five words.}
+\caption{This contains exactly five words.}
+\caption{This is more than five words.}
+\caption{This is more than five words \foo{but this isn't}.}
+""", @[
+   create_violation(existence_latex_scope_descend, pos(1, 1)),
+   create_violation(existence_latex_scope_descend, pos(2, 1)),
 ])
