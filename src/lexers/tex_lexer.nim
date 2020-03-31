@@ -98,6 +98,9 @@ proc get_context_before(l: TeXLexer, pos: int): string =
 
 proc get_context_after(l: TeXLexer, pos: int): string =
    for i in countup(1, l.nof_context_chars):
+      if pos + i > high(l.buf):
+         break
+
       let c = l.buf[pos + i]
       if c == '\0':
          break

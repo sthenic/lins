@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * The plain text parser now ignores empty segments, just like the LaTeX parser.
 * (LaTeX) Fixed an issue where the leading context for capture groups following a control word or environment was not set correctly for any group but the first one.
+* (LaTeX) Fixed a potential access violation that would cause the application to crash.
 
 ## v0.6.1 - 2019-05-11
 
