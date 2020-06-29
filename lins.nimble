@@ -7,7 +7,7 @@ bin = @["lins"]
 skip_ext = @["nim", "txt"]
 
 # Dependencies
-requires "nim >= 1.0.0"
+requires "nim >= 1.2.0"
 requires "yaml >= 0.13.0"
 
 # Tasks
@@ -42,6 +42,7 @@ task parsertests, "Run the parser test suite.":
 task utilstests, "Run the utils test suite.":
    with_dir("tests/utils"):
       exec("nim c --hints:off -r twordwrap")
+      exec("nim c --hints:off -r tconfiguration")
 
 
 task lintertests, "Run the linter test suite.":
