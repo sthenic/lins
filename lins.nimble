@@ -8,7 +8,7 @@ skip_ext = @["nim", "txt"]
 
 # Dependencies
 requires "nim >= 1.2.0"
-requires "yaml >= 0.13.0"
+requires "yaml 0.13.1"
 
 # Tasks
 task build_release, "Compile the application into an executable (release mode, don't install)":
