@@ -2,7 +2,7 @@ import streams
 import terminal
 import strformat
 
-include ../../src/rules/parser
+include ../../src/parsers/rule_parser
 include ../../src/rules/latex_rules
 include ../../src/linters/linter
 
