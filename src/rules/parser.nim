@@ -15,9 +15,9 @@ import ../utils/cli
 import ../utils/configuration
 
 type
-   RuleValueError = object of Exception
-   RuleParseError = object of Exception
-   RulePathError* = object of Exception
+   RuleValueError = object of ValueError
+   RuleParseError = object of ValueError
+   RulePathError* = object of ValueError
 
 type
    Mode = enum
@@ -33,93 +33,93 @@ type
       extends: string
       message: string
       level: string
-      ignorecase: bool
-      nonword: bool
-      raw: seq[string]
-      tokens: seq[string]
-      debug: bool
-      scope: seq[string]
-      latex: seq[Table[string, string]]
-      linter: seq[string]
-      exceptions: seq[string]
+      ignorecase {.defaultVal: false.}: bool
+      nonword {.defaultVal: false.}: bool
+      raw {.defaultVal: @[].}: seq[string]
+      tokens {.defaultVal: @[].}: seq[string]
+      debug {.defaultVal: false.}: bool
+      scope {.defaultVal: @[].}: seq[string]
+      latex {.defaultVal: @[].}: seq[Table[string, string]]
+      linter {.defaultVal: @[].}: seq[string]
+      exceptions {.defaultVal: @[].}: seq[string]
 
    SubstitutionYAML = object
       extends: string
       message: string
       level: string
-      ignorecase: bool
-      nonword: bool
+      ignorecase {.defaultVal: false.}: bool
+      nonword {.defaultVal: false.}: bool
       swap: Table[string, string]
-      debug: bool
-      scope: seq[string]
-      latex: seq[Table[string, string]]
-      linter: seq[string]
-      exceptions: seq[string]
+      debug {.defaultVal: false.}: bool
+      scope {.defaultVal: @[].}: seq[string]
+      latex {.defaultVal: @[].}: seq[Table[string, string]]
+      linter {.defaultVal: @[].}: seq[string]
+      exceptions {.defaultVal: @[].}: seq[string]
 
    OccurrenceYAML = object
       extends: string
       message: string
       level: string
-      ignorecase: bool
+      ignorecase {.defaultVal: false.}: bool
       limit: int
       limit_kind: string
       token: string
-      debug: bool
-      scope: seq[string]
-      latex: seq[Table[string, string]]
-      linter: seq[string]
-      exceptions: seq[string]
+      debug {.defaultVal: false.}: bool
+      scope {.defaultVal: @[].}: seq[string]
+      latex {.defaultVal: @[].}: seq[Table[string, string]]
+      linter {.defaultVal: @[].}: seq[string]
+      exceptions {.defaultVal: @[].}: seq[string]
 
    RepetitionYAML = object
       extends: string
       message: string
       level: string
-      ignorecase: bool
+      ignorecase {.defaultVal: false.}: bool
       token: string
-      debug: bool
-      scope: seq[string]
-      latex: seq[Table[string, string]]
-      linter: seq[string]
-      exceptions: seq[string]
+      debug {.defaultVal: false.}: bool
+      scope {.defaultVal: @[].}: seq[string]
+      latex {.defaultVal: @[].}: seq[Table[string, string]]
+      linter {.defaultVal: @[].}: seq[string]
+      exceptions {.defaultVal: @[].}: seq[string]
 
    ConsistencyYAML = object
       extends: string
       message: string
       level: string
-      ignorecase: bool
-      nonword: bool
+      ignorecase {.defaultVal: false.}: bool
+      nonword {.defaultVal: false.}: bool
       either: Table[string, string]
-      debug: bool
-      scope: seq[string]
-      latex: seq[Table[string, string]]
-      linter: seq[string]
-      exceptions: seq[string]
+      debug {.defaultVal: false.}: bool
+      scope {.defaultVal: @[].}: seq[string]
+      latex {.defaultVal: @[].}: seq[Table[string, string]]
+      linter {.defaultVal: @[].}: seq[string]
+      exceptions {.defaultVal: @[].}: seq[string]
 
    DefinitionYAML = object
       extends: string
       message: string
       level: string
-      ignorecase: bool
-      definition: string
-      declaration: string
-      debug: bool
-      scope: seq[string]
-      latex: seq[Table[string, string]]
-      linter: seq[string]
-      exceptions: seq[string]
+      ignorecase {.defaultVal: false.}: bool
+      definition {.defaultVal: r"(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)".}: string
+      declaration {.defaultVal: r"\b([A-Z]{3,5})\b".}: string
+      debug {.defaultVal: false.}: bool
+      scope {.defaultVal: @[].}: seq[string]
+      latex {.defaultVal: @[].}: seq[Table[string, string]]
+      linter {.defaultVal: @[].}: seq[string]
+      exceptions {.defaultVal: @[].}: seq[string]
 
    ConditionalYAML = object
       extends: string
       message: string
       level: string
-      ignorecase: bool
+      ignorecase {.defaultVal: false.}: bool
       first: string
       second: string
-      debug: bool
-      scope: seq[string]
-      latex: seq[Table[string, string]]
-      linter: seq[string]
-      exceptions: seq[string]
+      debug {.defaultVal: false.}: bool
+      scope {.defaultVal: @[].}: seq[string]
+      latex {.defaultVal: @[].}: seq[Table[string, string]]
+      linter {.defaultVal: @[].}: seq[string]
+      exceptions {.defaultVal: @[].}: seq[string]
 
    Rules = tuple
       existence: ExistenceYAML
@@ -130,66 +130,37 @@ type
       definition: DefinitionYAML
       conditional: ConditionalYAML
 
-# Default values for YAML objects
-set_default_value(ExistenceYAML, ignorecase, false)
-set_default_value(SubstitutionYAML, ignorecase, false)
-set_default_value(OccurrenceYAML, ignorecase, false)
-set_default_value(RepetitionYAML, ignorecase, false)
-set_default_value(ConsistencyYAML, ignorecase, false)
-set_default_value(DefinitionYAML, ignorecase, false)
-set_default_value(ConditionalYAML, ignorecase, false)
+# set_default_value(ExistenceYAML, latex, @[])
+# set_default_value(SubstitutionYAML, latex, @[])
+# set_default_value(OccurrenceYAML, latex, @[])
+# set_default_value(RepetitionYAML, latex, @[])
+# set_default_value(ConsistencyYAML, latex, @[])
+# set_default_value(DefinitionYAML, latex, @[])
+# set_default_value(ConditionalYAML, latex, @[])
 
-set_default_value(ExistenceYAML, debug, false)
-set_default_value(SubstitutionYAML, debug, false)
-set_default_value(OccurrenceYAML, debug, false)
-set_default_value(RepetitionYAML, debug, false)
-set_default_value(ConsistencyYAML, debug, false)
-set_default_value(DefinitionYAML, debug, false)
-set_default_value(ConditionalYAML, debug, false)
+# set_default_value(ExistenceYAML, scope, @[])
+# set_default_value(SubstitutionYAML, scope, @[])
+# set_default_value(OccurrenceYAML, scope, @[])
+# set_default_value(RepetitionYAML, scope, @[])
+# set_default_value(ConsistencyYAML, scope, @[])
+# set_default_value(DefinitionYAML, scope, @[])
+# set_default_value(ConditionalYAML, scope, @[])
 
-set_default_value(ExistenceYAML, latex, @[])
-set_default_value(SubstitutionYAML, latex, @[])
-set_default_value(OccurrenceYAML, latex, @[])
-set_default_value(RepetitionYAML, latex, @[])
-set_default_value(ConsistencyYAML, latex, @[])
-set_default_value(DefinitionYAML, latex, @[])
-set_default_value(ConditionalYAML, latex, @[])
+# set_default_value(ExistenceYAML, linter, @[])
+# set_default_value(SubstitutionYAML, linter, @[])
+# set_default_value(OccurrenceYAML, linter, @[])
+# set_default_value(RepetitionYAML, linter, @[])
+# set_default_value(ConsistencyYAML, linter, @[])
+# set_default_value(DefinitionYAML, linter, @[])
+# set_default_value(ConditionalYAML, linter, @[])
 
-set_default_value(ExistenceYAML, scope, @[])
-set_default_value(SubstitutionYAML, scope, @[])
-set_default_value(OccurrenceYAML, scope, @[])
-set_default_value(RepetitionYAML, scope, @[])
-set_default_value(ConsistencyYAML, scope, @[])
-set_default_value(DefinitionYAML, scope, @[])
-set_default_value(ConditionalYAML, scope, @[])
-
-set_default_value(ExistenceYAML, linter, @[])
-set_default_value(SubstitutionYAML, linter, @[])
-set_default_value(OccurrenceYAML, linter, @[])
-set_default_value(RepetitionYAML, linter, @[])
-set_default_value(ConsistencyYAML, linter, @[])
-set_default_value(DefinitionYAML, linter, @[])
-set_default_value(ConditionalYAML, linter, @[])
-
-set_default_value(ExistenceYAML, exceptions, @[])
-set_default_value(SubstitutionYAML, exceptions, @[])
-set_default_value(OccurrenceYAML, exceptions, @[])
-set_default_value(RepetitionYAML, exceptions, @[])
-set_default_value(ConsistencyYAML, exceptions, @[])
-set_default_value(DefinitionYAML, exceptions, @[])
-set_default_value(ConditionalYAML, exceptions, @[])
-
-set_default_value(ExistenceYAML, nonword, false)
-set_default_value(ExistenceYAML, raw, @[])
-set_default_value(ExistenceYAML, tokens, @[])
-
-set_default_value(SubstitutionYAML, nonword, false)
-
-set_default_value(ConsistencyYAML, nonword, false)
-
-set_default_value(DefinitionYAML, definition,
-                  r"(?:\b[A-Z][a-z]+ )+\(([A-Z]{3,5})\)")
-set_default_value(DefinitionYAML, declaration, r"\b([A-Z]{3,5})\b")
+# set_default_value(ExistenceYAML, exceptions, @[])
+# set_default_value(SubstitutionYAML, exceptions, @[])
+# set_default_value(OccurrenceYAML, exceptions, @[])
+# set_default_value(RepetitionYAML, exceptions, @[])
+# set_default_value(ConsistencyYAML, exceptions, @[])
+# set_default_value(DefinitionYAML, exceptions, @[])
+# set_default_value(ConditionalYAML, exceptions, @[])
 
 
 proc new(t: typedesc[ExistenceYAML]): ExistenceYAML =
@@ -333,31 +304,17 @@ template validate_latex_section(data: typed, filename: string,
    for raw_entry in data.scope:
       case to_lower_ascii(raw_entry):
       of "text":
-         add(latex_section.scope, (name: "document",
-                                   kind: ScopeKind.Environment,
-                                   before: "", logic: OR, descend: true))
+         add(latex_section.scope, new_latex_scope_entry("document", ScopeKind.Environment, "", OR, true))
       of "comment":
-         add(latex_section.scope, (name: "", kind: ScopeKind.Comment,
-                                   before: "", logic: OR, descend: true))
+         add(latex_section.scope, new_latex_scope_entry("", ScopeKind.Comment, "", OR, true))
       of "math":
-         add(latex_section.scope, (name: "", kind: ScopeKind.Math,
-                                   before: "", logic: OR, descend: true))
-         add(latex_section.scope, (name: "equation",
-                                   kind: ScopeKind.Environment,
-                                   before: "", logic: OR, descend: true))
-         add(latex_section.scope, (name: "equation*",
-                                   kind: ScopeKind.Environment,
-                                   before: "", logic: OR, descend: true))
+         add(latex_section.scope, new_latex_scope_entry("", ScopeKind.Math, "", OR, true))
+         add(latex_section.scope, new_latex_scope_entry("equation", ScopeKind.Environment, "", OR, true))
+         add(latex_section.scope, new_latex_scope_entry("equation*", ScopeKind.Environment, "", OR, true))
       of "title":
-         add(latex_section.scope, (name: "section",
-                                   kind: ScopeKind.ControlSequence,
-                                   before: "", logic: OR, descend: true))
-         add(latex_section.scope, (name: "subsection",
-                                   kind: ScopeKind.ControlSequence,
-                                   before: "", logic: OR, descend: true))
-         add(latex_section.scope, (name: "subsubsection",
-                                   kind: ScopeKind.ControlSequence,
-                                   before: "", logic: OR, descend: true))
+         add(latex_section.scope, new_latex_scope_entry("section", ScopeKind.ControlSequence, "", OR, true))
+         add(latex_section.scope, new_latex_scope_entry("subsection", ScopeKind.ControlSequence, "", OR, true))
+         add(latex_section.scope, new_latex_scope_entry("subsubsection", ScopeKind.ControlSequence, "", OR, true))
       else:
          discard
 

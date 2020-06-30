@@ -99,6 +99,15 @@ type
          observed*: bool
 
 
+proc new_latex_scope_entry*(name: string, kind: ScopeKind, before: string,
+                            logic: ScopeLogic, descend: bool): LaTeXScopeEntry =
+   result.name = name
+   result.kind = kind
+   result.before = before
+   result.logic = logic
+   result.descend = descend
+
+
 proc create_violation*(r: Rule, pos: Position,
                        message_args: varargs[string]): Violation =
    (kind: $r.kind, severity: r.severity, source_file: r.source_file,
