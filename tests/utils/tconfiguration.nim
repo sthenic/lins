@@ -5,7 +5,6 @@ import streams
 
 import ../../src/utils/configuration
 
-# var p: CfgParser
 var nof_passed = 0
 var nof_failed = 0
 
