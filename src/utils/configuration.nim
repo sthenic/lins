@@ -7,10 +7,11 @@ import ./log
 
 type
    CfgState* = object
+      filename*: string
       rule_dirs*: seq[CfgRuleDir]
       styles*: seq[CfgStyle]
 
-   CfgParser* = object
+   CfgParser = object
       filename: string
       parser: parsecfg.CfgParser
       event: CfgEvent
@@ -29,7 +30,6 @@ type
       name*: string
       exceptions*: seq[string]
       only*: seq[string]
-
 
    CfgParseError* = object of ValueError
 
@@ -81,11 +81,8 @@ proc parse_rule_dirs_section(p: var CfgParser) =
 proc parse_except_section(p: var CfgParser) =
    while true:
       get_event(p)
-      if p.event.kind != cfgKeyValuePair:
+      if p.event.kind != cfgKeyValuePair or len(p.event.value) > 0:
          break
-      if len(p.event.value) > 0:
-         warning(p, "Unexpected key/value pair, skipping.")
-         continue
 
       log.debug("    Adding new exception '$1' to rule '$2'.",
                 p.event.key, p.state.styles[^1].rules[^1].name)
@@ -108,7 +105,7 @@ proc parse_only_section(p: var CfgParser) =
 
 proc parse_rule(p: var CfgParser) =
    if p.event.kind != cfgKeyValuePair:
-      abort(p, "Expected a key/value pair.")
+      abort(p, "Expected a 'rule' key/value pair.")
    elif p.event.key != "rule":
       abort(p, "Expected key 'rule'.")
 
@@ -148,7 +145,10 @@ proc parse_style_section(p: var CfgParser) =
       get_event(p)
 
    # At least one rule is expected per style section.
-   parse_rule(p)
+   while true:
+      parse_rule(p)
+      if p.event.kind != cfgKeyValuePair or p.event.key != "rule":
+         break
 
 
 proc parse_section*(p: var CfgParser) =
@@ -161,10 +161,11 @@ proc parse_section*(p: var CfgParser) =
       abort(p, "Unexpected section '$1'.", p.event.section)
 
 
-proc parse*(p: var CfgParser, s: Stream, filename: string): CfgState =
+proc parse*(s: Stream, filename: string): CfgState =
+   var p: CfgParser
    open(p.parser, s, filename)
+   get_event(p)
    while true:
-      get_event(p)
       case p.event.kind
       of cfgEof:
          break
@@ -173,4 +174,63 @@ proc parse*(p: var CfgParser, s: Stream, filename: string): CfgState =
       else:
          abort(p, "Unexpected file contents.")
    close(p.parser)
+   p.state.filename = filename
    result = p.state
+
+
+proc get_configuration_file*(): string =
+   ## Returns the full path to a configuration file, if one exists.
+   const FILENAMES = @[".lins.cfg", "lins.cfg",
+                       ".lins/.lins.cfg", ".lins/lins.cfg"]
+   const FILENAMES_CFGDIR = @["lins/.lins.cfg", "lins/lins.cfg"]
+
+   # Check for the environment variable 'LINS_CFG'. A valid configuration file
+   # specified in this way takes precedence over the regular search.
+   if exists_env("LINS_CFG"):
+      let path = expand_tilde(get_env("LINS_CFG"))
+      if file_exists(path):
+         return path
+      else:
+         log.warning("Environment variable 'LINS_CFG' ('$1') does not " &
+                     "specify an existing file.", path)
+
+   # Walk from the current directory up to the root directory searching for a
+   # configuraiton file.
+   for path in parent_dirs(expand_filename("./"), false, true):
+      for filename in FILENAMES:
+         let tmp = path / filename
+         if file_exists(tmp):
+            return tmp
+
+   # Default path to the user's configuration dir: ~/.config
+   var path_to_cfgdir = get_home_dir() / ".config"
+   when not defined(windows):
+      # If 'XDG_CONFIG_HOME' is defined, we replace the default value.
+      if exists_env("XDG_CONFIG_HOME"):
+         path_to_cfgdir = expand_tilde(get_env("XDG_CONFIG_HOME"))
+
+   for filename in FILENAMES_CFGDIR:
+      let tmp = path_to_cfgdir / filename
+      if file_exists(tmp):
+         return tmp
+
+
+proc get_default_style*(styles: seq[CfgStyle]): string =
+   if exists_env("LINS_DEFAULT_STYLE"):
+      let default_style_env = get_env("LINS_DEFAULT_STYLE")
+      # Validate style
+      for style in styles:
+         if style.name == default_style_env:
+            return default_style_env
+
+      log.warning("Environment variable 'LINS_DEFAULT_STYLE' ('$1') does " &
+                  "not match any defined style.", default_style_env)
+
+   for style in styles:
+      if style.is_default:
+         if len(result) == 0:
+            result = style.name
+         else:
+            log.warning("Only one style may be set as the default. " &
+                        "Ignoring default specifier for style '$1'.",
+                        style.name)
