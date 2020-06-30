@@ -88,4 +88,5 @@ proc enforce*(r: var Rule, seg: LaTeXTextSegment): seq[Violation] =
    if not lint_filter(r, seg):
       return
 
+   # FIXME: Reset when a scope is entered?
    result = enforce(r, seg.base)

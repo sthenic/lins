@@ -7,9 +7,9 @@ import ./log
 import ../rules/rules
 import ../linters/meta_linter
 
-type CLIValueError* = object of Exception
+type CliValueError* = object of ValueError
 
-type CLIState* = object
+type CliState* = object
    has_arguments*: bool
    input_from_stdin*: bool
    is_ok*: bool
@@ -34,13 +34,13 @@ type CLIState* = object
    parser_output_filename*: string
 
 # CLI constructor, initializes an object with default values.
-proc new(t: typedesc[CLIState]): CLIState =
-   result = CLIState(color_mode: Color, severity: SUGGESTION, linter: AUTO,
+proc new(t: typedesc[CliState]): CliState =
+   result = CliState(color_mode: Color, severity: SUGGESTION, linter: AUTO,
                      line_init: 1, col_init: 1)
 
 
-proc parse_cli*(): CLIState =
-   result = CLIState.new()
+proc parse_cli*(): CliState =
+   result = CliState.new()
    if not terminal.isatty(stdout):
       result.color_mode = NoColor
 
@@ -76,12 +76,12 @@ proc parse_cli*(): CLIState =
             result.severity_exit = true
          of "rule":
             if val == "":
-               log.abort(CLIValueError, "Option --rule expects a value.")
+               log.abort(CliValueError, "Option --rule expects a value.")
 
             result.rules.add(val)
          of "rule-dir":
             if val == "":
-               log.abort(CLIValueError, "Option --rule-dir expects a value.")
+               log.abort(CliValueError, "Option --rule-dir expects a value.")
 
             result.rule_dirs.add(val)
          of "minimal":
@@ -97,11 +97,11 @@ proc parse_cli*(): CLIState =
             of "suggestion":
                result.severity = SUGGESTION
             else:
-               log.abort(CLIValueError, "Option --severity expects the " &
+               log.abort(CliValueError, "Option --severity expects the " &
                          "values 'suggestion', 'warning' or 'error'.")
          of "style":
             if val == "":
-               log.abort(CLIValueError, "Option --style expects a value.")
+               log.abort(CliValueError, "Option --style expects a value.")
 
             result.styles.add(val)
          of "list":
@@ -109,27 +109,27 @@ proc parse_cli*(): CLIState =
             result.is_ok = true
          of "parser-output":
             if val == "":
-               log.abort(CLIValueError,
+               log.abort(CliValueError,
                          "Option --parser-output expects a filename.")
 
             result.parser_output_filename = val
          of "line":
             if val == "":
-               log.abort(CLIValueError, "Option --line expects a value.")
+               log.abort(CliValueError, "Option --line expects a value.")
 
             try:
                result.line_init = parse_int(val)
             except ValueError:
-               log.abort(CLIValueError,
+               log.abort(CliValueError,
                          "Failed to convert '$1' to an integer.", val)
          of "col":
             if val == "":
-               log.abort(CLIValueError, "Option --col expects a value.")
+               log.abort(CliValueError, "Option --col expects a value.")
 
             try:
                result.col_init = parse_int(val)
             except ValueError:
-               log.abort(CLIValueError,
+               log.abort(CliValueError,
                          "Failed to convert '$1' to an integer.", val)
          of "linter":
             case val.to_lower_ascii()
@@ -140,13 +140,13 @@ proc parse_cli*(): CLIState =
             of "latex":
                result.linter = Filter.LATEX
             else:
-               log.abort(CLIValueError, "Option --severity expects the " &
+               log.abort(CliValueError, "Option --severity expects the " &
                          "values 'auto', 'plain' or 'latex'.")
          else:
-            log.abort(CLIValueError, "Unknown option '$1'.", key)
+            log.abort(CliValueError, "Unknown option '$1'.", key)
 
       of cmdEnd:
-         log.abort(CLIValueError, "Failed to parse options and arguments " &
+         log.abort(CliValueError, "Failed to parse options and arguments " &
                   "This should not have happened.")
 
    # Check if the user has piped input to the application (the terminal will

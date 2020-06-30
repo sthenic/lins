@@ -1,5 +1,5 @@
 type
-   ParseError* = object of Exception
+   ParseError* = object of ValueError
 
    Linebreak* = tuple
       pos, line: int

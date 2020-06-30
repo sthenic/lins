@@ -10,8 +10,8 @@ import ../parsers/latex_parser
 export ScopeKind
 
 type
-   EnforceError* = object of Exception
-   EnforceNotImplementedError* = object of Exception
+   EnforceError* = object of ValueError
+   EnforceNotImplementedError* = object of ValueError
 
    Severity* = enum
       SUGGESTION

@@ -17,9 +17,9 @@ import ../parsers/latex_parser
 export strformat, Severity, Rule
 
 type
-   LinterFileIOError* = object of Exception
-   LinterValueError* = object of Exception
-   LinterParseError* = object of Exception
+   LinterFileIOError* = object of IOError
+   LinterValueError* = object of ValueError
+   LinterParseError* = object of ValueError
 
    LinterDebugOptions* = tuple
       parser_output_filename: string

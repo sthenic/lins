@@ -843,7 +843,7 @@ proc build_databases(cfg_state: CfgState): Database =
          log.debug("  Adding $1 rule objects from '$2'.", $nof_robj, rule.name)
 
 
-proc get_rules*(cfg_state: CfgState, cli_state: CLIState): seq[Rule] =
+proc get_rules*(cfg_state: CfgState, cli_state: CliState): seq[Rule] =
    ## Return a sequence of rules given the current configuration and CLI state.
    if cli_state.no_cfg:
       # TODO: Is this ok? You can't combine options --no-cfg with --rule-dir
@@ -885,7 +885,7 @@ proc get_rules*(cfg_state: CfgState, cli_state: CLIState): seq[Rule] =
       result.add(style_db[default_style])
 
 
-proc list*(cfg_state: CfgState, cli_state: CLIState) =
+proc list*(cfg_state: CfgState, cli_state: CliState) =
    # Temporarily suppress log messages.
    log.push_quiet_mode(true)
 

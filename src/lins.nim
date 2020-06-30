@@ -34,10 +34,10 @@ if not terminal.isatty(stdout):
    log.set_color_mode(NoColor)
 
 # Parse the arguments and options and return a CLI state object.
-var cli_state: CLIState
+var cli_state: CliState
 try:
    cli_state = parse_cli()
-except CLIValueError:
+except CliValueError:
    quit(EINVAL)
 
 # Parse CLI object state.
