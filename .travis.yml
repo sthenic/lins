@@ -5,7 +5,7 @@ matrix:
   include:
     - name: "Tests"
       os: linux
-      dist: xenial
+      dist: focal
       script:
         - nimble test
 
@@ -14,7 +14,7 @@ matrix:
       python:
         - "3.7"
       os: linux
-      dist: xenial
+      dist: focal
       install:
         - pip3 install sphinx
       before_script:
@@ -81,9 +81,39 @@ matrix:
         on:
           tags: true
 
+    - name: "Build Focal"
+      os: linux
+      dist: focal
+      script:
+        - nimble build_release
+      before_deploy:
+        - source /etc/os-release
+        - PLATFORM_INFO="${ID}-${VERSION_ID}-$(uname -i)"
+        - ARCHIVE_FILENAME="lins-${LINS_VERSION}-${PLATFORM_INFO}"
+        - cd build
+        - chmod -R 755 deb/DEBIAN
+        - sh build_deb.sh "${PLATFORM_INFO}"
+        - cp *.deb ../
+        - cd ..
+        - tar -czf "${ARCHIVE_FILENAME}.tar.gz" lins LICENSE THIRD_PARTY_LICENSES.md
+        - md5sum "${ARCHIVE_FILENAME}.tar.gz" > ${ARCHIVE_FILENAME}.tar.gz.md5
+        - md5sum "${ARCHIVE_FILENAME}.deb" > ${ARCHIVE_FILENAME}.deb.md5
+      deploy:
+        provider: releases
+        api_key: "$GITHUB_OAUTH_TOKEN"
+        skip_cleanup: true
+        overwrite: true
+        file:
+          - "${ARCHIVE_FILENAME}.tar.gz"
+          - "${ARCHIVE_FILENAME}.tar.gz.md5"
+          - "${ARCHIVE_FILENAME}.deb"
+          - "${ARCHIVE_FILENAME}.deb.md5"
+        on:
+          tags: true
+
     - name: "Build Windows"
       os: linux
-      dist: xenial
+      dist: focal
       before_install:
         - sudo apt install -y mingw-w64 zip
       script:
