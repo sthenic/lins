@@ -7,7 +7,7 @@ import streams
 import linters/meta_linter
 import rules/parser
 import utils/log
-import utils/cfg
+import utils/configuration
 import utils/cli
 
 # Version information
@@ -75,17 +75,27 @@ if len(cli_state.parser_output_filename) != 0:
       log.info("Parser output will be written to file '$1'.",
                cli_state.parser_output_filename)
 
-# Create meta linter
+# Create a meta linter.
 var linter = MetaLinter()
 open_linter(linter, cli_state.minimal, cli_state.severity,
             parser_output_stream)
 
-# Parse configuration file.
+# Parse the configuration file.
 var cfg_state: CfgState
-try:
-   cfg_state = parse_cfg_file()
-except CfgFileNotFoundError, CfgParseError, CfgPathError:
-   discard
+let cfg_filename = get_configuration_file()
+if len(cfg_filename) > 0:
+   let fs = new_file_stream(cfg_filename)
+   if is_nil(fs):
+      log.info("Failed to open the configuration file '$1' for parsing.",
+               cfg_filename)
+   else:
+      log.info("Using configuration file '$1'.", cfg_filename)
+      try:
+         cfg_state = parse(fs, cfg_filename)
+      except CfgParseError:
+         discard
+else:
+   log.info("Unable to find a configuration file.")
 
 # Print available styles and the set of active rule files, then exit.
 if cli_state.print_list:

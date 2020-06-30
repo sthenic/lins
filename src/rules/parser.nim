@@ -12,7 +12,7 @@ import terminal
 import ./rules
 import ../utils/log
 import ../utils/cli
-import ../utils/cfg
+import ../utils/configuration
 
 type
    RuleValueError = object of Exception
