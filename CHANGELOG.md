@@ -5,8 +5,14 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 * The plain text parser now ignores empty segments, just like the LaTeX parser.
-* (LaTeX) Fixed an issue where the leading context for capture groups following a control word or environment was not set correctly for any group but the first one.
-* (LaTeX) Fixed a potential access violation that would cause the application to crash.
+* (LaTeX) Fix an issue where the leading context for capture groups following a
+  control word or environment was not set correctly for any group but the first
+  one.
+* (LaTeX) Fix a potential access violation that would cause the application to
+  crash.
+* (LaTeX) The control word `\textbackslash` now inserts a backslash character
+  into the text segment instead of being removed completely.
+* Refactored code for better maintainablilty.
 
 ## v0.6.1 - 2019-05-11
 
@@ -14,7 +20,11 @@ All notable changes to this project will be documented in this file.
 
 ## v0.6.0 - 2019-05-08
 
-* Major refactoring completed to add support for a LaTeX linter. No breaking   changes are expected. There's still a plain text linter which is selected by default. The LaTeX linter is chosen automatically for files with the `.tex` or `.sty` extensions. Please refer to the project documentation for details on the new functionality.
+* Major refactoring completed to add support for a LaTeX linter. No breaking
+  changes are expected. There's still a plain text linter which is selected by
+  default. The LaTeX linter is chosen automatically for files with the `.tex` or
+  `.sty` extensions. Please refer to the project documentation for details on
+  the new functionality.
 
 ## v0.5.1 - 2018-08-28
 
@@ -26,15 +36,19 @@ All notable changes to this project will be documented in this file.
 
 ## v0.4.0 - 2018-08-19
 
-* Searching for a configuration file directly in the user's home has been replaced by instead looking in the user's configuration directory, e.g. ``~/.config``. This new method respects ``XDG_CONFIG_HOME`` on Unix systems.
+* Searching for a configuration file directly in the user's home has been
+  replaced by instead looking in the user's configuration directory, e.g.
+  ``~/.config``. This new method respects ``XDG_CONFIG_HOME`` on Unix systems.
 * Expand '~' when parsing ``--rule-dir`` values.
 * Improved documentation and CLI help text.
 * A lot of internal refactoring and cleanup (not affecting functionality).
 
 ## v0.3.1 - 2018-08-09
 
-* Fixed ANSI escape sequences not being suppressed when piping the output to another application or a file.
-* Fixed an issue where the violation counters were not being reset going from one input file to the next.
+* Fixed ANSI escape sequences not being suppressed when piping the output to
+  another application or a file.
+* Fixed an issue where the violation counters were not being reset going from
+  one input file to the next.
 
 ## v0.3.0 - 2018-08-08
 
@@ -42,7 +56,9 @@ All notable changes to this project will be documented in this file.
 
 ## v0.2.2 - 2018-08-07
 
-* Fixed an issue with the substitution rule's violation guard introduced in v0.2.0. Strings are now converted to lower-case and compared if the `ignore_case` property is set to `true`.
+* Fixed an issue with the substitution rule's violation guard introduced in
+  v0.2.0. Strings are now converted to lower-case and compared if the
+  `ignore_case` property is set to `true`.
 
 ## v0.2.1 - 2018-08-06
 
@@ -54,8 +70,10 @@ All notable changes to this project will be documented in this file.
 * Updated the configuration file search algorithm.
 * Ensured that log level suppression yields the correct exit code.
 * Added environment variables `LINS_CFG` and `LINS_DEFAULT_STYLE`.
-* Added the `--list` option to display available styles and the current rule set.
-* The substitution rule no longer reports a violation if the key regex happens to also match text equal to the substitution value.
+* Added the `--list` option to display available styles and the current rule
+  set.
+* The substitution rule no longer reports a violation if the key regex happens
+  to also match text equal to the substitution value.
 
 ## v0.1.1 - 2018-08-02
 

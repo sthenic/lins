@@ -400,6 +400,10 @@ proc parse_control_word(p: var LaTeXParser) =
    of "par", "cr":
       handle_par(p)
       get_token(p)
+   of "textbackslash":
+      p.tok.token = "\\"
+      add_tok(p)
+      get_token(p)
    else:
       var name = p.tok.token
       get_token(p)

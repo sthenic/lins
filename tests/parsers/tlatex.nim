@@ -688,6 +688,15 @@ run_test("Itemized list",
 ])
 
 
+run_test("Character replacement: \\textbackslash -> \\",
+"""
+This is a Windows path: C:\textbackslash path\textbackslash to\textbackslash file
+\textbackslash on a new line
+""", @[
+   LaTeXTextSegment.new("This is a Windows path: C:\\path\\to\\file \\on a new line ", 1, 0, @[(40, 2)], @[])
+])
+
+
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
 var test_str = "test"
