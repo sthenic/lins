@@ -327,3 +327,25 @@ run_test("Existence, LaTeX descend", trules,
    create_violation(existence_latex_scope_descend, pos(1, 1)),
    create_violation(existence_latex_scope_descend, pos(2, 1)),
 ])
+
+# Print summary
+styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
+var test_str = "test"
+if nof_passed == 1:
+   test_str.add(' ')
+else:
+   test_str.add('s')
+styledWriteLine(stdout, styleBright, &" {$nof_passed:<4} ", test_str,
+                fgGreen, " PASSED")
+
+test_str = "test"
+if nof_failed == 1:
+   test_str.add(' ')
+else:
+   test_str.add('s')
+styledWriteLine(stdout, styleBright, &" {$nof_failed:<4} ", test_str,
+                fgRed, " FAILED")
+
+styledWriteLine(stdout, styleBright, "-------------------")
+
+quit(nof_failed)
