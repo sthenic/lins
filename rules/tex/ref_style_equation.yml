@@ -8,6 +8,6 @@ linter:
 latex:
   - name: eqref
     type: control sequence
-    before: (?i)(?<=(?<!^|\. |\.\n)equation|(?<!^|\. |\.\n)equations)~$
+    leading: (?i)(?<=(?<!^|\. |\.\n)equation|(?<!^|\. |\.\n)equations)~$
 tokens:
   - 'eq:'

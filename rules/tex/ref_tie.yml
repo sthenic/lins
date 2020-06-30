@@ -8,9 +8,9 @@ linter:
 latex:
   - name: eqref
     type: control sequence
-    before: (?<!~)$
+    leading: (?<!~)$
   - name: ref
     type: control sequence
-    before: (?<!~)$
+    leading: (?<!~)$
 tokens:
   - .+

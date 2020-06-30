@@ -31,7 +31,7 @@ type
    LaTeXScopeEntry* = tuple
       name: string # Maybe a regex?
       kind: ScopeKind
-      before: string
+      leading: string
       logic: ScopeLogic
       descend: bool
 
@@ -99,11 +99,11 @@ type
          observed*: bool
 
 
-proc new_latex_scope_entry*(name: string, kind: ScopeKind, before: string,
+proc new_latex_scope_entry*(name: string, kind: ScopeKind, leading: string,
                             logic: ScopeLogic, descend: bool): LaTeXScopeEntry =
    result.name = name
    result.kind = kind
-   result.before = before
+   result.leading = leading
    result.logic = logic
    result.descend = descend
 

@@ -8,6 +8,6 @@ linter:
 latex:
   - name: ref
     type: control sequence
-    before: (?<!Table|Tables)~$
+    leading: (?<!Table|Tables)~$
 tokens:
   - 'tab:'

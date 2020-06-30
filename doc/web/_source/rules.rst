@@ -193,8 +193,8 @@ of *scope entries* where each entry accepts the following fields:
 | ``type``    | The type of document element to match:         | N/A      |
 |             | ``control sequence`` or ``environment``.       |          |
 +-------------+------------------------------------------------+----------+
-| ``before``  | Regular expression with access to the *raw*    | An empty |
-|             | text *before* the scope entry                  | string   |
+| ``leading`` | Regular expression with access to the *raw*    | An empty |
+|             | text *leading* up to the scope entry           | string   |
 |             | (see :ref:`contexts <linter_latex_context>`).  |          |
 |             | This raw text is limited to 20 characters.     |          |
 +-------------+------------------------------------------------+----------+
@@ -249,7 +249,7 @@ Let us look at an example:
     latex:
       - name: foo
         type: control sequence
-        before: required\s$
+        leading: required\s$
       - name: bar
         type: environment
         logic: and

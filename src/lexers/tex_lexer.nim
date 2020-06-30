@@ -15,7 +15,7 @@ type
    CategoryCode* = range[0 .. 15]
 
    Context* = tuple
-      before, after: string
+      leading, trailing: string
 
    TeXToken* = object
       token_type*: TeXTokenType
@@ -76,7 +76,7 @@ proc is_valid*(t: TeXToken): bool =
 
 # TODO: This is a naive implementation that doesn't take unicode characters
 # into account.
-proc get_context_before(l: TeXLexer, pos: int): string =
+proc get_leading_context(l: TeXLexer, pos: int): string =
    # If the buffer has been reset we need to get the context from the carry.
    if pos == 0:
       return l.context_carry
@@ -96,7 +96,7 @@ proc get_context_before(l: TeXLexer, pos: int): string =
       add(result, tmp[i])
 
 
-proc get_context_after(l: TeXLexer, pos: int): string =
+proc get_trailing_context(l: TeXLexer, pos: int): string =
    for i in countup(1, l.nof_context_chars):
       if pos + i > high(l.buf):
          break
@@ -111,7 +111,7 @@ proc get_context_after(l: TeXLexer, pos: int): string =
 proc handle_crlf(l: var TeXLexer, pos: int): int =
    # Refill buffer at end-of-line characters. Store the context in case the
    # buffer is refilled completely, i.e. result is 0 leaving this proc.
-   l.context_carry = get_context_before(l, pos)
+   l.context_carry = get_leading_context(l, pos)
    add(l.context_carry, l.buf[pos])
    case l.buf[pos]
    of '\c':
@@ -234,7 +234,7 @@ proc handle_category_0(l: var TeXLexer, tok: var TeXToken) =
          # state M. We have to attach the trailing context to these tokens too
          # since they are often used as environment delimiters.
          tok.token_type = ControlSymbol
-         tok.context.after = get_context_after(l, pos)
+         tok.context.trailing = get_trailing_context(l, pos)
          add(tok.token, l.buf[pos])
          inc(pos)
          state = StateM
@@ -292,16 +292,16 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
    tok.catcode = 0
    set_len(tok.token, 0)
    update_token_position(l, tok)
-   set_len(tok.context.before, 0)
-   set_len(tok.context.after, 0)
+   set_len(tok.context.leading, 0)
+   set_len(tok.context.trailing, 0)
 
    let c = l.buf[l.bufpos]
    case c
    of lexbase.EndOfFile:
       tok.token_type = EndOfFile
    of CATEGORY[0]:
-      # Grab the context before tokens of category code 0.
-      tok.context.before = get_context_before(l, l.bufpos)
+      # Grab the leading context tokens of category code 0.
+      tok.context.leading = get_leading_context(l, l.bufpos)
       handle_category_0(l, tok)
    of CATEGORY[5]:
       let prev_state = l.state
@@ -318,7 +318,7 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
          tok.catcode = 10
       of StateS:
          # The end of line character is simply dropped and does not generate a
-         # token. The buffer is refilled since before so we recursively call
+         # token. The buffer is refilled since earlier so we recursively call
          # get_token() to continue the search.
          get_token(l, tok)
    of CATEGORY[7]:
@@ -362,9 +362,9 @@ proc get_token*(l: var TeXLexer, tok: var TeXToken) =
       # operation, especially if the context consists of 10-20 characters or
       # more. This is a trade-off worth making.
       if tok.catcode in [1, 3] or tok.token == "[":
-         tok.context.before = get_context_before(l, l.bufpos)
+         tok.context.leading = get_leading_context(l, l.bufpos)
       if tok.catcode in [2, 3] or tok.token == "]":
-         tok.context.after = get_context_after(l, l.bufpos)
+         tok.context.trailing = get_trailing_context(l, l.bufpos)
 
       inc(l.bufpos)
 

@@ -122,8 +122,8 @@ proc init(s: var ScopeEntry) =
    set_len(s.name, 0)
    s.encl = Enclosure.Invalid
    s.kind = ScopeKind.Invalid
-   set_len(s.context.before, 0)
-   set_len(s.context.after, 0)
+   set_len(s.context.leading, 0)
+   set_len(s.context.trailing, 0)
    s.count = 0
    s.delimiter_count = 0
 
@@ -167,12 +167,12 @@ proc add_seg(p: var LaTeXParser, seg: var LaTeXTextSegment) =
 
 
 proc begin_enclosure(p: var LaTeXParser, keep_scope, expand: bool,
-                     context_before: string) =
+                     leading_context: string) =
    # Push the current text segment to the stack.
    add(p.seg_stack, p.seg)
    add(p.last_tok_stack, p.last_tok)
    # Push the current scope entry to the scope.
-   p.scope_entry.context.before = context_before
+   p.scope_entry.context.leading = leading_context
    add(p.scope, p.scope_entry)
    # Reinitialize the text segment w/ the current scope.
    init(p.seg)
@@ -217,7 +217,7 @@ proc expand_segment(p: var LaTeXParser, inner: LaTeXTextSegment) =
    add(p.seg.base.text, inner.base.text)
 
 
-proc end_enclosure(p: var LaTeXParser, context_after: string) =
+proc end_enclosure(p: var LaTeXParser, trailing_context: string) =
    var inner = p.seg
    p.seg = pop(p.seg_stack)
    if inner.expand:
@@ -263,13 +263,13 @@ proc handle_category_1(p: var LaTeXParser) =
    # capture group.
    inc(p.delimiter_count)
    if not is_empty(p.scope_entry):
-      let context_before = p.scope_entry.context.before
+      let leading_context = p.scope_entry.context.leading
       p.scope_entry = ScopeEntry(name: p.scope_entry.name,
                                  kind: p.scope_entry.kind,
                                  encl: Group,
                                  count: p.scope_entry.count + 1,
                                  delimiter_count: p.delimiter_count)
-      begin_enclosure(p, false, false, context_before)
+      begin_enclosure(p, false, false, leading_context)
    get_token(p)
 
 
@@ -278,7 +278,7 @@ proc handle_category_2(p: var LaTeXParser) =
    # delimiter count is equal to that of the closest scope entry, we end the
    # current enclosure. The delimiter count is always decremented.
    if is_in_enclosure(p, Group) and is_matching_delimiter(p):
-      end_enclosure(p, p.tok.context.after)
+      end_enclosure(p, p.tok.context.trailing)
    dec(p.delimiter_count)
    get_token(p)
 
@@ -292,27 +292,27 @@ proc handle_category_3(p: var LaTeXParser) =
          # Error condition.
          log.abort(ParseError, attach_line(p.tok, "Display math section " &
                    "ended without two characters of catcode 3, e.g. '$$'."))
-      end_enclosure(p, p.tok.context.after)
+      end_enclosure(p, p.tok.context.trailing)
       get_token(p)
    elif is_in_enclosure(p, Enclosure.Math):
       # Ends with this character.
-      end_enclosure(p, p.tok.context.after)
+      end_enclosure(p, p.tok.context.trailing)
       get_token(p)
    else:
       # Enclosure begins, peek the next character to determine the type
       # of math enclosure. For display math, TeX requires that the '$$'
       # delimiter occurs next to each other.
-      var context_before = p.tok.context.before
+      var leading_context = p.tok.context.leading
       get_token(p)
       if p.tok.catcode == 3:
          p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
                                     encl: Enclosure.DisplayMath)
-         begin_enclosure(p, false, false, context_before)
+         begin_enclosure(p, false, false, leading_context)
          get_token(p)
       else:
          p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
                                     encl: Enclosure.Math)
-         begin_enclosure(p, false, false, context_before)
+         begin_enclosure(p, false, false, leading_context)
          # Recursively parse the token.
          parse_token(p)
 
@@ -325,9 +325,9 @@ proc handle_category_12(p: var LaTeXParser) =
                                  kind: p.scope_entry.kind,
                                  encl: Option,
                                  count: p.scope_entry.count + 1)
-      begin_enclosure(p, false, false, p.tok.context.before)
+      begin_enclosure(p, false, false, p.tok.context.leading)
    elif p.tok.token == "]" and is_in_enclosure(p, Option):
-      end_enclosure(p, p.tok.context.after)
+      end_enclosure(p, p.tok.context.trailing)
    else:
       add_tok(p)
    get_token(p)
@@ -375,19 +375,19 @@ proc get_group_as_string(p: var LaTeXParser): string =
 
 
 proc parse_control_word(p: var LaTeXParser) =
-   var context_before = p.tok.context.before
+   var leading_context = p.tok.context.leading
    case p.tok.token
    of "begin":
       let env = get_group_as_string(p) # Stops at '}'
       p.scope_entry = ScopeEntry(name: env, kind: ScopeKind.Environment,
                                  encl: Enclosure.Environment)
       begin_enclosure(p, true, contains(EXPANDED_ENVIRONMENTS, env),
-                      context_before)
+                      leading_context)
       get_token(p)
    of "end":
       let env = get_group_as_string(p) # Stops at '}'
       if is_in_enclosure(p, Enclosure.Environment):
-         end_enclosure(p, p.tok.context.after)
+         end_enclosure(p, p.tok.context.trailing)
          if p.scope_entry.name != env:
             log.abort(ParseError, attach_line(p.tok, "Environment name " &
                       "mismatch '" & env & "' closes '" & p.scope_entry.name &
@@ -413,7 +413,7 @@ proc parse_control_word(p: var LaTeXParser) =
                                     encl: Group, count: 1,
                                     delimiter_count: p.delimiter_count)
          begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name),
-                         context_before)
+                         leading_context)
          get_token(p)
       elif p.tok.catcode == 12 and p.tok.token == "[" and
            not is_in_math_scope(p.seg):
@@ -424,7 +424,7 @@ proc parse_control_word(p: var LaTeXParser) =
          p.scope_entry = ScopeEntry(name: name, kind: ControlSequence,
                                     encl: Option, count: 1)
          begin_enclosure(p, false, contains(EXPANDED_CONTROL_WORDS, name),
-                         context_before)
+                         leading_context)
          get_token(p)
 
 
@@ -443,15 +443,15 @@ proc parse_control_symbol(p: var LaTeXParser) =
       # doing delimter pairing which would allow us to raise a parse error.
       p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
                                  encl: Enclosure.DisplayMath)
-      begin_enclosure(p, false, false, p.tok.context.before)
+      begin_enclosure(p, false, false, p.tok.context.leading)
    elif p.tok.token == "]" and is_in_enclosure(p, Enclosure.DisplayMath):
-      end_enclosure(p, p.tok.context.after)
+      end_enclosure(p, p.tok.context.trailing)
    elif p.tok.token == "(":
       p.scope_entry = ScopeEntry(kind: ScopeKind.Math,
                                  encl: Enclosure.Math)
-      begin_enclosure(p, false, false, p.tok.context.before)
+      begin_enclosure(p, false, false, p.tok.context.leading)
    elif p.tok.token == ")" and is_in_enclosure(p, Enclosure.Math):
-      end_enclosure(p, p.tok.context.after)
+      end_enclosure(p, p.tok.context.trailing)
 
    get_token(p)
 

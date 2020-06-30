@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
   crash.
 * (LaTeX) The control word `\textbackslash` now inserts a backslash character
   into the text segment instead of being removed completely.
+* (LaTeX) **BREAKING** The name of the context labels `before`/`after` have been
+  changed to `leading`/`trailing`. LaTeX scope entries in a rule file now expect
+  to a field called `leading` instead of `before`.
 * Refactored code for better maintainablilty.
 
 ## v0.6.1 - 2019-05-11

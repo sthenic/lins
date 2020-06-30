@@ -253,7 +253,7 @@ level: warning
 latex:
   - name: foo
     type: control sequence
-    before: required\s$
+    leading: required\s$
   - name: bar
     type: environment
     logic: and

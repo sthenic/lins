@@ -268,8 +268,8 @@ template validate_latex_section(data: typed, filename: string,
                log.warning("Unsupported scope property value '$1' defined " &
                            "for rule in file '$2', skipping.", val, filename)
                raise new_exception(RuleValueError, "")
-         of "before":
-            entry.before = val
+         of "leading":
+            entry.leading = val
          of "logic":
             case to_lower_ascii(val):
             of "and":
@@ -425,7 +425,7 @@ template debug_latex_section(latex_section: LaTeXRuleSection) =
       log.debug_always("LaTeX scope entry:")
       log.debug_always("  name: '$1'", entry.name)
       log.debug_always("  kind: '$1'", $entry.kind)
-      log.debug_always("  before: '$1'", entry.before)
+      log.debug_always("  leading: '$1'", entry.leading)
       log.debug_always("  logic: $1", $entry.logic)
 
 

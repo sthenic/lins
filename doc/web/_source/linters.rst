@@ -210,8 +210,8 @@ is emitted as two segments:
 
       <code>&nbsp;reference to Table&nbsp;</code>
 
-Defining the rule discussed above involves just specifying ``(?<!~)$`` as the
-value for the ``before`` field for a ``\ref`` scope entry in the :ref:`LaTeX
+Defining the rule discussed above involves simply specifying ``(?<!~)$`` as the
+value for the ``leading`` field for a ``\ref`` scope entry in the :ref:`LaTeX
 section <rule_latex>` of the rule file.
 
 
@@ -299,7 +299,7 @@ reference styling):
     latex:
       - name: ref
         type: control sequence
-        before: (?<!Fig\.|Figs\.)~$
+        leading: (?<!Fig\.|Figs\.)~$
     tokens:
       - 'fig:'
 
@@ -338,7 +338,7 @@ Enforce the rule that a caption should be longer than five words:
     latex:
       - name: caption
         type: control sequence
-        before: (?<!\.)$
+        leading: (?<!\.)$
         descend: false
     tokens:
       - ^(\b\w+[.!?]?\s*){0,5}$

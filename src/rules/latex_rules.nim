@@ -47,9 +47,9 @@ proc scope_filter(r: Rule, seg: LaTeXTextSegment): bool =
 
             # Determine if the context is matches any user defined expressions.
             var context_match = true
-            if len(rule_entry.before) > 0:
-               context_match = is_some(nre.find(scope_entry.context.before,
-                                                re(rule_entry.before)))
+            if len(rule_entry.leading) > 0:
+               context_match = is_some(nre.find(scope_entry.context.leading,
+                                                re(rule_entry.leading)))
             # TODO: Check for trailing context match once that's fully
             #       implemented.
             add(entry_match, (context_match, rule_entry.logic))
