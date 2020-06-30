@@ -5,7 +5,7 @@ import terminal
 import streams
 
 import linters/meta_linter
-import rules/parser
+import parsers/rule_parser
 import utils/log
 import utils/configuration
 import utils/cli

@@ -9,7 +9,7 @@ import os
 import nre
 import terminal
 
-import ./rules
+import ../rules/rules
 import ../utils/log
 import ../utils/cli
 import ../utils/configuration
