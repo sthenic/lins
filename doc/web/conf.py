@@ -7,7 +7,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Lins'
-copyright = '2019 Marcus Eriksson'
+copyright = '2020 Marcus Eriksson'
 author = 'Marcus Eriksson'
 
 # The short X.Y version
