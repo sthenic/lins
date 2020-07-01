@@ -328,6 +328,28 @@ run_test("Existence, LaTeX descend", trules,
    create_violation(existence_latex_scope_descend, pos(2, 1)),
 ])
 
+
+let existence_latex_invert = parse_rule_string("""
+extends: existence
+message: "A \foo sequence should always contain 'hello'."
+ignorecase: true
+level: warning
+invert: true
+latex:
+  - name: foo
+    type: control sequence
+tokens:
+- hello""")
+trules = @[existence_latex_invert]
+run_test("Existence, LaTeX invert", trules,
+"""
+This is wrong: \foo{a}.
+
+This is correct: \foo{hello}.
+""", @[
+   create_violation(existence_latex_invert, pos(1, 1)),
+])
+
 # Print summary
 styledWriteLine(stdout, styleBright, "\n----- SUMMARY -----")
 var test_str = "test"

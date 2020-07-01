@@ -337,6 +337,22 @@ Here, the resulting regular expression will be
 
 which will catch occurrences of "very unique", "less complete" etc.
 
+
+Inverting the Matching Logic
+----------------------------
+
+The ``invert`` field (``false`` by default) causes the matching logic to be
+inverted if set to ``true``, i.e. if the text segment does *not* contain any of
+the listed ``tokens``, a violation is generated.  One important detail is that
+when ``invert`` is ``true``, the ``message`` is *not* provided any text to match
+the replacement field ``$1``.
+
+.. important::
+
+    When ``invert`` is ``true``, the ``message`` is *not* provided any text to
+    match the replacement field ``$1``.
+
+
 .. _`rule_substitution`:
 
 Substitution

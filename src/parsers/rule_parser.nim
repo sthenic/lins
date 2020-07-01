@@ -33,6 +33,7 @@ type
       extends: string
       message: string
       level: string
+      invert {.defaultVal: false.}: bool
       ignorecase {.defaultVal: false.}: bool
       nonword {.defaultVal: false.}: bool
       raw {.defaultVal: @[].}: seq[string]
@@ -498,7 +499,8 @@ proc parse_rule(data: ExistenceYAML, filename: string): Rule =
    let display_name = get_rule_display_name(filename)
    result = new_existence_rule(level, message, filename, display_name,
                                ignore_case, plain_section,
-                               latex_section, linter_kind, token_str, exceptions)
+                               latex_section, linter_kind, token_str, exceptions,
+                               data.invert)
 
 
 proc parse_rule(data: SubstitutionYAML, filename: string): Rule =

@@ -81,7 +81,7 @@ type
       par_prev*: int
       case kind*: RuleKind
       of RkExistence:
-         discard
+         invert*: bool
       of RkSubstitution:
          subst_table*: Table[string, string]
       of RkOccurrence:
@@ -182,7 +182,8 @@ proc new_existence_rule*(severity: Severity,
                          plain_section: PlainRuleSection,
                          latex_section: LaTeXRuleSection,
                          linter_kind: LinterKind,
-                         regex, regex_exceptions: string): Rule =
+                         regex, regex_exceptions: string,
+                         invert: bool): Rule =
    var regex_flags = ""
    if ignore_case:
       regex_flags = "(?i)"
@@ -190,6 +191,7 @@ proc new_existence_rule*(severity: Severity,
    result = new_rule(RkExistence, severity, message, source_file, display_name,
                      ignore_case, plain_section, latex_section, linter_kind,
                      regex_flags & regex, "", regex_exceptions)
+   result.invert = invert
 
 
 proc new_substitution_rule*(severity: Severity,
@@ -346,6 +348,13 @@ proc enforce_existence(r: Rule, seg: TextSegment): seq[Violation] =
                                                m.match_bounds.a + 1,
                                                seg.linebreaks)
       result.add(r.create_violation(violation_pos, $m))
+   if r.invert:
+      if len(result) > 0:
+         set_len(result, 0)
+      else:
+         let violation_pos = r.calculate_position(seg.line, seg.col, 1,
+                                                  seg.linebreaks)
+         result.add(r.create_violation(violation_pos))
 
 
 proc enforce_substitution(r: Rule, seg: TextSegment): seq[Violation] =

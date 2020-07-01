@@ -15,6 +15,11 @@ All notable changes to this project will be documented in this file.
 * (LaTeX) **BREAKING** The name of the context labels `before`/`after` have been
   changed to `leading`/`trailing`. LaTeX scope entries in a rule file now expect
   to a field called `leading` instead of `before`.
+* The existence rule now features the field `invert` (`false` by default) that
+  causes the matching logic to be inverted if set to `true`, i.e. if the text
+  segment does *not* contain any of the listed `tokens`, a violation is
+  generated. One important detail is that when `invert` is `true`, the
+  `message` is *not* provided any text to match the replacement field `$1`.
 * Refactored code for better maintainablilty.
 
 ## v0.6.1 - 2019-05-11
