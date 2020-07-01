@@ -130,38 +130,6 @@ type
       definition: DefinitionYAML
       conditional: ConditionalYAML
 
-# set_default_value(ExistenceYAML, latex, @[])
-# set_default_value(SubstitutionYAML, latex, @[])
-# set_default_value(OccurrenceYAML, latex, @[])
-# set_default_value(RepetitionYAML, latex, @[])
-# set_default_value(ConsistencyYAML, latex, @[])
-# set_default_value(DefinitionYAML, latex, @[])
-# set_default_value(ConditionalYAML, latex, @[])
-
-# set_default_value(ExistenceYAML, scope, @[])
-# set_default_value(SubstitutionYAML, scope, @[])
-# set_default_value(OccurrenceYAML, scope, @[])
-# set_default_value(RepetitionYAML, scope, @[])
-# set_default_value(ConsistencyYAML, scope, @[])
-# set_default_value(DefinitionYAML, scope, @[])
-# set_default_value(ConditionalYAML, scope, @[])
-
-# set_default_value(ExistenceYAML, linter, @[])
-# set_default_value(SubstitutionYAML, linter, @[])
-# set_default_value(OccurrenceYAML, linter, @[])
-# set_default_value(RepetitionYAML, linter, @[])
-# set_default_value(ConsistencyYAML, linter, @[])
-# set_default_value(DefinitionYAML, linter, @[])
-# set_default_value(ConditionalYAML, linter, @[])
-
-# set_default_value(ExistenceYAML, exceptions, @[])
-# set_default_value(SubstitutionYAML, exceptions, @[])
-# set_default_value(OccurrenceYAML, exceptions, @[])
-# set_default_value(RepetitionYAML, exceptions, @[])
-# set_default_value(ConsistencyYAML, exceptions, @[])
-# set_default_value(DefinitionYAML, exceptions, @[])
-# set_default_value(ConditionalYAML, exceptions, @[])
-
 
 proc new(t: typedesc[ExistenceYAML]): ExistenceYAML =
    result = ExistenceYAML(extends: "existence")
