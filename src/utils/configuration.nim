@@ -163,6 +163,8 @@ proc parse_section*(p: var CfgParser) =
 
 proc parse*(s: Stream, filename: string): CfgState =
    var p: CfgParser
+   p.filename = filename
+   p.state.filename = filename
    open(p.parser, s, filename)
    get_event(p)
    while true:
@@ -174,7 +176,6 @@ proc parse*(s: Stream, filename: string): CfgState =
       else:
          abort(p, "Unexpected file contents.")
    close(p.parser)
-   p.state.filename = filename
    result = p.state
 
 
