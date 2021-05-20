@@ -8,7 +8,6 @@ jobs:
   documentation:
     runs-on: ubuntu-20.04
     steps:
-    run:
     # Check out the repository under $GITHUB_WORKSPACE.
     - name: Checkout lins
       uses: actions/checkout@v2
