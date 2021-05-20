@@ -7,8 +7,8 @@ bin = @["lins"]
 skip_ext = @["nim", "txt"]
 
 # Dependencies
-requires "nim >= 1.2.0"
-requires "yaml >= 0.14.0"
+requires "nim >= 1.4.6"
+requires "yaml >= 0.15.0"
 
 # Tasks
 task build_release, "Compile the application into an executable (release mode, don't install)":
