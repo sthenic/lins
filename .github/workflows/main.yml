@@ -1,0 +1,20 @@
+name: tests
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Check out the repository under $GITHUB_WORKSPACE.
+    - name: Checkout lins
+      uses: actions/checkout@v2
+
+    - uses: jiro4989/setup-nim-action@v1.3.3
+      with:
+        nim-version: 'stable'
+
+    - name: Build
+      run: nimble build -y
+
+    - name: Test
+      run: nimble test -y

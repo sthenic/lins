@@ -1,0 +1,73 @@
+name: release
+on:
+  push:
+    tags:
+      - 'v*'
+
+# FIXME: Add pages job
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-20.04
+          - ubuntu-18.04
+          - ubuntu-16.04
+          - windows-latest
+          - macos-latest
+    steps:
+    # Check out the repository under $GITHUB_WORKSPACE.
+    - name: Checkout lins
+      uses: actions/checkout@v2
+
+    - uses: jiro4989/setup-nim-action@v1.3.3
+      with:
+        nim-version: 'stable'
+
+    - name: Build Ubuntu
+      if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-18.04' || matrix.os == 'ubuntu-16.04'}}
+      run: |
+        nimble build -y
+        source /etc/os-release
+        PLATFORM_INFO="${ID}-${VERSION_ID}-$(uname -i)"
+        ARCHIVE_FILENAME="lins-$(cat src/VERSION)-${PLATFORM_INFO}"
+        cd build
+        sh build_deb.sh "${PLATFORM_INFO}"
+        cp *.deb ../
+        cd ..
+        tar -czf "${ARCHIVE_FILENAME}.tar.gz" lins README.md LICENSE THIRD_PARTY_LICENSES.md CHANGELOG.md
+        md5sum "${ARCHIVE_FILENAME}.tar.gz" > ${ARCHIVE_FILENAME}.tar.gz.md5
+        md5sum "${ARCHIVE_FILENAME}.deb" > ${ARCHIVE_FILENAME}.deb.md5
+
+    - name: Build macOS
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        nimble build -y
+        ARCHIVE_FILENAME="lins-$(cat src/VERSION)-macos"
+        tar -czf "${ARCHIVE_FILENAME}.tar.gz" lins README.md LICENSE THIRD_PARTY_LICENSES.md CHANGELOG.md
+        md5 "${ARCHIVE_FILENAME}.tar.gz" > ${ARCHIVE_FILENAME}.tar.gz.md5
+
+    - name: Build Windows
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        nimble build -y
+        $ARCHIVE_FILENAME="lins-$(cat src/VERSION)-win_x86_64"
+        7z a -tzip "${ARCHIVE_FILENAME}.zip" lins.exe README.md LICENSE THIRD_PARTY_LICENSES.md CHANGELOG.md
+        [string]$MD5 = (get-filehash -Algorithm MD5 "${ARCHIVE_FILENAME}.zip").Hash
+        echo $MD5 > "${ARCHIVE_FILENAME}.zip.md5"
+
+    - name: Upload artifacts
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      with:
+        draft: true
+        files: |
+          *.tar.gz
+          *.tar.gz.md5
+          *.deb
+          *.deb.md5
+          *.zip
+          *.zip.md5
