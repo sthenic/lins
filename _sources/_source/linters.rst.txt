@@ -113,9 +113,9 @@ output with the ``--parser-output`` option.
 Font Styling Macros
 -------------------
 
-The font styling macros defined by LaTeX such as ``\textbf``, ``\emph`` are
+The font styling macros defined by LaTeX such as ``\textbf`` and ``\emph`` are
 handled differently from regular control sequences. Instead of triggering a new
-segment and adding to the scope chain, the text inside is expanded into the text
+segment and adding to the scope chain, the text within is expanded into the text
 of the parent segment. This is done to allow rules to target expressions
 consisting of more than one word where the author has decided to style one of
 the words differently from the others. For example, say we want to warn the
@@ -167,8 +167,8 @@ The same goes for environments,
 
 would be emitted as two segments:
 
-- one containing "This is the first paragraph."
-- and one containing "This is the second paragraph.",
+- one containing "This is the first paragraph." and
+- one containing "This is the second paragraph.",
 
 both with the scope: ``foo`` (environment). Segments are emitted when the
 ``\par`` token (which is implied by two newline characters) is processed *and*
@@ -210,8 +210,8 @@ is emitted as two segments:
 
       <code>&nbsp;reference to Table&nbsp;</code>
 
-Defining the rule discussed above involves just specifying ``(?<!~)$`` as the
-value for the ``before`` field for a ``\ref`` scope entry in the :ref:`LaTeX
+Defining the rule discussed above involves simply specifying ``(?<!~)$`` as the
+value for the ``leading`` field for a ``\ref`` scope entry in the :ref:`LaTeX
 section <rule_latex>` of the rule file.
 
 
@@ -299,13 +299,13 @@ reference styling):
     latex:
       - name: ref
         type: control sequence
-        before: (?<!Fig\.|Figs\.)~$
+        leading: (?<!Fig\.|Figs\.)~$
     tokens:
       - 'fig:'
 
 
 
-Enforce the rule that a caption to e.g. a figure or a table should end with a
+Enforce the rule that a caption to, e.g. a figure or a table should end with a
 full stop---making it more likely that the author writes a complete sentence:
 
 .. code-block:: YAML
@@ -338,7 +338,7 @@ Enforce the rule that a caption should be longer than five words:
     latex:
       - name: caption
         type: control sequence
-        before: (?<!\.)$
+        leading: (?<!\.)$
         descend: false
     tokens:
       - ^(\b\w+[.!?]?\s*){0,5}$

@@ -1,18 +1,19 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>Linters &#8212; Lins 0.6.1
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Linters &#8212; Lins 0.7.0
  documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Rules" href="rules.html" />
@@ -82,7 +83,7 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="linters">
+  <section id="linters">
 <span id="lins-linters"></span><h1>Linters<a class="headerlink" href="#linters" title="Permalink to this headline">¶</a></h1>
 <p>When Lins reads the input file, the text first passes through a parser tasked
 with piecing together <em>segments</em> of text which are then passed on to the linting
@@ -99,7 +100,7 @@ the <code class="docutils literal notranslate"><span class="pre">.tex</span></co
 <p class="admonition-title">Note</p>
 <p>You can manually select which linter to use with the <code class="docutils literal notranslate"><span class="pre">--linter</span></code> option.</p>
 </div>
-<div class="section" id="plain-text">
+<section id="plain-text">
 <span id="linter-plain-text"></span><h2>Plain text<a class="headerlink" href="#plain-text" title="Permalink to this headline">¶</a></h2>
 <p>The plain text parser emits a text segment for each <em>paragraph</em>. Two consecutive
 line breaks is interpreted as a paragraph break. For example, this text:</p>
@@ -132,7 +133,7 @@ purus nunc. Sed consectetur nunc in est euismod, aliquet volutpat
 ante luctus. Nam feugiat quam a tortor ultricies tristique.
 </pre></div>
 </div>
-<div class="section" id="scopes">
+<section id="scopes">
 <span id="linter-plain-text-scope"></span><h3>Scopes<a class="headerlink" href="#scopes" title="Permalink to this headline">¶</a></h3>
 <p>Since a text segment corresponds to a paragraph, that becomes the granularity of
 the plain text linter. Thus, two <em>scopes</em> are available:</p>
@@ -141,9 +142,9 @@ the plain text linter. Thus, two <em>scopes</em> are available:</p>
 <li><p><em>paragraph</em>—spanning a paragraph.</p></li>
 </ul>
 <p>Scopes are used when defining <a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">rule files</span></a>.</p>
-</div>
-</div>
-<div class="section" id="latex">
+</section>
+</section>
+<section id="latex">
 <span id="linter-latex"></span><h2>LaTeX<a class="headerlink" href="#latex" title="Permalink to this headline">¶</a></h2>
 <p>The LaTeX parser follows the rules of the TeX language; identifying control
 symbols, control words, comments and the text to be typeset. The parser does
@@ -160,11 +161,11 @@ such as the <a class="reference internal" href="#linter-latex-scope"><span class
 <p>The <a class="reference internal" href="#linter-latex-examples"><span class="std std-ref">Examples</span></a> section breaks down a few real-world examples
 and demonstrates how the parser works. Lins can be instructed to dump the parser
 output with the <code class="docutils literal notranslate"><span class="pre">--parser-output</span></code> option.</p>
-<div class="section" id="font-styling-macros">
+<section id="font-styling-macros">
 <span id="linter-latex-font-style"></span><h3>Font Styling Macros<a class="headerlink" href="#font-styling-macros" title="Permalink to this headline">¶</a></h3>
-<p>The font styling macros defined by LaTeX such as <code class="docutils literal notranslate"><span class="pre">\textbf</span></code>, <code class="docutils literal notranslate"><span class="pre">\emph</span></code> are
+<p>The font styling macros defined by LaTeX such as <code class="docutils literal notranslate"><span class="pre">\textbf</span></code> and <code class="docutils literal notranslate"><span class="pre">\emph</span></code> are
 handled differently from regular control sequences. Instead of triggering a new
-segment and adding to the scope chain, the text inside is expanded into the text
+segment and adding to the scope chain, the text within is expanded into the text
 of the parent segment. This is done to allow rules to target expressions
 consisting of more than one word where the author has decided to style one of
 the words differently from the others. For example, say we want to warn the
@@ -181,8 +182,8 @@ particular font style is used for identifiers and do not tie in to the
 surronding text in the same way. More importantly, this offers the ability to
 create rules to target identifiers written in snake case or camel case,
 triggering a warning that <code class="docutils literal notranslate"><span class="pre">\texttt</span></code> should be used to typeset this word.</p>
-</div>
-<div class="section" id="linter-latex-scope">
+</section>
+<section id="linter-latex-scope">
 <span id="id1"></span><h3>Scopes<a class="headerlink" href="#linter-latex-scope" title="Permalink to this headline">¶</a></h3>
 <p>Scopes play a key role in the LaTeX linter and can be leveraged by <a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">rules</span></a> to great effect. The <em>scope</em> is defined as the chain of the
 control sequences and environments enclosing the text segment. Each link in the
@@ -203,14 +204,14 @@ This is the second paragraph.
 </div>
 <p>would be emitted as two segments:</p>
 <ul class="simple">
-<li><p>one containing “This is the first paragraph.”</p></li>
-<li><p>and one containing “This is the second paragraph.”,</p></li>
+<li><p>one containing “This is the first paragraph.” and</p></li>
+<li><p>one containing “This is the second paragraph.”,</p></li>
 </ul>
 <p>both with the scope: <code class="docutils literal notranslate"><span class="pre">foo</span></code> (environment). Segments are emitted when the
 <code class="docutils literal notranslate"><span class="pre">\par</span></code> token (which is implied by two newline characters) is processed <em>and</em>
 when enclosures end. A single newline character inserts a space—all according
 to the rules of TeX.</p>
-<div class="section" id="context">
+<section id="context">
 <span id="linter-latex-context"></span><h4>Context<a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h4>
 <p>The <em>context</em> is a property attached to a scope entry. It holds 20 characters
 from the <em>raw</em> text leading up to the start of the enclosure. For example, in</p>
@@ -234,12 +235,12 @@ and</p></li>
 <code class="docutils literal notranslate"><span class="pre">\ref</span></code> has the context</p>
 <code>&nbsp;reference to Table&nbsp;</code></li>
 </ul>
-<p>Defining the rule discussed above involves just specifying <code class="docutils literal notranslate"><span class="pre">(?&lt;!~)$</span></code> as the
-value for the <code class="docutils literal notranslate"><span class="pre">before</span></code> field for a <code class="docutils literal notranslate"><span class="pre">\ref</span></code> scope entry in the <a class="reference internal" href="rules.html#rule-latex"><span class="std std-ref">LaTeX
+<p>Defining the rule discussed above involves simply specifying <code class="docutils literal notranslate"><span class="pre">(?&lt;!~)$</span></code> as the
+value for the <code class="docutils literal notranslate"><span class="pre">leading</span></code> field for a <code class="docutils literal notranslate"><span class="pre">\ref</span></code> scope entry in the <a class="reference internal" href="rules.html#rule-latex"><span class="std std-ref">LaTeX
 section</span></a> of the rule file.</p>
-</div>
-</div>
-<div class="section" id="examples">
+</section>
+</section>
+<section id="examples">
 <span id="linter-latex-examples"></span><h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <p>This section presents a few real-world examples of rules specific to the LaTeX
 linter. Refer to the section on <a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">rule files</span></a> for documentation
@@ -306,12 +307,12 @@ reference styling):</p>
 <span class="nt">latex</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ref</span>
     <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
-    <span class="nt">before</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;!Fig\.|Figs\.)~$</span>
+    <span class="nt">leading</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;!Fig\.|Figs\.)~$</span>
 <span class="nt">tokens</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="s">&#39;fig:&#39;</span>
 </pre></div>
 </div>
-<p>Enforce the rule that a caption to e.g. a figure or a table should end with a
+<p>Enforce the rule that a caption to, e.g. a figure or a table should end with a
 full stop—making it more likely that the author writes a complete sentence:</p>
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">extends</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">existence</span>
 <span class="nt">message</span><span class="p">:</span> <span class="s">&quot;A</span><span class="nv"> </span><span class="s">caption</span><span class="nv"> </span><span class="s">should</span><span class="nv"> </span><span class="s">end</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">full</span><span class="nv"> </span><span class="s">stop</span><span class="nv"> </span><span class="s">&#39;.&#39;.&quot;</span>
@@ -339,7 +340,7 @@ full stop—making it more likely that the author writes a complete sentence:</p
 <span class="nt">latex</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">caption</span>
     <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control sequence</span>
-    <span class="nt">before</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;!\.)$</span>
+    <span class="nt">leading</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(?&lt;!\.)$</span>
     <span class="nt">descend</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="nt">tokens</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">^(\b\w+[.!?]?\s*){0,5}$</span>
@@ -446,9 +447,9 @@ enclosed in <code class="docutils literal notranslate"><span class="pre">\texttt
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">OpenSuse</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
           </div>
@@ -458,10 +459,10 @@ enclosed in <code class="docutils literal notranslate"><span class="pre">\texttt
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2019 Marcus Eriksson.
+      &copy;2021 Marcus Eriksson.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

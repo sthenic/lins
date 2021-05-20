@@ -184,59 +184,59 @@ Each rule may define a ``latex`` section to specify in which context the rule
 should be enforced when the LaTeX linter is used. The section consists of a list
 of *scope entries* where each entry accepts the following fields:
 
-+-------------+-----------------------------------------------+-------------+
-|    Label    |                  Description                  |   Default   |
-+=============+===============================================+=============+
-| ``name``    | The name of the document element to match.    | N/A         |
-|             | Cannot be a regular expression.               |             |
-+-------------+-----------------------------------------------+-------------+
-| ``type``    | The type of document element to match:        | N/A         |
-|             | ``control sequence`` or ``environment``.      |             |
-+-------------+-----------------------------------------------+-------------+
-| ``before``  | Regular expression with access to the *raw*   | ``<empty>`` |
-|             | text *before* the scope entry                 |             |
-|             | (see :ref:`contexts <linter_latex_context>`). |             |
-|             | The text is limited to ``20`` characters.     |             |
-+-------------+-----------------------------------------------+-------------+
-| ``descend`` | A scope entry where ``descend`` is            | ``true``    |
-|             | ``false`` implies that the scope is not       |             |
-|             | allowed to descend beyond this level.         |             |
-|             |                                               |             |
-|             | For example, we could define a rule saying    |             |
-|             | that a ``\caption`` should contain more       |             |
-|             | than five words. But unless we set  the       |             |
-|             | ``descend`` to ``false`` for the              |             |
-|             | ``\caption`` scope entry---the contents of    |             |
-|             | any nested environments or control            |             |
-|             | sequences would trigger the rule as well.     |             |
-+-------------+-----------------------------------------------+-------------+
-| ``logic``   | The ``logic`` field specifies how a scope     | ``or``      |
-|             | entry interacts with the other entries in     |             |
-|             | determining whether or not the rule should    |             |
-|             | be enforced. Valid values are ``or``,         |             |
-|             | ``and`` and ``not``.                          |             |
-|             |                                               |             |
-|             | Whether to enforce the rule or not is         |             |
-|             | determined according to:                      |             |
-|             |                                               |             |
-|             | ``(O or A) and not N``                        |             |
-|             |                                               |             |
-|             | where                                         |             |
-|             |                                               |             |
-|             | - ``O`` represents all scope entries with     |             |
-|             |   the ``or`` logic reduced to a single        |             |
-|             |   truth value with the ``or`` operation.      |             |
-|             | - ``A`` represents all scope entries with     |             |
-|             |   the ``and`` logic reduced to a single       |             |
-|             |   truth value with the ``and`` operation.     |             |
-|             | - ``N`` represents all scope entries with     |             |
-|             |   the ``not`` logic reduced to a single       |             |
-|             |   truth value with the ``or`` operation.      |             |
-|             |                                               |             |
-|             | As a special case: if the list only           |             |
-|             | consists of entries marked with ``not``,      |             |
-|             | then ``(O or A)`` evaluates to ``true``.      |             |
-+-------------+-----------------------------------------------+-------------+
++-------------+------------------------------------------------+----------+
+|    Label    |                  Description                   | Default  |
++=============+================================================+==========+
+| ``name``    | The name of the document element to match.     | N/A      |
+|             | Cannot be a regular expression.                |          |
++-------------+------------------------------------------------+----------+
+| ``type``    | The type of document element to match:         | N/A      |
+|             | ``control sequence`` or ``environment``.       |          |
++-------------+------------------------------------------------+----------+
+| ``leading`` | Regular expression with access to the *raw*    | An empty |
+|             | text *leading* up to the scope entry           | string   |
+|             | (see :ref:`contexts <linter_latex_context>`).  |          |
+|             | This raw text is limited to 20 characters.     |          |
++-------------+------------------------------------------------+----------+
+| ``descend`` | A scope entry where ``descend`` is             | ``true`` |
+|             | ``false`` implies that the scope is not        |          |
+|             | allowed to descend beyond this level.          |          |
+|             |                                                |          |
+|             | For example, we could define a rule saying     |          |
+|             | that a ``\caption`` should contain more        |          |
+|             | than five words. But unless we set             |          |
+|             | ``descend`` to ``false`` for the               |          |
+|             | ``\caption`` scope entry---the contents of     |          |
+|             | any nested environments or control             |          |
+|             | sequences would trigger the rule as well.      |          |
++-------------+------------------------------------------------+----------+
+| ``logic``   | The ``logic`` field specifies how a scope      | ``or``   |
+|             | entry interacts with the other entries in      |          |
+|             | determining whether or not the rule should     |          |
+|             | be enforced. Valid values are ``or``,          |          |
+|             | ``and`` and ``not``.                           |          |
+|             |                                                |          |
+|             | Whether to enforce the rule or not is          |          |
+|             | determined according to:                       |          |
+|             |                                                |          |
+|             | ``(O or A) and not N``                         |          |
+|             |                                                |          |
+|             | where                                          |          |
+|             |                                                |          |
+|             | - ``O`` represents all scope entries with      |          |
+|             |   the ``or`` logic reduced to a single         |          |
+|             |   truth value with the ``or`` operation.       |          |
+|             | - ``A`` represents all scope entries with      |          |
+|             |   the ``and`` logic reduced to a single        |          |
+|             |   truth value with the ``and`` operation.      |          |
+|             | - ``N`` represents all scope entries with      |          |
+|             |   the ``not`` logic reduced to a single        |          |
+|             |   truth value with the ``or`` operation.       |          |
+|             |                                                |          |
+|             | As a special case, if the list only            |          |
+|             | consists of entries marked with ``not``,       |          |
+|             | then ``(O or A)`` evaluates to ``true``.       |          |
++-------------+------------------------------------------------+----------+
 
 .. note::
 
@@ -249,7 +249,7 @@ Let us look at an example:
     latex:
       - name: foo
         type: control sequence
-        before: required\s$
+        leading: required\s$
       - name: bar
         type: environment
         logic: and
@@ -336,6 +336,22 @@ Here, the resulting regular expression will be
     (?i)\b(?:most|more|less|least|very)\b\s*\b(absolute|adequate|complete|unique)\b
 
 which will catch occurrences of "very unique", "less complete" etc.
+
+
+Inverting the Matching Logic
+----------------------------
+
+The ``invert`` field (``false`` by default) causes the matching logic to be
+inverted if set to ``true``, i.e. if the text segment does *not* contain any of
+the listed ``tokens``, a violation is generated.  One important detail is that
+when ``invert`` is ``true``, the ``message`` is *not* provided any text to match
+the replacement field ``$1``.
+
+.. important::
+
+    When ``invert`` is ``true``, the ``message`` is *not* provided any text to
+    match the replacement field ``$1``.
+
 
 .. _`rule_substitution`:
 
