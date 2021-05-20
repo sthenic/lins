@@ -39,7 +39,7 @@ jobs:
     - name: Checkout lins
       uses: actions/checkout@v2
 
-    - uses: jiro4989/setup-nim-action@v1.3.3
+    - uses: jiro4989/setup-nim-action@v1.1.4
       with:
         nim-version: 'stable'
 
@@ -49,7 +49,7 @@ jobs:
         nimble build -y
         source /etc/os-release
         PLATFORM_INFO="${ID}-${VERSION_ID}-$(uname -i)"
-        ARCHIVE_FILENAME="lins-$(cat src/VERSION)-${PLATFORM_INFO}"
+        ARCHIVE_FILENAME="lins-$(cat VERSION)-${PLATFORM_INFO}"
         cd build
         sh build_deb.sh "${PLATFORM_INFO}"
         cp *.deb ../
@@ -62,7 +62,7 @@ jobs:
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
         nimble build -y
-        ARCHIVE_FILENAME="lins-$(cat src/VERSION)-macos"
+        ARCHIVE_FILENAME="lins-$(cat VERSION)-macos"
         tar -czf "${ARCHIVE_FILENAME}.tar.gz" lins README.md LICENSE THIRD_PARTY_LICENSES.md CHANGELOG.md
         md5 "${ARCHIVE_FILENAME}.tar.gz" > ${ARCHIVE_FILENAME}.tar.gz.md5
 
@@ -70,8 +70,11 @@ jobs:
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
         nimble build -y
-        $ARCHIVE_FILENAME="lins-$(cat src/VERSION)-win_x86_64"
-        7z a -tzip "${ARCHIVE_FILENAME}.zip" lins.exe README.md LICENSE THIRD_PARTY_LICENSES.md CHANGELOG.md
+        curl https://nim-lang.org/download/dlls.zip -sSf -o dlls.zip
+        7z e -y dlls.zip
+        rm dlls.zip
+        $ARCHIVE_FILENAME="lins-$(cat VERSION)-win_x86_64"
+        7z a -tzip "${ARCHIVE_FILENAME}.zip" lins.exe README.md LICENSE THIRD_PARTY_LICENSES.md CHANGELOG.md pcre64.dll
         [string]$MD5 = (get-filehash -Algorithm MD5 "${ARCHIVE_FILENAME}.zip").Hash
         echo $MD5 > "${ARCHIVE_FILENAME}.zip.md5"
 

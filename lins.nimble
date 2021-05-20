@@ -1,4 +1,4 @@
-version = "0.6.1"
+version = "0.7.0"
 author = "Marcus Eriksson"
 description = "Lins is a lightweight, extensible linter for prose."
 license = "MIT"

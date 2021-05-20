@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v0.7.0 - 2021-05-20
 
 * The plain text parser now ignores empty segments, just like the LaTeX parser.
 * (LaTeX) Fix an issue where the leading context for capture groups following a
