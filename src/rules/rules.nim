@@ -500,7 +500,7 @@ proc enforce_definition(r: var Rule, seg: TextSegment): seq[Violation] =
             #       add that to the sequence.
             log.warning("Redefinition of '$1' on line $2.", def, $pos.line)
 
-      except IndexError:
+      except IndexDefect:
          # Abort if no capture group can be found. This should not happen due
          # to validation enforced at an earlier stage.
          log.abort(EnforceError,
@@ -537,7 +537,7 @@ proc enforce_definition(r: var Rule, seg: TextSegment): seq[Violation] =
             result.add(r.create_violation((line_decl, col_decl), decl))
 
 
-      except IndexError:
+      except IndexDefect:
          # Abort if no capture group can be found. This should not happen due
          # to validation enforced at an earlier stage.
          log.abort(EnforceError,
@@ -559,7 +559,7 @@ proc enforce_conditional(r: var Rule, seg: TextSegment): seq[Violation] =
 
          r.observed = true
 
-      except IndexError:
+      except IndexDefect:
          # Abort if no capture group can be found. This should not happen due
          # to validation enforced at an earlier stage.
          log.abort(EnforceError,

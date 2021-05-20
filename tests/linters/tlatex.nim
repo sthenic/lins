@@ -31,14 +31,14 @@ template run_test(title: string, rules: var seq[Rule], stimuli: string,
       styledWriteLine(stdout, styleBright, fgGreen, "[✓] ",
                       fgWhite, "Test '",  title, "'")
       nof_passed += 1
-   except AssertionError:
+   except AssertionDefect:
       echo "Full response:"
       for r in response:
          echo r
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
                       fgWhite, "Test '",  title, "'")
       nof_failed += 1
-   except IndexError:
+   except IndexDefect:
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
                       fgWhite, "Test '",  title, "'",
                       " (missing reference data)")

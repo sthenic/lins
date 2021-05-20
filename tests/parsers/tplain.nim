@@ -24,11 +24,11 @@ template run_test(title, stimuli: string; reference: seq[PlainTextSegment],
       styledWriteLine(stdout, styleBright, fgGreen, "[✓] ",
                       fgWhite, "Test '",  title, "'")
       nof_passed += 1
-   except AssertionError:
+   except AssertionDefect:
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
                       fgWhite, "Test '",  title, "'")
       nof_failed += 1
-   except IndexError:
+   except IndexDefect:
       styledWriteLine(stdout, styleBright, fgRed, "[✗] ",
                       fgWhite, "Test '",  title, "'", #resetStyle,
                       " (missing reference data)")
