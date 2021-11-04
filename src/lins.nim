@@ -1,6 +1,5 @@
 import times
 import strutils
-import strformat
 import terminal
 import streams
 

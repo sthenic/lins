@@ -7,16 +7,16 @@ bin = @["lins"]
 skip_ext = @["nim", "txt"]
 
 # Dependencies
-requires "nim >= 1.4.6"
-requires "yaml >= 0.15.0"
+requires "nim >= 1.6.0"
+requires "yaml >= 0.16.0"
 
 # Tasks
 task build_release, "Compile the application into an executable (release mode, don't install)":
-   exec("nimble build -d:release")
+   exec("nimble build -d:release --gc:orc")
 
 
 task build_release_xwin64, "Cross-compile the application into a Windows executable with MinGW (release mode, don't install)":
-   exec("nimble build -d:release --os:windows -d:xwin")
+   exec("nimble build -d:release --os:windows -d:xwin --gc:orc")
 
 
 task test, "Run the test suite.":
@@ -29,22 +29,22 @@ task test, "Run the test suite.":
 
 task lexertests, "Run the lexer test suite.":
    with_dir("tests/lexers"):
-      exec("nim c --hints:off -r tplain")
-      exec("nim c --hints:off -r ttex")
+      exec("nim c --hints:off --gc:orc -r tplain")
+      exec("nim c --hints:off --gc:orc -r ttex")
 
 
 task parsertests, "Run the parser test suite.":
    with_dir("tests/parsers"):
-      exec("nim c --hints:off -r tplain")
-      exec("nim c --hints:off -r tlatex")
+      exec("nim c --hints:off --gc:orc -r tplain")
+      exec("nim c --hints:off --gc:orc -r tlatex")
 
 
 task utilstests, "Run the utils test suite.":
    with_dir("tests/utils"):
-      exec("nim c --hints:off -r twordwrap")
-      exec("nim c --hints:off -r tconfiguration")
+      exec("nim c --hints:off --gc:orc -r twordwrap")
+      exec("nim c --hints:off --gc:orc -r tconfiguration")
 
 
 task lintertests, "Run the linter test suite.":
    with_dir("tests/linters"):
-      exec("nim c --hints:off -r tlatex")
+      exec("nim c --hints:off --gc:orc -r tlatex")

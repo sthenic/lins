@@ -1,4 +1,4 @@
-[![NIM](https://img.shields.io/badge/Nim-1.4.6-orange.svg?style=flat-square)](https://nim-lang.org)
+[![NIM](https://img.shields.io/badge/Nim-1.6.0-orange.svg?style=flat-square)](https://nim-lang.org)
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![tests](https://github.com/sthenic/lins/actions/workflows/main.yml/badge.svg)](https://github.com/sthenic/lins/actions/workflows/main.yml)
 
