@@ -1,18 +1,19 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Configuration &#8212; Lins 0.7.0
+    <title>Configuration &#8212; Lins 0.7.1
  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -86,12 +87,12 @@
           <div class="body" role="main">
             
   <section id="configuration">
-<span id="lins-cfg"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<span id="lins-cfg"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h1>
 <p>Configuring the tool through a <em>configuration file</em>  allows you to specify paths
 to <a class="reference internal" href="#cfg-rule-dirs"><span class="std std-ref">directories</span></a> containing <a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">rule files</span></a>
 and to define <a class="reference internal" href="#cfg-styles"><span class="std std-ref">styles</span></a> from these files.</p>
 <section id="configuration-file">
-<span id="cfg-file"></span><h2>Configuration File<a class="headerlink" href="#configuration-file" title="Permalink to this headline">¶</a></h2>
+<span id="cfg-file"></span><h2>Configuration File<a class="headerlink" href="#configuration-file" title="Permalink to this heading">¶</a></h2>
 <p>The configuration file is expected to be named <code class="docutils literal notranslate"><span class="pre">.lins.cfg</span></code> or <code class="docutils literal notranslate"><span class="pre">lins.cfg</span></code> and
 uses a syntax similar to Windows’ <code class="docutils literal notranslate"><span class="pre">.ini</span></code> files. The tool determines which
 configuration file to use through a search that follows these parameters:</p>
@@ -130,35 +131,35 @@ search outlined above.</p>
 </div>
 <p>Below is an example of a configuration file. The following sections break down
 and explain its contents.</p>
-<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[RuleDirs]</span>
-<span class="na">&quot;/path/to/rules/foo&quot;</span>
-<span class="na">baz</span><span class="o">=</span><span class="s">&quot;/path/to/rules/bar&quot;</span>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[RuleDirs]</span><span class="w"></span>
+<span class="na">&quot;/path/to/rules/foo&quot;</span><span class="w"></span>
+<span class="na">baz</span><span class="o">=</span><span class="s">&quot;/path/to/rules/bar&quot;</span><span class="w"></span>
 
-<span class="k">[Style]</span>
-<span class="na">name</span> <span class="o">=</span> <span class="s">mainstyle</span>
-<span class="na">default</span> <span class="o">=</span> <span class="s">true</span>
+<span class="k">[Style]</span><span class="w"></span>
+<span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">mainstyle</span><span class="w"></span>
+<span class="na">default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">true</span><span class="w"></span>
 
-<span class="na">rule</span> <span class="o">=</span> <span class="s">foo</span>
-<span class="k">[Except]</span>
-<span class="na">FooRule1</span>
-<span class="na">FooRule2</span>
+<span class="na">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">foo</span><span class="w"></span>
+<span class="k">[Except]</span><span class="w"></span>
+<span class="na">FooRule1</span><span class="w"></span>
+<span class="na">FooRule2</span><span class="w"></span>
 
-<span class="na">rule</span> <span class="o">=</span> <span class="s">baz</span>
+<span class="na">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">baz</span><span class="w"></span>
 
-<span class="k">[Style]</span>
-<span class="na">name</span> <span class="o">=</span> <span class="s">secondarystyle</span>
+<span class="k">[Style]</span><span class="w"></span>
+<span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">secondarystyle</span><span class="w"></span>
 
-<span class="na">rule</span> <span class="o">=</span> <span class="s">baz</span>
-<span class="k">[Only]</span>
-<span class="na">BazRule</span>
+<span class="na">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">baz</span><span class="w"></span>
+<span class="k">[Only]</span><span class="w"></span>
+<span class="na">BazRule</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
 <section id="rule-directories">
-<span id="cfg-rule-dirs"></span><h2>Rule Directories<a class="headerlink" href="#rule-directories" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[RuleDirs]</span>
-<span class="na">&quot;/path/to/rules/foo&quot;</span>
-<span class="na">baz</span><span class="o">=</span><span class="s">&quot;/path/to/rules/bar&quot;</span>
+<span id="cfg-rule-dirs"></span><h2>Rule Directories<a class="headerlink" href="#rule-directories" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[RuleDirs]</span><span class="w"></span>
+<span class="na">&quot;/path/to/rules/foo&quot;</span><span class="w"></span>
+<span class="na">baz</span><span class="o">=</span><span class="s">&quot;/path/to/rules/bar&quot;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Rule directories are specified in the <code class="docutils literal notranslate"><span class="pre">RuleDirs</span></code> section. The directories are
@@ -172,7 +173,7 @@ use the name of their lowest-level directory.</p>
 </div>
 </section>
 <section id="styles">
-<span id="cfg-styles"></span><h2>Styles<a class="headerlink" href="#styles" title="Permalink to this headline">¶</a></h2>
+<span id="cfg-styles"></span><h2>Styles<a class="headerlink" href="#styles" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference internal" href="rules.html#lins-rules"><span class="std std-ref">Rule files</span></a> may be grouped together to form a <em>style</em>. Styles
 are important for a few reasons:</p>
 <ul class="simple">
@@ -188,7 +189,7 @@ affected by the style’s maintainer removing and adding rule files.</p></li>
 example, two styles may share the same core rule set but one may enforce the
 <em>passive voice</em> while the other enforces the <em>active voice</em>.</p>
 <section id="defining-a-style">
-<span id="cfg-define-style"></span><h3>Defining a Style<a class="headerlink" href="#defining-a-style" title="Permalink to this headline">¶</a></h3>
+<span id="cfg-define-style"></span><h3>Defining a Style<a class="headerlink" href="#defining-a-style" title="Permalink to this heading">¶</a></h3>
 <p>Each style is defined in its own <code class="docutils literal notranslate"><span class="pre">Style</span></code> section. Immediately following the
 section title, the style’s <code class="docutils literal notranslate"><span class="pre">name</span></code> is expected. Additionally, the <code class="docutils literal notranslate"><span class="pre">default</span></code>
 keyword may be used to select this as the <em>default style</em>. Unless another style
@@ -196,20 +197,20 @@ is specified using the <code class="docutils literal notranslate"><span class="p
 be selected when invoking the tool. Additionally, you are able to overwrite the
 default specifier and assign this property to another style by setting the
 <code class="docutils literal notranslate"><span class="pre">LINS_DEFAULT_STYLE</span></code> <a class="reference internal" href="#cfg-env"><span class="std std-ref">environment variable</span></a>.</p>
-<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[Style]</span>
-<span class="na">name</span> <span class="o">=</span> <span class="s">mainstyle</span>
-<span class="na">default</span> <span class="o">=</span> <span class="s">true</span>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[Style]</span><span class="w"></span>
+<span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">mainstyle</span><span class="w"></span>
+<span class="na">default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">true</span><span class="w"></span>
 </pre></div>
 </div>
 <p>To assign rules to a style the <code class="docutils literal notranslate"><span class="pre">rule</span></code> keyword is used together with a target
 label (defined in the <code class="docutils literal notranslate"><span class="pre">RuleDirs</span></code> section). This will include all rules defined
 in the label’s target directory (unless the <code class="docutils literal notranslate"><span class="pre">Except</span></code> or <code class="docutils literal notranslate"><span class="pre">Only</span></code> sections are
 used).</p>
-<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="na">rule</span> <span class="o">=</span> <span class="s">baz</span>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="na">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">baz</span><span class="w"></span>
 </pre></div>
 </div>
 <section id="except-and-only">
-<h4>Except and Only<a class="headerlink" href="#except-and-only" title="Permalink to this headline">¶</a></h4>
+<h4>Except and Only<a class="headerlink" href="#except-and-only" title="Permalink to this heading">¶</a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">Except</span></code> and <code class="docutils literal notranslate"><span class="pre">Only</span></code> sections applies to the latest <code class="docutils literal notranslate"><span class="pre">rule</span></code> keyword and
 are mutually exclusive, i.e. a rule can make use of either the <code class="docutils literal notranslate"><span class="pre">Except</span></code>
 section or the <code class="docutils literal notranslate"><span class="pre">Only</span></code> section, but not both.</p>
@@ -218,18 +219,18 @@ section or the <code class="docutils literal notranslate"><span class="pre">Only
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Except</span></code> section includes all rule files <em>except</em> the ones listed in
 the section.</p></li>
 </ul>
-<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="na">rule</span> <span class="o">=</span> <span class="s">foo</span>
-<span class="k">[Except]</span>
-<span class="na">FooRule1</span>
-<span class="na">FooRule2</span>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="na">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">foo</span><span class="w"></span>
+<span class="k">[Except]</span><span class="w"></span>
+<span class="na">FooRule1</span><span class="w"></span>
+<span class="na">FooRule2</span><span class="w"></span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Only</span></code> section <em>only</em> includes the rule files listed in the section.</p></li>
 </ul>
-<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="na">rule</span> <span class="o">=</span> <span class="s">baz</span>
-<span class="k">[Only]</span>
-<span class="na">BazRule</span>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="na">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">baz</span><span class="w"></span>
+<span class="k">[Only]</span><span class="w"></span>
+<span class="na">BazRule</span><span class="w"></span>
 </pre></div>
 </div>
 <p>In both cases, the lists consist of filenames (case sensitive and without the
@@ -238,7 +239,7 @@ extension) with one entry per line.</p>
 </section>
 </section>
 <section id="environment-variables">
-<span id="cfg-env"></span><h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
+<span id="cfg-env"></span><h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this heading">¶</a></h2>
 <p>Environment variables offer yet another way of configuring the tool in a
 persistent manner.</p>
 <ul class="simple">
@@ -264,7 +265,7 @@ other default style.</p></li>
       &copy;2021 Marcus Eriksson.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
