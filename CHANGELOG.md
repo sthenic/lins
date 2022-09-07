@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.7.1 - 2022-09-07
+
+* Build for Ubuntu 22.04, remove Ubuntu 16.04. No functional changes.
+
 ## v0.7.0 - 2021-05-20
 
 * The plain text parser now ignores empty segments, just like the LaTeX parser.

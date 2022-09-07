@@ -6,7 +6,7 @@ on:
 
 jobs:
   documentation:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     # Check out the repository under $GITHUB_WORKSPACE.
     - name: Checkout lins
@@ -29,9 +29,9 @@ jobs:
     strategy:
       matrix:
         os:
+          - ubuntu-22.04
           - ubuntu-20.04
           - ubuntu-18.04
-          - ubuntu-16.04
           - windows-latest
           - macos-latest
     steps:
@@ -44,7 +44,7 @@ jobs:
         nim-version: 'stable'
 
     - name: Build Ubuntu
-      if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-18.04' || matrix.os == 'ubuntu-16.04'}}
+      if: ${{ matrix.os == 'ubuntu-22.04' || matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-18.04'}}
       run: |
         nimble build -y
         source /etc/os-release
